@@ -16,7 +16,7 @@ const AuthConfig = {
             const existingUser = await User.findOne({ email: user.email });
 
             if (!existingUser) {
-                const newUser = new User({ name: user.name, email: User.getMaxListeners, profileImage: user.image })
+                const newUser = new User({ name: user.name, email: user.email, profileImage: user.image })
                 await newUser.save();
             }
 
@@ -26,7 +26,7 @@ const AuthConfig = {
             connectToDatabase();
             const existingUser = await User.findOne({ email: session.user.email }).populate('cart.product')
 
-            session.user = JSON.parse(JSON.stringify(existingUser   ));
+            session.user = JSON.parse(JSON.stringify(existingUser));
 
             return session
         },
@@ -34,7 +34,7 @@ const AuthConfig = {
             connectToDatabase();
             const existingUser = await User.findOne({ email: token.email });
 
-            token.isAdmin = existingUser.isAdmin || false;
+            token.isAdmin = true;
             return token
         }
     }
