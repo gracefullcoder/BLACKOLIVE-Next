@@ -1,6 +1,7 @@
 import connectToDatabase from "@/src/lib/ConnectDb";
 import User from "@/src/models/user";
 import GoogleProvider from "next-auth/providers/google";
+import Product from "../models/product";
 
 const AuthConfig = {
     providers: [
@@ -24,7 +25,10 @@ const AuthConfig = {
         },
         async session({ session }: any) {
             connectToDatabase();
-            const existingUser = await User.findOne({ email: session.user.email }).populate('cart.product')
+            const existingUser = await User.findOne({ email: session.user.email }).populate({
+                path: 'cart.product',
+                model: Product 
+            });
 
             session.user = JSON.parse(JSON.stringify(existingUser));
 

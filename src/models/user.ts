@@ -31,14 +31,14 @@ const userSchema = new mongoose.Schema({
     ],
     orderDetails: [
         {
-            type: Schema.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: "Order"
         }
     ],
     cart: [
         {
             product: {
-                type: Schema.ObjectId,
+                type: Schema.Types.ObjectId,
                 ref: "Product"
             },
             quantity: Number,
@@ -46,7 +46,7 @@ const userSchema = new mongoose.Schema({
     ],
     membershipStatus: [
         {
-            type: Schema.ObjectId,
+            type: Schema.Types.ObjectId,
             ref: "Membership"
         }
 
