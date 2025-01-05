@@ -1,4 +1,4 @@
-// import HeroSection from "@/src/components/HeroSection";
+import HeroSection from "@/src/components/HeroSection";
 import Products from "@/src/components/product/Products";
 import { productType } from "../types/product";
 import axios from "axios";
@@ -21,7 +21,7 @@ export default async function Home() {
 
   return (
     <>
-      {/* <HeroSection /> */}
+      <HeroSection />
       <Products products={products} title={"PRODUCTS"} />
     </>
   );
