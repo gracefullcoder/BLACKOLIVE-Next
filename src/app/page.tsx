@@ -6,7 +6,7 @@ import axios from "axios";
 async function fetchProducts() {
   try {
     const response = await axios.get(`${process.env.API_BASE_URL}/api/product/?type=all`);
-    console.log(response , process.env.API_BASE_URL)
+
     if (!response.status || response.status >= 400) {
       throw new Error("Failed to fetch products");
     }
