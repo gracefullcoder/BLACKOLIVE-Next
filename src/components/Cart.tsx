@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-import { decreaseQuantity,increaseQuantity,removeFromCart } from '../actions/Cart';
+import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/Cart';
 
 const Cart = () => {
   const router = useRouter();
@@ -51,7 +51,7 @@ const Cart = () => {
     return true;
   };
 
-  const totalAmount = items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  const totalAmount = items.reduce((sum, item) => sum + (item?.product?.price * item.quantity), 0);
 
   const toggleCart = () => {
     setIsOpen(!isOpen);
@@ -68,7 +68,7 @@ const Cart = () => {
     setIsLoading(true);
     try {
       const orderItems = items.map(item => ({
-        product: item.product._id,
+        product: item?.product?._id,
         quantity: item.quantity
       }));
 
@@ -98,9 +98,9 @@ const Cart = () => {
   const handleDecrease = async (item: any) => {
     if (item.quantity > 1) {
       try {
-        const res = await decreaseQuantity(session?.data?.user?._id, item.product._id);
+        const res = await decreaseQuantity(session?.data?.user?._id, item?.product?._id);
         if (res.success) {
-          DecQty(item.product._id, setItems);
+          DecQty(item?.product?._id, setItems);
         }
       } catch (error) {
         console.error("Error decreasing quantity:", error);
@@ -110,9 +110,9 @@ const Cart = () => {
 
   const handleIncrease = async (item: any) => {
     try {
-      const res = await increaseQuantity(session?.data?.user?._id, item.product._id);
+      const res = await increaseQuantity(session?.data?.user?._id, item?.product?._id);
       if (res.success) {
-        IncQty(item.product._id, setItems);
+        IncQty(item?.product?._id, setItems);
       }
     } catch (error) {
       console.error("Error increasing quantity:", error);
@@ -121,9 +121,9 @@ const Cart = () => {
 
   const handleRemoveFromCart = async (item: any) => {
     try {
-      const res = await removeFromCart(session?.data?.user?._id, item.product._id);
+      const res = await removeFromCart(session?.data?.user?._id, item?.product?._id);
       if (res.success) {
-        removeItem(item.product._id, setItems);
+        removeItem(item?.product?._id, setItems);
       }
     } catch (error) {
       console.error("Error removing from cart:", error);
@@ -148,16 +148,16 @@ const Cart = () => {
             </div>
           ) : (
             <div className="p-4 space-y-4">
-              {items.map((item) => (
-                <div key={item.product._id} className="flex items-center gap-4 p-2 border rounded-lg">
+              {items.map((item,idx) => (
+                <div key={idx} className="flex items-center gap-4 p-2 border rounded-lg">
                   <img
-                    src={item.product.image}
-                    alt={item.product.title}
+                    src={item?.product?.image}
+                    alt={item?.product?.title}
                     className="w-20 h-20 object-cover rounded-md"
                   />
                   <div className="flex-1">
-                    <h3 className="font-medium">{item.product.title}</h3>
-                    <p className="text-green-600">Rs. {item.product.price.toFixed(2)}</p>
+                    <h3 className="font-medium">{item?.product?.title}</h3>
+                    <p className="text-green-600">Rs. {item?.product?.price.toFixed(2)}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() => handleDecrease(item)}
@@ -191,24 +191,39 @@ const Cart = () => {
           <div className="absolute bottom-0 left-0 right-0 border-t bg-white p-4">
             {/* Time Selection */}
             <div className="mb-4">
-              <p className="text-sm font-medium mb-2">Select Delivery Time:</p>
+              <p className="mt-4">Select Delivery Time:</p>
               <select
-                className="w-full p-2 border rounded-lg"
+                className="mt-4 border rounded-3xl w-full px-4 py-2"
+                name="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
               >
-                <option value="">Select Time</option>
-                {timings.map((t, i) => {
-                  const hour = parseInt(t.split(":")[0]);
-                  if (currTime < hour - 1) {
-                    return (
-                      <option key={i} value={t}>
-                        {formatTime(t, "today")}
-                      </option>
-                    );
-                  }
-                  return null;
-                })}
+                <option value="">Select</option>
+                {currTime >= 17 ? (
+                  timings.map((t, i) => (
+                    <option key={i} value={formatTime(t, "tomorrow")}>
+                      {formatTime(t, "tomorrow")}
+                    </option>
+                  ))
+                ) : currTime >= 0 && currTime < 8 ? (
+                  timings.map((t, i) => (
+                    <option key={i} value={formatTime(t, "today")}>
+                      {formatTime(t, "today")}
+                    </option>
+                  ))
+                ) : (
+                  timings.map((t, i) => {
+                    const hour = parseInt(t.slice(0, 2));
+                    if (hour - currTime > 1) {
+                      return (
+                        <option key={i} value={formatTime(t, "today")}>
+                          {formatTime(t, "today")}
+                        </option>
+                      );
+                    }
+                    return null;
+                  })
+                )}
               </select>
             </div>
 
@@ -217,7 +232,7 @@ const Cart = () => {
               <div className="mb-4">
                 <p className="text-sm font-medium mb-2">Select Delivery Address:</p>
                 <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {userAddresses.map((addr:any, idx:number) => (
+                  {userAddresses.map((addr: any, idx: number) => (
                     <div
                       key={idx}
                       className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { productType } from '@/src/types/product';
+import { IKImage } from 'imagekitio-next';
 
 function ProductCard({ _id, image, title, speciality, price, finalPrice, details }: productType) {
   return (
@@ -10,11 +11,15 @@ function ProductCard({ _id, image, title, speciality, price, finalPrice, details
       className="block group">
       <div className="border border-gray-300 w-fit p-4 rounded-3xl pb-8 transition-transform transform hover:scale-105 hover:shadow-lg">
         <div className="overflow-hidden rounded-lg">
-          <img
+
+          <IKImage
+            urlEndpoint='https://ik.imagekit.io/vaibhav11'
             src={image}
             alt={title}
             className="h-[24rem] w-[19rem] object-cover mb-4 transition-transform transform group-hover:scale-110"
             loading="lazy"
+            height={400}
+            width={320}
           />
         </div>
         <p className="text-lg font-semibold text-gray-800 group-hover:text-black transition-colors">
