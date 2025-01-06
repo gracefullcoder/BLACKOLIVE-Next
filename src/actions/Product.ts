@@ -7,7 +7,7 @@ export const getSpecificProduct = async (id: any) => {
         console.log("specfic product")
         let product = await Product.findById(id);
 
-        if (Product == null) {
+        if (product == null) {
             product = await MembershipProd.findById(id);
         }
         console.log(product)

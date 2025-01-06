@@ -1,6 +1,6 @@
 import HeroSection from "@/src/components/HeroSection";
 import Products from "@/src/components/product/Products";
-import { productType } from "../types/product";
+import { productType } from "@/src/types/product";
 import axios from "axios";
 
 async function fetchProducts() {

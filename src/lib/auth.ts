@@ -1,7 +1,7 @@
 import connectToDatabase from "@/src/lib/ConnectDb";
 import User from "@/src/models/user";
 import GoogleProvider from "next-auth/providers/google";
-import Product from "../models/product";
+import Product from "@/src/models/product";
 
 const AuthConfig = {
     providers: [

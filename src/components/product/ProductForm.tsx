@@ -55,7 +55,7 @@ const ProductForm = () => {
                 imageData = await uploadFile(imageFile);
             }
 
-            const response: any = await axios.post('http://localhost:3000/api/admin/products', {
+            const response: any = await axios.post('/api/admin/products', {
                 ...formData,
                 image: imageData.url,
                 fileId: imageData.fileId,
