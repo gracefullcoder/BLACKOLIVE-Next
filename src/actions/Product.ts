@@ -15,8 +15,8 @@ export const getSpecificProduct = async (id: any) => {
 
         return JSON.parse(JSON.stringify(product));
     } catch (error) {
-        console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!idhar bidhu !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         console.log(error);
+        return { error: "Failed to fetch data", status: 500 };
     }
 }
 
@@ -27,11 +27,6 @@ export async function getProducts(type: string) {
         await connectToDatabase()
         const products = await Product.find();
         const membership = await MembershipProd.find();
-        // const params = req.nextUrl.searchParams;
-
-        // const type = params.get('type');
-
-        console.log(products,membership)
 
         if (type == "all") {
             return JSON.parse(JSON.stringify({ products, membership }))
