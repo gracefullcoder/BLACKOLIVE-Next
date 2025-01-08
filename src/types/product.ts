@@ -5,5 +5,10 @@ export type productType = {
     speciality: string,
     price: number,
     finalPrice: number
-    details: string
+    details: string,
+    timings?: number[],
+    days?: number
+    bonus?: number
 }
+
+export type orderType = productType & { startDate: string }

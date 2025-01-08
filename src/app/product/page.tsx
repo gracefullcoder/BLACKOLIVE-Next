@@ -14,3 +14,4 @@ async function renderProduct({ searchParams }: { searchParams: any }) {
 }
 
 export default renderProduct
+

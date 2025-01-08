@@ -1,7 +1,7 @@
 import connectToDatabase from "@/src/lib/ConnectDb";
 import { NextRequest, NextResponse } from "next/server";
 import Product from "@/src/models/product";
-import MembershipProd from "@/src/models/membershipproducts";
+import MembershipProduct from "@/src/models/membershipproducts";
 
 
 export async function GET(req: NextRequest) {
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
         let product;
 
         if (data.isMembership) {
-            product = await MembershipProd.create({
+            product = await MembershipProduct.create({
                 title: data.title,
                 details: data.details,
                 image: data.image,
@@ -29,7 +29,8 @@ export async function POST(req: Request) {
                 finalPrice: data.finalPrice,
                 isAvailable: data.isAvailable ?? true,
                 bonus: data.bonus,
-                days: data.days
+                days: data.days,
+                timings : data.timings.split(',')
             });
         } else {
             product = await Product.create({

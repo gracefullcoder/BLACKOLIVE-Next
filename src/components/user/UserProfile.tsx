@@ -1,8 +1,10 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Plus, Pencil, Save, X, MapPin } from 'lucide-react';
 import axios from 'axios';
 import { handleResponse } from '@/src/utility/basic';
+import MyOrders from '../order/MyOrders';
+import { getOrders } from '@/src/actions/Order';
 
 interface Address {
     number: number,
@@ -21,6 +23,25 @@ const UserProfile = ({ user }: any) => {
         landmark: '',
         pincode: ''
     });
+
+    const [orders, setOrders] = useState({ orderDetails: [], membershipDetails: [] });
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            if (user) {
+                try {
+                    const response = await getOrders(user._id);
+                    setOrders(response.data || { orderDetails: [], membershipDetails: [] });
+                } catch (error) {
+                    console.error("Failed to fetch orders:", error);
+                    setOrders({ orderDetails: [], membershipDetails: [] });
+                }
+            }
+        };
+
+        fetchOrders();
+    }, [user]);
+
 
     console.log(user)
     const handleContactSubmit = async (e: any) => {
@@ -51,6 +72,8 @@ const UserProfile = ({ user }: any) => {
             console.error('Failed to add address:', error);
         }
     };
+
+    console.log(user)
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -211,6 +234,8 @@ const UserProfile = ({ user }: any) => {
                             )}
                         </div>
                     </div>
+
+                    <MyOrders orders={orders} />
                 </div>
             </div>
         </div>

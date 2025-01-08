@@ -1,5 +1,6 @@
+"use server"
 import connectToDatabase from "../lib/ConnectDb";
-import MembershipProd from "../models/membershipproducts"
+import MembershipProduct from "../models/membershipproducts"
 import Product from "../models/product";
 
 export const getSpecificProduct = async (id: any) => {
@@ -9,7 +10,7 @@ export const getSpecificProduct = async (id: any) => {
         let product = await Product.findById(id);
 
         if (product == null) {
-            product = await MembershipProd.findById(id);
+            product = await MembershipProduct.findById(id);
         }
         console.log(product)
 
@@ -26,7 +27,7 @@ export async function getProducts(type: string) {
         console.log("requested products");
         await connectToDatabase()
         const products = await Product.find();
-        const membership = await MembershipProd.find();
+        const membership = await MembershipProduct.find();
 
         if (type == "all") {
             return JSON.parse(JSON.stringify({ products, membership }))

@@ -37,11 +37,11 @@ const memProductSchema = new mongoose.Schema({
     responses: [
         {
             type: mongoose.Schema.ObjectId,
-            ref: "MembershipProd"
+            ref: "Feedback"
         }
     ]
 })
 
-const MembershipProd = mongoose.models.MembershipProd || mongoose.model("MembershipProd", memProductSchema);
+const MembershipProduct = mongoose.models.MembershipProduct || mongoose.model("MembershipProduct", memProductSchema);
 
-export default MembershipProd;
+export default MembershipProduct;

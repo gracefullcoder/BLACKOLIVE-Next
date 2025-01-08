@@ -1,5 +1,5 @@
 import connectToDatabase from "@/src/lib/ConnectDb";
-import MembershipProd from "@/src/models/membershipproducts";
+import MembershipProduct from "@/src/models/membershipproducts";
 import Product from "@/src/models/product";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
         console.log("requested");
         await connectToDatabase()
         const products = await Product.find();
-        const membership = await MembershipProd.find();
+        const membership = await MembershipProduct.find();
         const params = req.nextUrl.searchParams;
 
         const type = params.get('type');

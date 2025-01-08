@@ -17,7 +17,8 @@ const ProductForm = () => {
         finalPrice: '',
         isAvailable: true,
         bonus: '',
-        days: ''
+        days: '',
+        timings: ''
     });
 
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -77,7 +78,8 @@ const ProductForm = () => {
                 finalPrice: '',
                 isAvailable: true,
                 bonus: '',
-                days: ''
+                days: '',
+                timings: ''
             });
 
             setImageFile(null);
@@ -223,6 +225,19 @@ const ProductForm = () => {
                                     onChange={handleInputChange}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                     required
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Timings
+                                </label>
+                                <input
+                                    type="text"
+                                    name="timings"
+                                    value={formData.timings}
+                                    onChange={handleInputChange}
+                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                                 />
                             </div>
                         </div>

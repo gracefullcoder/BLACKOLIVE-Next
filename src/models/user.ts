@@ -44,10 +44,10 @@ const userSchema = new mongoose.Schema({
             quantity: Number,
         }
     ],
-    membershipStatus: [
+    membershipDetails: [
         {
             type: Schema.Types.ObjectId,
-            ref: "Membership"
+            ref: "MembershipOrder"
         }
 
     ]
