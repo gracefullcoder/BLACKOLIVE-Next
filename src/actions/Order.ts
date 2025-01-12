@@ -5,6 +5,7 @@ import MembershipOrder from "../models/membershipOrder";
 import Order from "../models/order";
 import User from "../models/user";
 import { revalidatePath } from "next/cache";
+import MembershipProduct from "../models/membershipproducts";
 
 export const createOrder = async (
     userId: string,
@@ -90,13 +91,21 @@ export const createMembership = async (
             return { success: false, message: "Address not found" };
         }
 
+        const memebershipDetails = await MembershipProduct.findById(orderItem);
+
+        const graphLength = memebershipDetails.days + memebershipDetails.bonus
+        const deliveryGraph = new Array(graphLength).fill(1);
+
+        for (let i = memebershipDetails.days; i < graphLength; i++) deliveryGraph[i] = 0
+
         const order = await MembershipOrder.create({
             category: orderItem,
             address: selectedAddress,
             contact: contact || user.contact,
             time,
             overallRating: 0,
-            startDate
+            startDate,
+            deliveryGraph
         });
 
         await User.findByIdAndUpdate(userId, {
@@ -157,4 +166,27 @@ export async function getMembershipOrder(id: string, userId: string) {
         console.error('Failed to fetch membership order:', error);
         return null;
     }
+}
+
+export async function useBonus(idx: number, orderId: String) {
+    const membershipDetails = await MembershipOrder.findById(orderId).populate("category");
+
+    if (membershipDetails.bonusUsed < membershipDetails.category.bonus) {
+        let updatedIdx = -1;
+        for (let i = idx + 1; i <= membershipDetails.deliveryGraph.length; i++) {
+            if (membershipDetails.deliveryGraph[i] == 0) {
+                membershipDetails.deliveryGraph[i] = 1;
+                membershipDetails.deliveryGraph[idx] = 0;
+                membershipDetails.bonusUsed++;
+                updatedIdx = i;
+                break;
+            }
+        }
+
+        await membershipDetails.save()
+
+        return { success: true, message: "Bonus Used!", updatedIdx }
+    }
+    return { success: false, message: "All Bonus Used!" }
+
 }

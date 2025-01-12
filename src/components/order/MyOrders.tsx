@@ -4,7 +4,7 @@ import { Calendar, Clock, MapPin, Star, Package, CreditCard } from 'lucide-react
 
 const MyOrders = ({ orders }: any) => {
     const router = useRouter();
-    
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -12,6 +12,26 @@ const MyOrders = ({ orders }: any) => {
             day: 'numeric'
         });
     };
+
+    const daysRemaining = (startDate: string | Date, numOfDays: number): number => {
+        const startDateFormat = new Date(startDate);
+        const currDate = new Date()
+        startDateFormat.setHours(0, 0, 0, 0);
+        currDate.setHours(0, 0, 0, 0);
+
+        if (startDateFormat > currDate) {
+            return numOfDays;
+        } else {
+            const daysDelivered = (currDate.getTime() - startDateFormat.getTime()) / (1000 * 60 * 60 * 24);
+
+            console.log("vaibhavrt", daysDelivered)
+
+            const remDays = numOfDays - Math.floor(daysDelivered)
+
+            return remDays > 0 ? remDays : 0;
+        }
+    };
+
 
     return (
         <div className="p-6 space-y-8">
@@ -21,7 +41,7 @@ const MyOrders = ({ orders }: any) => {
                     <Package className="text-blue-600" />
                     My Orders
                 </h2>
-                
+
                 <div className="grid gap-4 md:grid-cols-2">
                     {orders?.orderDetails?.map((order: any) => (
                         <div
@@ -86,7 +106,7 @@ const MyOrders = ({ orders }: any) => {
                     <CreditCard className="text-blue-600" />
                     My Memberships
                 </h2>
-                
+
                 <div className="grid gap-4 md:grid-cols-2">
                     {orders?.membershipDetails?.map((membership: any) => (
                         <div
@@ -109,7 +129,7 @@ const MyOrders = ({ orders }: any) => {
                                     </div>
                                     <div className="bg-blue-50 px-3 py-1 rounded-full">
                                         <p className="text-sm text-blue-600">
-                                            {membership.category.days} days
+                                            {daysRemaining(membership.startDate, membership.category.days)} days
                                         </p>
                                     </div>
                                 </div>

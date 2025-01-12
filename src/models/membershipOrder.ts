@@ -26,6 +26,9 @@ const membershipSchema = new mongoose.Schema({
         type: Number,
         length: 10
     },
+    deliveryGraph: [{
+        type: Number
+    }],
     bonusUsed: {
         type: Number,
         default: 0

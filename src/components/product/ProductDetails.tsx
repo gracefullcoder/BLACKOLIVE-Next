@@ -66,7 +66,7 @@ function ProductDetails({ product }: { product: productType }) {
 
 
     //for membership
-    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any }>({ time: 0, startDate: new Date() });
+    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any }>({ time: product?.timings ? product?.timings[1] : 0, startDate: new Date() });
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<number>(-1);
 
@@ -86,7 +86,14 @@ function ProductDetails({ product }: { product: productType }) {
 
         console.log(new Date(membershipDetails.startDate) > new Date())
 
-        if (!membershipDetails.startDate || new Date(membershipDetails.startDate) < new Date()) {
+        const currDate = new Date()
+        const startDate = new Date(membershipDetails.startDate)
+        currDate.setHours(0, 0, 0, 0);
+        startDate.setHours(0, 0, 0, 0);
+
+        console.log(startDate,currDate)
+
+        if (!membershipDetails.startDate || startDate <= currDate) {
             toast.error("Please select a valid date!");
             return false;
         }
@@ -176,7 +183,7 @@ function ProductDetails({ product }: { product: productType }) {
                                 </div> :
 
                                 <div>
-                                    <p className="text-slate-500 mt-6">Quantity</p> 
+                                    <p className="text-slate-500 mt-6">Quantity</p>
 
                                     <div className="flex gap-8 px-4 py-2 border w-fit rounded-3xl mt-2 items-center text-3xl max-lg:mx-auto">
                                         <button
