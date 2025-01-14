@@ -20,7 +20,7 @@ export async function GET() {
 export async function PUT(request: NextRequest, { params }: { params: any }) {
     try {
         await connectToDatabase();
-        const { userId } = params;
+        const { userId } = await params;
         const { isAdmin } = await request.json();
 
         const updatedUser = await User.findByIdAndUpdate(

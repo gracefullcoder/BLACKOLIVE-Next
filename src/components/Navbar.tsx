@@ -53,15 +53,17 @@ function Navbar() {
               </Link>
             </li>
             <li>
-              <Link href="/customize" >
-                CUSTOMIZE
-              </Link>
-            </li>
-            <li>
               <Link href="/contact" >
                 CONTACT
               </Link>
             </li>
+            {
+              session?.data?.user?.isAdmin && <li>
+                <Link href="/admin" >
+                  ADMIN
+                </Link>
+              </li>
+            }
           </nav>
         </div>
 
@@ -80,10 +82,10 @@ function Navbar() {
               {session?.data?.user ?
                 <div className='flex gap-2 items-center'>
                   <Link href="/user"><User className='text-gray-600 hover:text-black' /></Link>
-                  <button className='text-slate-600 text-normal hover:text-black' onClick={() => signOut()}>logout</button>
+                  <button className='text-slate-600 text-xl hover:text-black' onClick={() => signOut()}>logout</button>
                 </div>
                 :
-                <button onClick={() => signIn('google')}>Signin</button>
+                <button className='ml-2 text-white text-xl hover:text-green-500 px-6 py-2 bg-black rounded-3xl' onClick={() => signIn('google')}>login</button>
               }
             </li>
             <li>

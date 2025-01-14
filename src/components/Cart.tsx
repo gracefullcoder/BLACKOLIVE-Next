@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/Cart';
+import { Message } from '@/src/utility/SendMessage';
 
 const Cart = () => {
   const router = useRouter();
@@ -82,6 +83,12 @@ const Cart = () => {
 
       if (response.success) {
         toast.success("Order placed successfully!");
+        const message = items.map((item, idx) => {
+            return `PRODUCT ${idx + 1}: ${item.product.title}\n -Quantity: ${item.quantity}\n-Time : ${time}\n`;
+          })
+          .join("\n");
+
+        Message(message);
         setItems([]);
         setIsOpen(false);
         // router.push(`/orders/${response.orderId}`);

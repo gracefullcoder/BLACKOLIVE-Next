@@ -9,11 +9,12 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
     try {
         await connectToDatabase();
 
-        const { userId } = params;
+        const { userId } = await params;
 
         const user = await User.findById(userId)
             .populate({
                 path: "orderDetails",
+                model: Order,
                 populate: {
                     path: "orders.product",
                     model: Product,
@@ -21,8 +22,9 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
             })
             .populate({
                 path: "membershipDetails",
+                model: MembershipOrder,
                 populate: {
-                    path: "orders.product",
+                    path: "category",
                     model: Product,
                 },
             })
