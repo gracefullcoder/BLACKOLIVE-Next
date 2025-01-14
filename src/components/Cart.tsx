@@ -148,7 +148,7 @@ const Cart = () => {
             </div>
           ) : (
             <div className="p-4 space-y-4">
-              {items.map((item,idx) => (
+              {items.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-4 p-2 border rounded-lg">
                   <img
                     src={item?.product?.image}
@@ -201,13 +201,13 @@ const Cart = () => {
                 <option value="">Select</option>
                 {currTime >= 17 ? (
                   timings.map((t, i) => (
-                    <option key={i} value={formatTime(t, "tomorrow")}>
+                    <option key={i} value={t + " tomorrow"}>
                       {formatTime(t, "tomorrow")}
                     </option>
                   ))
                 ) : currTime >= 0 && currTime < 8 ? (
                   timings.map((t, i) => (
-                    <option key={i} value={formatTime(t, "today")}>
+                    <option key={i} value={t + " today"}>
                       {formatTime(t, "today")}
                     </option>
                   ))
@@ -216,7 +216,7 @@ const Cart = () => {
                     const hour = parseInt(t.slice(0, 2));
                     if (hour - currTime > 1) {
                       return (
-                        <option key={i} value={formatTime(t, "today")}>
+                        <option key={i} value={t + " today"}>
                           {formatTime(t, "today")}
                         </option>
                       );

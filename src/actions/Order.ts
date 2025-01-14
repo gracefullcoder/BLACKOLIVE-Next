@@ -190,3 +190,121 @@ export async function useBonus(idx: number, orderId: String) {
     return { success: false, message: "All Bonus Used!" }
 
 }
+// Get all orders
+export async function getAllOrders() {
+    try {
+        await connectToDatabase();
+        const orders = await Order.find({})
+            .populate('orders.product')
+            .sort({ createdAt: -1 });
+        return JSON.parse(JSON.stringify(orders));
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        throw error;
+    }
+}
+
+// Update order status
+export async function updateOrderStatus(orderId: any, newStatus: any) {
+    try {
+        await connectToDatabase();
+        const updatedOrder = await Order.findByIdAndUpdate(
+            orderId,
+            { status: newStatus },
+            { new: true }
+        ).populate('orders.product');
+        return JSON.parse(JSON.stringify(updatedOrder));
+    } catch (error) {
+        console.error("Error updating order status:", error);
+        throw error;
+    }
+}
+
+// Update product quantity in order
+export async function updateOrderQuantity(orderId: any, productId: any, newQuantity: any) {
+    try {
+        await connectToDatabase();
+        const order = await Order.findById(orderId);
+        const orderItem = order.orders.find(
+            (item: any) => item._id.toString() === productId
+        );
+
+        if (!orderItem) {
+            throw new Error('Product not found in order');
+        }
+
+        orderItem.quantity = newQuantity;
+        await order.save();
+
+        const updatedOrder = await order.populate('orders.product');
+        return JSON.parse(JSON.stringify(updatedOrder));
+    } catch (error) {
+        console.error("Error updating quantity:", error);
+        throw error;
+    }
+}
+
+// Remove product from order
+export async function removeProductFromOrder(orderId: any, productId: any) {
+    try {
+        await connectToDatabase();
+        const order = await Order.findById(orderId);
+
+        order.orders = order.orders.filter(
+            (item: any) => item._id.toString() !== productId
+        );
+
+        await order.save();
+        const updatedOrder = await order.populate('orders.product');
+        return JSON.parse(JSON.stringify(updatedOrder));
+    } catch (error) {
+        console.error("Error removing product:", error);
+        throw error;
+    }
+}
+
+// Get filtered orders by time range
+export async function getFilteredOrders(timeRange: any, status: any) {
+    try {
+        await connectToDatabase();
+        let query: any = {};
+
+        // Add status filter if provided
+        if (status !== null) {
+            query.status = status;
+        }
+
+        // Add time filter
+        if (timeRange) {
+            const currentTime = new Date();
+            const startTime = new Date(currentTime);
+
+            switch (timeRange) {
+                case 'morning':
+                    startTime.setHours(6, 0, 0);
+                    query.time = { $gte: 6, $lt: 12 };
+                    break;
+                case 'afternoon':
+                    startTime.setHours(12, 0, 0);
+                    query.time = { $gte: 12, $lt: 17 };
+                    break;
+                case 'evening':
+                    startTime.setHours(17, 0, 0);
+                    query.time = { $gte: 17, $lt: 23 };
+                    break;
+                case 'night':
+                    query.time = { $gte: 0, $lt: 6 };
+                    break;
+            }
+        }
+
+        const orders = await Order.find(query)
+            .populate('orders.product')
+            .sort({ createdAt: -1 });
+
+        return JSON.parse(JSON.stringify(orders));
+    } catch (error) {
+        console.error("Error fetching filtered orders:", error);
+        throw error;
+    }
+}
