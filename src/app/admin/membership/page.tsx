@@ -105,7 +105,7 @@ export default function OrdersPage() {
             {error && <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">{error}</div>}
             
             <div className="mb-6">
-                <h1 className="text-2xl font-bold mb-4">Order Management</h1>
+                <h1 className="text-2xl font-bold mb-4">Membership Management</h1>
                 
                 {/* Filters */}
                 <div className="flex gap-4 mb-6">

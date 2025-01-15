@@ -25,6 +25,7 @@ export const isAdminConfig = {
 
 export async function isAdminMiddleware(request: NextRequest) {
     const token = await getToken({ req: request });
+    console.log(token)
 
     if (!token) {
         return NextResponse.json(

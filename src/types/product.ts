@@ -8,7 +8,8 @@ export type productType = {
     details: string,
     timings?: number[],
     days?: number
-    bonus?: number
+    bonus?: number,
+    isAvailable?:boolean
 }
 
 export type orderType = productType & { startDate: string }

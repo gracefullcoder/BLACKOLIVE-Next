@@ -30,10 +30,68 @@ export async function POST(req: Request) {
                 isAvailable: data.isAvailable ?? true,
                 bonus: data.bonus,
                 days: data.days,
-                timings : data.timings.split(',')
+                timings: data.timings.split(',')
             });
         } else {
             product = await Product.create({
+                title: data.title,
+                details: data.details,
+                image: data.image,
+                fileId: data.fileId,
+                speciality: data.speciality,
+                price: data.price,
+                finalPrice: data.finalPrice,
+                isAvailable: data.isAvailable ?? true
+            });
+        }
+
+        return NextResponse.json(
+            { message: "Product created successfully", product },
+            { status: 201 }
+        );
+    } catch (error) {
+        console.log(error);
+        return NextResponse.json(
+            { message: "Error creating product", error },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PUT(req: Request) {
+    try {
+        await connectToDatabase()
+        const { productId, isAvailable } = await req.json();
+        const product = await Product.findByIdAndUpdate(productId, { isAvailable })
+
+        return NextResponse.json({ success: true, message: "Updated!" })
+    } catch (error) {
+
+    }
+}
+
+export async function PATCH(req: Request) {
+    try {
+        await connectToDatabase();
+        const data = await req.json();
+        let product;
+
+        if (data.isMembership) {
+            product = await MembershipProduct.findByIdAndUpdate(data.id, {
+                title: data.title,
+                details: data.details,
+                image: data.image,
+                fileId: data.fileId,
+                speciality: data.speciality,
+                price: data.price,
+                finalPrice: data.finalPrice,
+                isAvailable: data.isAvailable ?? true,
+                bonus: data.bonus,
+                days: data.days,
+                timings: data.timings
+            });
+        } else {
+            product = await Product.findByIdAndUpdate(data.id, {
                 title: data.title,
                 details: data.details,
                 image: data.image,

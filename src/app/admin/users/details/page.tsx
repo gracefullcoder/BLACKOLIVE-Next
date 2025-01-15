@@ -91,7 +91,7 @@ function Page() {
                     <h2 className="text-2xl font-semibold mb-4">Cart</h2>
                     {userData.cart.map((item:any) => (
                         <div key={item.product._id} className="mb-4 border-b pb-4">
-                            <p className="text-gray-700">Product: {item.product.name}</p>
+                            <p className="text-gray-700">Product: {item.product.title}</p>
                             <p className="text-gray-700">Quantity: {item.quantity}</p>
                         </div>
                     ))}

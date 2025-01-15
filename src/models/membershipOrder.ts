@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 
 const membershipSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User"
+    },
     category: {
         type: mongoose.Schema.ObjectId,
         ref: "MembershipProduct"

@@ -14,7 +14,7 @@ function HeroSection() {
         alt="Delicious Salad"
         className="h-full w-full object-cover md:object-center"
       />
-      <HeroCard />
+      {/* <HeroCard /> */}
     </div>
   )
 }

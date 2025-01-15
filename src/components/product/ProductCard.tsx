@@ -1,6 +1,7 @@
+"use client"
 import Link from 'next/link';
 import { productType } from '@/src/types/product';
-// import { IKImage } from 'imagekitio-next';
+import { IKImage } from 'imagekitio-next';
 
 function ProductCard({ _id, image, title, speciality, price, finalPrice, details }: productType) {
   return (

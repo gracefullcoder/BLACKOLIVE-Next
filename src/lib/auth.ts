@@ -36,9 +36,10 @@ const AuthConfig = {
         },
         async jwt({ token }: any) {
             connectToDatabase();
+            console.log("token is" , token)
             const existingUser = await User.findOne({ email: token.email });
-
-            token.isAdmin = true;
+            token.isAdmin = existingUser.isAdmin;
+            token.user = existingUser
             return token
         }
     }

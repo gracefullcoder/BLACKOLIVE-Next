@@ -308,3 +308,17 @@ export async function getFilteredOrders(timeRange: any, status: any) {
         throw error;
     }
 }
+
+// Get all orders
+export async function getAllMembership() {
+    try {
+        await connectToDatabase();
+        const membership = await Order.find({})
+            .populate('category')
+            .sort({ createdAt: -1 });
+        return JSON.parse(JSON.stringify(membership));
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        throw error;
+    }
+}
