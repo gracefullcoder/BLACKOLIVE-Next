@@ -2,15 +2,15 @@
 import { useSession } from 'next-auth/react'
 import HeroCard from './HeroCard'
 
-function HeroSection() {
+function HeroSection({ features }: { features: any }) {
   const session = useSession();
 
   console.log(session);
-  
+
   return (
     <div className="h-full w-full relative">
       <img
-        src='/assets/salad.jpg'
+        src={features?.heroImage || '/assets/salad.jpg'}
         alt="Delicious Salad"
         className="h-full w-full object-cover md:object-center"
       />
