@@ -20,4 +20,3 @@ function Products({ products, title }: { products: productType[], title: string 
 }
 
 export default Products;
-
