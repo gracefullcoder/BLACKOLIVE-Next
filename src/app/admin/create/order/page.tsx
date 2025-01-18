@@ -1,5 +1,5 @@
 "use client"
-import { addUserDetails, getUserByMail } from '@/src/actions/User';
+import { addUserDetails, getUserByMail, getUserByContact } from '@/src/actions/User';
 import { UserData } from '@/src/types/user';
 import React, { useEffect, useState } from 'react'
 import { toast } from 'react-toastify';
@@ -18,6 +18,7 @@ function page() {
     });
 
     const [email, setEmail] = useState("")
+    const [contact, setContact] = useState(0);
     const [isAddPresent, setIsAddPresent] = useState(false);
     const [isContact, setIsContact] = useState(false);
 
@@ -25,6 +26,21 @@ function page() {
         e.preventDefault();
         console.log(email)
         const res: any = await getUserByMail(email);
+        if (res.success) {
+            if (res.user) {
+                setUser(res.user);
+            } else {
+                toast.error("User doesn't exist!")
+            }
+        } else {
+            toast.error("Failed to fetch user data")
+        }
+    }
+
+    const handleUserPhno = async (e: any) => {
+        e.preventDefault();
+        console.log(email)
+        const res: any = await getUserByContact(contact);
         if (res.success) {
             if (res.user) {
                 setUser(res.user);
@@ -51,6 +67,17 @@ function page() {
         <div>create Order
             <form onSubmit={(e) => handleUser(e)}>
                 <input type="email" onChange={(e: any) => setEmail(e.target.value)} className='border-black border' />
+                <button>Check User</button>
+            </form>
+
+            <br />
+            <br />
+
+            //check by mobile number
+
+            <h1>Check by phone number</h1>
+            <form onSubmit={(e) => handleUserPhno(e)}>
+                <input type="number" onChange={(e: any) => setContact(e.target.value)} className='border-black border' />
                 <button>Check User</button>
             </form>
 

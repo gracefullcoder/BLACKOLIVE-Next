@@ -52,23 +52,27 @@ const Cart = () => {
     return true;
   };
 
-  const totalAmount = items.reduce((sum, item) => sum + (item?.product?.price * item.quantity), 0);
+  const totalAmount = items.reduce((sum, item) => item.product.isAvailable ? sum + (item?.product?.finalPrice * item.quantity) : sum, 0);
 
   const toggleCart = () => {
     setIsOpen(!isOpen);
   };
 
   const handleCheckout = async () => {
+    if (totalAmount == 0) {
+      toast.error("Add Something in cart")
+      return
+    }
+
     if (!validateCheckout()) return;
 
     if (!isProfileComplete) {
-      router.push('/profile');
-      return;
+      router.push('/user');
     }
 
     setIsLoading(true);
     try {
-      const orderItems = items.map(item => ({
+      const orderItems = items.filter(item => item.product.isAvailable).map(item => ({
         product: item?.product?._id,
         quantity: item.quantity
       }));
@@ -84,8 +88,8 @@ const Cart = () => {
       if (response.success) {
         toast.success("Order placed successfully!");
         const message = items.map((item, idx) => {
-            return `PRODUCT ${idx + 1}: ${item.product.title}\n -Quantity: ${item.quantity}\n-Time : ${time}\n`;
-          })
+          return `PRODUCT ${idx + 1}: ${item.product.title}\n -Quantity: ${item.quantity}\n-Time : ${time}\n`;
+        })
           .join("\n");
 
         Message(message);
@@ -164,23 +168,30 @@ const Cart = () => {
                   />
                   <div className="flex-1">
                     <h3 className="font-medium">{item?.product?.title}</h3>
-                    <p className="text-green-600">Rs. {item?.product?.price.toFixed(2)}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() => handleDecrease(item)}
-                        className="p-1 hover:bg-gray-100 rounded"
-                        disabled={item.quantity <= 1}
-                      >
-                        <Minus className="w-4 h-4" />
-                      </button>
-                      <span className="w-8 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() => handleIncrease(item)}
-                        className="p-1 hover:bg-gray-100 rounded"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
+                    <p className="text-green-600">Rs. {item?.product?.finalPrice.toFixed(2)}</p>
+
+                    {item.product.isAvailable ?
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => handleDecrease(item)}
+                          className="p-1 hover:bg-gray-100 rounded"
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <button
+                          onClick={() => handleIncrease(item)}
+                          className="p-1 hover:bg-gray-100 rounded"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div> :
+                      <div className='text-red-600 text-sm'>
+                        Out Of Stock
+                      </div>
+                    }
+
                   </div>
                   <button
                     onClick={() => handleRemoveFromCart(item)}

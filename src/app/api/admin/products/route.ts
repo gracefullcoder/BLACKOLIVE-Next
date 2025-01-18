@@ -2,6 +2,7 @@ import connectToDatabase from "@/src/lib/ConnectDb";
 import { NextRequest, NextResponse } from "next/server";
 import Product from "@/src/models/product";
 import MembershipProduct from "@/src/models/membershipproducts";
+import { revalidatePath } from "next/cache";
 
 
 export async function GET(req: NextRequest) {
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
                 days: data.days,
                 timings: data.timings.split(',')
             });
+            revalidatePath("/membership")
         } else {
             product = await Product.create({
                 title: data.title,
@@ -43,7 +45,10 @@ export async function POST(req: Request) {
                 finalPrice: data.finalPrice,
                 isAvailable: data.isAvailable ?? true
             });
+            revalidatePath("/salads")
         }
+
+        revalidatePath("/");
 
         return NextResponse.json(
             { message: "Product created successfully", product },
@@ -90,6 +95,7 @@ export async function PATCH(req: Request) {
                 days: data.days,
                 timings: data.timings
             });
+            revalidatePath("/membership");
         } else {
             product = await Product.findByIdAndUpdate(data.id, {
                 title: data.title,
@@ -101,6 +107,7 @@ export async function PATCH(req: Request) {
                 finalPrice: data.finalPrice,
                 isAvailable: data.isAvailable ?? true
             });
+            revalidatePath("/salads");
         }
 
         return NextResponse.json(

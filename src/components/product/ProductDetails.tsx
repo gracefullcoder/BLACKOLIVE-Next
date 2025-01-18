@@ -91,7 +91,7 @@ function ProductDetails({ product }: { product: productType }) {
         currDate.setHours(0, 0, 0, 0);
         startDate.setHours(0, 0, 0, 0);
 
-        console.log(startDate,currDate)
+        console.log(startDate, currDate)
 
         if (!membershipDetails.startDate || startDate <= currDate) {
             toast.error("Please select a valid date!");
@@ -204,60 +204,67 @@ function ProductDetails({ product }: { product: productType }) {
                         }
                     </div>
 
-                    {
-                        product.bonus &&
-                        <>
-                            {/* Address Selection */}
-                            {userAddresses.length > 0 ? (
-                                <div className="mb-4">
-                                    <p className="my-2">Select Delivery Address:</p>
-                                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                                        {userAddresses.map((addr: any, idx: number) => (
-                                            <div
-                                                key={idx}
-                                                className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
-                                                onClick={() => setSelectedAddress(idx)}
-                                            >
-                                                <p className="text-sm">{addr.address}</p>
-                                                <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
-                                            </div>
-                                        ))}
+                    {product.isAvailable ? <>
+                        {
+                            product.bonus &&
+                            <>
+                                {/* Address Selection */}
+                                {userAddresses.length > 0 ? (
+                                    <div className="mb-4">
+                                        <p className="my-2">Select Delivery Address:</p>
+                                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                                            {userAddresses.map((addr: any, idx: number) => (
+                                                <div
+                                                    key={idx}
+                                                    className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
+                                                    onClick={() => setSelectedAddress(idx)}
+                                                >
+                                                    <p className="text-sm">{addr.address}</p>
+                                                    <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                                    <p className="text-sm text-yellow-700">Please add a delivery address in your profile</p>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                                        <p className="text-sm text-yellow-700">Please add a delivery address in your profile</p>
+                                    </div>
+                                )}
 
-                            {/* Contact Information Warning */}
-                            {!hasContact && (
-                                <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                                    <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
-                                </div>
-                            )}
-                        </>
-                    }
+                                {/* Contact Information Warning */}
+                                {!hasContact && (
+                                    <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                                        <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
+                                    </div>
+                                )}
+                            </>
+                        }
 
 
-                    {!product.bonus ? (!existingCartItem && (
-                        <button
-                            className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
+                        {!product.bonus ? (!existingCartItem && (
+                            <button
+                                className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
                                       bg-green-600 hover:bg-green-700 text-white cursor-pointer
                                     `}
-                            onClick={handleAddToCart}
-                        >
-                            Add to Cart
-                        </button>
-                    )) :
-                        <button
-                            className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
+                                onClick={handleAddToCart}
+                            >
+                                Add to Cart
+                            </button>
+                        )) :
+                            <button
+                                className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
                                       bg-green-600 hover:bg-green-700 text-white cursor-pointer
                                     `}
-                            onClick={handleMembership}
-                        >
-                            Buy Membership
-                        </button>}
+                                onClick={handleMembership}
+                            >
+                                Buy Membership
+                            </button>}
+                    </> :
+
+                        <div className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
+                                      bg-red-600 hover:bg-red-700 text-white cursor-pointer`}>
+                            Out Of Stock
+                        </div>}
 
 
                 </div>

@@ -17,8 +17,30 @@ export const createOrder = async (
 ) => {
     try {
         const user = await User.findById(userId);
+
         if (!user) {
             return { success: false, message: "User not found" };
+        }
+
+
+        const productIds = orderItems.map((item: any) => item.product);
+        const products = await Product.find({ _id: { $in: productIds } });
+
+        console.log(products)
+
+        const unavailableProducts: string[] = [];
+
+        products.forEach((product) => {
+            if (!product.isAvailable) {
+                unavailableProducts.push(product.title)
+            }
+        })
+
+        if (unavailableProducts.length != 0) {
+            return {
+                success: false,
+                message: `${unavailableProducts.toString()}`.concat(" Unavailable")
+            };
         }
 
         const selectedAddress = user.addresses[addressId];
@@ -39,8 +61,6 @@ export const createOrder = async (
             $set: { cart: [] }
         });
 
-        revalidatePath('/cart');
-        revalidatePath('/orders');
         return { success: true, message: "Order created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
     } catch (error) {
         console.error("Error creating order:", error);

@@ -188,7 +188,7 @@ export default function ProductManagementPage() {
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${product.price.toFixed(2)}
+                    {product.finalPrice.toFixed(2)} /-
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span

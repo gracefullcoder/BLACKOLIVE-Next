@@ -19,6 +19,23 @@ export const getUserByMail = async (email: string) => {
     }
 }
 
+export const getUserByContact = async (contact: number) => {
+    try {
+        await connectToDatabase()
+        const userData = await User.findOne({ contact })
+
+        console.log(userData)
+        if (!userData) {
+            return { success: true, user: false }
+        }
+
+        return { success: true, user: JSON.parse(JSON.stringify(userData)) };
+    } catch (error: any) {
+        console.log(error);
+        return { success: false, message: error.message || "Failed to get User Details" }
+    }
+}
+
 export const addUserDetails = async (email: string, formData: FormData) => {
     const contact = formData.get("contact");
     const number = formData.get("number");
@@ -35,6 +52,5 @@ export const addUserDetails = async (email: string, formData: FormData) => {
     console.log(formData.get("contact"))
 
     return { success: true, message: "Not able to update user data" }
-
-
 }
+

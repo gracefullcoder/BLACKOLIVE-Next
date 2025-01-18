@@ -38,7 +38,7 @@ const AuthConfig = {
             connectToDatabase();
             console.log("token is" , token)
             const existingUser = await User.findOne({ email: token.email });
-            token.isAdmin = existingUser.isAdmin;
+            token.isAdmin = existingUser?.isAdmin || false;
             token.user = existingUser
             return token
         }

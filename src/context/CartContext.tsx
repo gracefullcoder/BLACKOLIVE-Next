@@ -1,15 +1,11 @@
 "use client"
 import { createContext, useEffect, useState, ReactNode, useContext } from "react";
 import { useSession } from "next-auth/react";
+import { productType } from "../types/product";
 
 export type CartItem = {
-   product :{
-    _id: string;
-    title: string;
-    price: number;
-    image: string;
-   },
-   quantity: number
+    product: productType,
+    quantity: number
 };
 
 type CartContextType = { items: CartItem[], setItems: React.Dispatch<React.SetStateAction<CartItem[]>>, isOpen: boolean, setIsOpen: React.Dispatch<React.SetStateAction<boolean>> };
