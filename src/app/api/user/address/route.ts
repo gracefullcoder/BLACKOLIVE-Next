@@ -8,15 +8,15 @@ export async function POST(req: Request) {
         const { id, address } = await req.json();
 
 
-        console.log( id, address);
-        
+        console.log(id, address);
+
         const user = await User.findByIdAndUpdate(
             id,
             { $push: { addresses: address } },
             { new: true }
         );
 
-        return NextResponse.json(user);
+        return NextResponse.json({ success: true, user });
     } catch (error) {
         return NextResponse.json(
             { error: "Failed to add address" },

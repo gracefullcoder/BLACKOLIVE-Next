@@ -26,25 +26,37 @@ export default function ProductManagementPage() {
   }, []);
 
   // Handle availability toggle
-  const handleAvailabilityToggle = async (productId: any, currentStatus: any) => {
+  const handleAvailabilityToggle = async (productId: any, currentStatus: any, isMembership: boolean) => {
     try {
       const response: any = await fetch(`/api/admin/products`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ isAvailable: !currentStatus, productId }),
+        body: JSON.stringify({ isAvailable: !currentStatus, productId, isMembership }),
       });
 
       if (response.ok) {
         setAllProducts((prev: any) => {
-          return {
-            membership: [...prev.membership],
-            products: prev.products.map((product: any) =>
-              product._id === productId
-                ? { ...product, isAvailable: !product.isAvailable }
-                : product
-            )
+          if (isMembership) {
+            return {
+              membership: prev.membership.map((product: any) =>
+                product._id === productId
+                  ? { ...product, isAvailable: !product.isAvailable }
+                  : product
+              ),
+              products: [...prev.products]
+            }
+          }
+          else {
+            return {
+              membership: [...prev.membership],
+              products: prev.products.map((product: any) =>
+                product._id === productId
+                  ? { ...product, isAvailable: !product.isAvailable }
+                  : product
+              )
+            }
           }
         });
       }
@@ -107,7 +119,7 @@ export default function ProductManagementPage() {
                     {product.speciality}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${product.price.toFixed(2)}
+                    {product.price.toFixed(2)} /-
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -124,7 +136,7 @@ export default function ProductManagementPage() {
                       type="checkbox"
                       checked={product.isAvailable}
                       onChange={() =>
-                        handleAvailabilityToggle(product._id, product.isAvailable)
+                        handleAvailabilityToggle(product._id, product.isAvailable, false)
                       }
                       className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
@@ -216,7 +228,7 @@ export default function ProductManagementPage() {
                       type="checkbox"
                       checked={product.isAvailable}
                       onChange={() =>
-                        handleAvailabilityToggle(product._id, product.isAvailable)
+                        handleAvailabilityToggle(product._id, product.isAvailable, true)
                       }
                       className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />

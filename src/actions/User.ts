@@ -19,7 +19,7 @@ export const getUserByMail = async (email: string) => {
     }
 }
 
-export const getUserByContact = async (contact: number) => {
+export const getUserByContact = async (contact: number | string) => {
     try {
         await connectToDatabase()
         const userData = await User.findOne({ contact })

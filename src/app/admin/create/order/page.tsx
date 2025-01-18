@@ -1,98 +1,134 @@
-"use client"
-import { addUserDetails, getUserByMail, getUserByContact } from '@/src/actions/User';
-import { UserData } from '@/src/types/user';
-import React, { useEffect, useState } from 'react'
-import { toast } from 'react-toastify';
+"use client";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
+import { UserData } from "@/src/types/user";
+import { createOrder } from "@/src/actions/Order";
+import AdminOrder from "@/src/components/adminorders/AdminOrder";
+import ShowProducts from "@/src/components/adminorders/ShowProducts";
 
-function page() {
-    const [user, setUser] = useState<UserData>({
-        _id: "",
-        name: "",
-        email: "",
-        profileImage: "",
-        contact: 0,
-        addresses: [],
-        orderDetails: [],
-        cart: [],
-        membershipStatus: []
-    });
 
-    const [email, setEmail] = useState("")
-    const [contact, setContact] = useState(0);
-    const [isAddPresent, setIsAddPresent] = useState(false);
-    const [isContact, setIsContact] = useState(false);
 
-    const handleUser = async (e: any) => {
-        e.preventDefault();
-        console.log(email)
-        const res: any = await getUserByMail(email);
-        if (res.success) {
-            if (res.user) {
-                setUser(res.user);
-            } else {
-                toast.error("User doesn't exist!")
-            }
-        } else {
-            toast.error("Failed to fetch user data")
+
+export default function Page() {
+
+    const [user, setUser] = useState<UserData | null>(null);
+    const [products, setProducts] = useState([])
+    const [orderDetails, setOrderDetails] = useState<any>({
+        user: "",
+        orders: [],
+        address: null,
+        contact: null,
+        time: null
+    })
+
+
+    const handleOrderSubmit = async () => {
+        if (orderDetails.address === null) {
+            toast.error("Please select an address for the order.");
+            return;
         }
-    }
 
-    const handleUserPhno = async (e: any) => {
-        e.preventDefault();
-        console.log(email)
-        const res: any = await getUserByContact(contact);
-        if (res.success) {
-            if (res.user) {
-                setUser(res.user);
-            } else {
-                toast.error("User doesn't exist!")
-            }
-        } else {
-            toast.error("Failed to fetch user data")
+        if (!parseInt(orderDetails.time)) {
+            toast.error("Please select any Time for the order.");
+            return;
         }
+        // Handle order submission logic here
+        const response = await createOrder(user?._id || "", orderDetails.orders, orderDetails.address, orderDetails.contact, orderDetails.time)
+
+        if (response.success) {
+            toast.success(response.message);
+        }
+    };
+
+    const removeProduct = (pId: any) => {
+        setOrderDetails((prev: any) => ({ ...prev, orders: prev.orders.filter((order: any) => order.product != pId) }))
     }
 
-    const handleBasicInfo = async (e: any) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const res = await addUserDetails(email, formData)
+    const handleQuantity = (pId: any, quantity: any) => {
+        setOrderDetails((prev: any) => {
+            const newOrders = prev.orders.map((order: any) => {
+                if (order.product == pId) {
+                    return { ...order, quantity: Math.max(1, quantity) }
+                }
+                return order;
+            })
+
+            return { ...prev, orders: newOrders }
+        })
     }
 
-
-    useEffect(() => {
-        if (user.contact) setIsContact(true);
-        if (user?.addresses?.length) setIsAddPresent(true);
-    }, [user])
     return (
-        <div>create Order
-            <form onSubmit={(e) => handleUser(e)}>
-                <input type="email" onChange={(e: any) => setEmail(e.target.value)} className='border-black border' />
-                <button>Check User</button>
-            </form>
+        <div className="container mx-auto p-6 space-y-6">
 
-            <br />
-            <br />
+            <AdminOrder user={user} setUser={setUser} orderDetails={orderDetails} setOrderDetails={setOrderDetails} />
 
-            //check by mobile number
+            {user && (
+                <div className="bg-white p-6 rounded-lg shadow-lg">
 
-            <h1>Check by phone number</h1>
-            <form onSubmit={(e) => handleUserPhno(e)}>
-                <input type="number" onChange={(e: any) => setContact(e.target.value)} className='border-black border' />
-                <button>Check User</button>
-            </form>
+                    <h3 className="font-semibold text-lg mb-4 text-gray-700">Order Summary</h3>
 
-            {(!isAddPresent || !isContact) &&
-                <form onSubmit={handleBasicInfo}>
-                    add basic details
-                    <br />
-                    {/* <input type="email" name = 'con' value={email} onChange={(e: any) => setEmail(e.target.value)} className='border-black border' /> */}
-                    <input type='tel' name='contact' className='border-black border' />
-                    <input type="number" name='number' className='border-black border' />
-                    <button>sub</button>
-                </form>}
+                    {user.email && <ShowProducts products={products} setProducts={setProducts} setOrderDetails={setOrderDetails} isMembership={false} />}
+
+                    <div className="mt-6">
+                        <h3 className="font-semibold text-lg mb-4">Orders</h3>
+                        <div className="space-y-4">
+                            {orderDetails.orders.map((order: any, idx: any) => (
+                                <div
+                                    key={idx}
+                                    className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-md"
+                                >
+
+                                    <div className="font-medium text-gray-800">
+                                        Product: {order.title}
+                                    </div>
+
+                                    <input
+                                        type="number"
+                                        name="quantity"
+                                        value={order.quantity}
+                                        onChange={(e: any) =>
+                                            handleQuantity(order.product, e.target.value)
+                                        }
+                                        className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                        min={1}
+                                    />
+
+
+                                    <button
+                                        onClick={() => removeProduct(order.product)}
+                                        className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-all"
+                                    >
+                                        Remove
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-6">
+                        <label className="block text-gray-600 mb-2">Time:</label>
+                        <select
+                            name="time"
+                            onChange={(e) => setOrderDetails((prev: any) => ({ ...prev, time: e.target.value }))}
+                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
+                        >
+                            <option value="0">Select</option>
+                            <option value="9">09 AM</option>
+                            <option value="12">12 PM</option>
+                            <option value="15">03 PM</option>
+                            <option value="18">06 PM</option>
+                        </select>
+                    </div>
+
+                    <button
+                        onClick={handleOrderSubmit}
+                        className="w-full bg-green-600 text-white py-2 mt-6 rounded-md hover:bg-green-700"
+                    >
+                        create Order
+                    </button>
+                </div>
+
+            )}
         </div>
-    )
+    );
 }
-
-
-export default page

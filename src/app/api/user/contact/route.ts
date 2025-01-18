@@ -10,13 +10,13 @@ export async function PUT(req: Request) {
 
         const { id, contact } = await req.json();
 
-        console.log(id,contact)
+        console.log(id, contact)
 
         const user = await User.findByIdAndUpdate(
             id, { contact }, { new: true }
         );
 
-        return NextResponse.json(user);
+        return NextResponse.json({ success: true, user });
     } catch (error) {
         return NextResponse.json(
             { error: "Failed to update contact" },

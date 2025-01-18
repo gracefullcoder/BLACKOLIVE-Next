@@ -66,8 +66,13 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
     try {
         await connectToDatabase()
-        const { productId, isAvailable } = await req.json();
-        const product = await Product.findByIdAndUpdate(productId, { isAvailable })
+        const { productId, isAvailable, isMembership } = await req.json();
+
+        if (isMembership) {
+            const product = await MembershipProduct.findByIdAndUpdate(productId, { isAvailable })
+        } else {
+            const product = await Product.findByIdAndUpdate(productId, { isAvailable })
+        }
 
         return NextResponse.json({ success: true, message: "Updated!" })
     } catch (error) {
