@@ -6,6 +6,7 @@ import Order from "../models/order";
 import User from "../models/user";
 import { revalidatePath } from "next/cache";
 import MembershipProduct from "../models/membershipproducts";
+import Product from "../models/product";
 
 export const createOrder = async (
     userId: string,
@@ -195,7 +196,7 @@ export async function getAllOrders() {
     try {
         await connectToDatabase();
         const orders = await Order.find()
-            .populate('orders.product')
+            .populate({ path: 'orders.product', model: Product })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(orders));
     } catch (error) {
