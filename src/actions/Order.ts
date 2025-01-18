@@ -194,7 +194,7 @@ export async function useBonus(idx: number, orderId: String) {
 export async function getAllOrders() {
     try {
         await connectToDatabase();
-        const orders = await Order.find({})
+        const orders = await Order.find()
             .populate('orders.product')
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(orders));

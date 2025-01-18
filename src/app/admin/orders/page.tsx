@@ -33,6 +33,7 @@ export default function OrdersPage() {
         try {
             setLoading(true);
             const data = await getAllOrders();
+            console.log(data)
             setOrders(data);
             setError('');
         } catch (err) {

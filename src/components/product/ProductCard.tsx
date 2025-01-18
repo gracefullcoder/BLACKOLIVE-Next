@@ -1,7 +1,7 @@
-// "use client"
+"use client"
 import Link from 'next/link';
 import { productType } from '@/src/types/product';
-import { IKImage } from 'imagekitio-next';
+// import { IKImage } from 'imagekitio-next';
 
 function ProductCard({ _id, image, title, speciality, price, finalPrice, details }: productType) {
   return (
@@ -13,8 +13,8 @@ function ProductCard({ _id, image, title, speciality, price, finalPrice, details
       <div className="border border-gray-300 w-fit p-4 rounded-3xl pb-8 transition-transform transform hover:scale-105 hover:shadow-lg">
         <div className="overflow-hidden rounded-lg">
           <img
-            // urlEndpoint='https://ik.imagekit.io/vaibhav11'
-            src={image}
+            // urlEndpoint='https://ik.imagekit.io/blackolive/BLACKOLIVE'
+            src={`${image}?tr=h-400%2Cw-320`}
             alt={title}
             className="h-[24rem] w-[19rem] object-cover mb-4 transition-transform transform group-hover:scale-110"
             loading="lazy"
