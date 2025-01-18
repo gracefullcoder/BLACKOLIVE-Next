@@ -28,7 +28,7 @@ const productSchema = new mongoose.Schema({
     },
     responses: [
         {
-            type: mongoose.Schema.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             ref: "Feedback"
         }
     ]

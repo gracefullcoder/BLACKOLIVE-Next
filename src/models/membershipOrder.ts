@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const membershipSchema = new mongoose.Schema({
     user: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
     category: {
-        type: mongoose.Schema.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "MembershipProduct"
     },
     startDate: {

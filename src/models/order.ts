@@ -9,14 +9,14 @@ const orderSchema = new mongoose.Schema({
     orders: [
         {
             product: {
-                type: Schema.ObjectId,
+                type: Schema.Types.ObjectId,
                 ref: "Product"
             },
             quantity: {
                 type: Number
             },
             reponse: {
-                type: Schema.ObjectId,
+                type: Schema.Types.ObjectId,
                 ref: "Feedback"
             }
         }
