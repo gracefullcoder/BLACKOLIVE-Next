@@ -1,19 +1,20 @@
 "use server"
-import axios from "axios";
 import connectToDatabase from "../lib/ConnectDb";
 import MembershipOrder from "../models/membershipOrder";
 import Order from "../models/order";
 import User from "../models/user";
-import { revalidatePath } from "next/cache";
 import MembershipProduct from "../models/membershipproducts";
 import Product from "../models/product";
+import { getServerSession } from "next-auth";
+import AuthConfig from "../lib/auth";
 
 export const createOrder = async (
     userId: string,
     orderItems: Array<{ product: string, quantity: number }>,
     addressId: number,
     contact: number,
-    time: number
+    time: number,
+    message: string
 ) => {
     try {
         const user = await User.findById(userId);
@@ -49,11 +50,13 @@ export const createOrder = async (
         }
 
         const order = await Order.create({
+            user: userId,
             orders: orderItems,
             address: selectedAddress,
             contact: contact || user.contact,
             time,
-            overallRating: 0
+            overallRating: 0,
+            message
         });
 
         await User.findByIdAndUpdate(userId, {
@@ -99,7 +102,8 @@ export const createMembership = async (
     addressId: number,
     contact: number,
     time: number,
-    startDate: Date
+    startDate: Date,
+    message: string
 ) => {
     try {
         const user = await User.findById(userId);
@@ -121,12 +125,14 @@ export const createMembership = async (
 
         const order = await MembershipOrder.create({
             category: orderItem,
+            user: userId,
             address: selectedAddress,
             contact: contact || user.contact,
             time,
             overallRating: 0,
             startDate,
-            deliveryGraph
+            deliveryGraph,
+            message
         });
 
         await User.findByIdAndUpdate(userId, {
@@ -209,8 +215,32 @@ export async function useBonus(idx: number, orderId: String) {
         return { success: true, message: "Bonus Used!", updatedIdx }
     }
     return { success: false, message: "All Bonus Used!" }
-
 }
+
+export const postponeMembership = async (mId: string) => {
+    const membership = await MembershipOrder.findById(mId);
+
+    if (!membership) return { success: false, message: "Membership doesn't exist" }
+
+
+    if (membership.status != "delivered") {
+        const utcDate = new Date();
+        utcDate.setDate(utcDate.getDate() + 1)
+        utcDate.setUTCHours(0, 0, 0, 0);
+
+        if (membership?.postponedDates?.some((date: any) => (date.toString() == utcDate.toString()))) {
+            return { success: false, message: "Already Added for postpone" }
+        } else {
+            console.log("Herer to update psotoen dat", membership.postponedDates, utcDate)
+            await MembershipOrder.findByIdAndUpdate(mId, { $push: { postponedDates: utcDate } })
+            return { success: true, message: `Order Postponed for Date ${utcDate.getDate()}` }
+        }
+
+    } else {
+        return { success: false, message: "Membership Is Completed" }
+    }
+}
+
 // Get all orders
 export async function getAllOrders() {
     try {
@@ -229,12 +259,85 @@ export async function getAllOrders() {
 export async function updateOrderStatus(orderId: any, newStatus: any) {
     try {
         await connectToDatabase();
-        const updatedOrder = await Order.findByIdAndUpdate(
-            orderId,
-            { status: newStatus },
-            { new: true }
-        ).populate('orders.product');
-        return JSON.parse(JSON.stringify(updatedOrder));
+        const { user } = await getServerSession(AuthConfig);
+
+        if (user && user.isAdmin) {
+            if (newStatus == "assign") {
+                const updatedOrder = await Order.findByIdAndUpdate(
+                    orderId,
+                    { status: "assigned", assignedTo: user._id },
+                    { new: true }
+                ).populate('orders.product');
+                return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+            else if (newStatus == "unassign") {
+                const updatedOrder = await Order.findByIdAndUpdate(
+                    orderId,
+                    { status: "pending", assignedTo: null },
+                    { new: true }
+                ).populate('orders.product');
+                return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+            else if (newStatus == "delivered") {
+                const updatedOrder = await Order.findByIdAndUpdate(
+                    orderId,
+                    { status: "delivered" },
+                    { new: true }
+                ).populate('orders.product');
+                return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+        } else {
+            return { success: false, message: "You are Not authorized" }
+        }
+
+    } catch (error) {
+        console.error("Error updating order status:", error);
+        throw error;
+    }
+}
+
+export async function updateMembershipStatus(orderId: any, newStatus: any) {
+    try {
+        await connectToDatabase();
+        const { user } = await getServerSession(AuthConfig);
+
+        if (user && user.isAdmin) {
+            if (newStatus == "assign") {
+                const updatedOrder = await MembershipOrder.findByIdAndUpdate(
+                    orderId,
+                    { status: "assigned", assignedTo: user._id },
+                    { new: true }
+                ).populate('category');
+                return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+            else if (newStatus == "unassign") {
+                const updatedOrder = await MembershipOrder.findByIdAndUpdate(
+                    orderId,
+                    { status: "pending", assignedTo: null },
+                    { new: true }
+                ).populate('category');
+                return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+            else if (newStatus == "delivered") {
+                const utcDate = new Date();
+                utcDate.setUTCHours(0, 0, 0, 0);
+                const updatedOrder = await MembershipOrder.findByIdAndUpdate(
+                    orderId,
+                    { $push: { deliveryDates: utcDate } },
+                    { new: true }
+                ).populate('category');
+
+                if (updatedOrder.deliveryDates.length === updatedOrder.category.days) {
+                    updatedOrder.status = "delivered";
+                    await updatedOrder.save();
+                }
+
+                return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+        } else {
+            return { success: false, message: "You are Not authorized" }
+        }
+
     } catch (error) {
         console.error("Error updating order status:", error);
         throw error;
@@ -284,15 +387,17 @@ export async function removeProductFromOrder(orderId: any, productId: any) {
     }
 }
 
-// Get filtered orders by time range
-export async function getFilteredOrders(timeRange: any, status: any) {
+
+export async function getFilteredOrders(timeRange: any, status: any, inverse: boolean) {
     try {
         await connectToDatabase();
         let query: any = {};
 
         // Add status filter if provided
         if (status !== null) {
-            query.status = status;
+            query.status = inverse ?
+                { $ne: status }
+                : status
         }
 
         // Add time filter
@@ -303,18 +408,18 @@ export async function getFilteredOrders(timeRange: any, status: any) {
             switch (timeRange) {
                 case 'morning':
                     startTime.setHours(6, 0, 0);
-                    query.time = { $gte: 6, $lt: 12 };
+                    query.time = { $gte: 0, $lt: 12 };
                     break;
                 case 'afternoon':
                     startTime.setHours(12, 0, 0);
-                    query.time = { $gte: 12, $lt: 17 };
+                    query.time = { $gte: 12, $lt: 15 };
                     break;
                 case 'evening':
                     startTime.setHours(17, 0, 0);
-                    query.time = { $gte: 17, $lt: 23 };
+                    query.time = { $gte: 15, $lt: 17 };
                     break;
                 case 'night':
-                    query.time = { $gte: 0, $lt: 6 };
+                    query.time = { $gte: 17, $lt: 24 };
                     break;
             }
         }
@@ -330,11 +435,68 @@ export async function getFilteredOrders(timeRange: any, status: any) {
     }
 }
 
+export async function getFilteredMemberships(timeRange: any, status: any, inverse: boolean, active: boolean, delivery: boolean) {
+    try {
+        await connectToDatabase();
+        let query: any = {};
+
+        if (status !== null) {
+            query.status = inverse ?
+                { $ne: status }
+                : status
+        }
+        const utcDate = new Date();
+        utcDate.setUTCHours(0, 0, 0, 0);
+
+        if (active) {
+            query.startDate = { $lte: utcDate }
+        }
+
+        if (delivery) {
+            query.deliveryDates = { $nin: [utcDate] }
+            query.postponedDates = { $nin: [utcDate] }
+        }
+
+        // Add time filter
+        if (timeRange) {
+            const currentTime = new Date();
+            const startTime = new Date(currentTime);
+
+            switch (timeRange) {
+                case 'morning':
+                    startTime.setHours(6, 0, 0);
+                    query.time = { $gte: 0, $lt: 12 };
+                    break;
+                case 'afternoon':
+                    startTime.setHours(12, 0, 0);
+                    query.time = { $gte: 12, $lt: 15 };
+                    break;
+                case 'evening':
+                    startTime.setHours(17, 0, 0);
+                    query.time = { $gte: 15, $lt: 17 };
+                    break;
+                case 'night':
+                    query.time = { $gte: 17, $lt: 24 };
+                    break;
+            }
+        }
+
+        const mermberships = await MembershipOrder.find(query)
+            .populate('category')
+            .sort({ createdAt: -1 });
+
+        return JSON.parse(JSON.stringify(mermberships));
+    } catch (error) {
+        console.error("Error fetching filtered mermberships:", error);
+        throw error;
+    }
+}
+
 // Get all orders
 export async function getAllMembership() {
     try {
         await connectToDatabase();
-        const membership = await Order.find({})
+        const membership = await MembershipOrder.find({})
             .populate('category')
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(membership));

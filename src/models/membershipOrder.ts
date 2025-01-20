@@ -30,9 +30,30 @@ const membershipSchema = new mongoose.Schema({
         type: Number,
         length: 10
     },
+    message: {
+        type: String
+    },
+    status: {
+        type: String,
+        default:"pending"
+    },
+    assignedTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
+    },
     deliveryGraph: [{
         type: Number
     }],
+    deliveryDates: [
+        {
+            type: Date
+        }
+    ],
+    postponedDates: [
+        {
+            type: Date
+        }
+    ],
     bonusUsed: {
         type: Number,
         default: 0

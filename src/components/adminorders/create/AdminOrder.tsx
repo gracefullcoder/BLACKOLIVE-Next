@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import UserSearch from "@/src/components/adminorders/UserSearch";
-import UserDetails from "@/src/components/adminorders/UserDetails";
-import AddressForm from "@/src/components/adminorders/AddressForm";
-import AddressList from "@/src/components/adminorders/AddressList";
+import UserSearch from "@/src/components/adminorders/create/UserSearch";
+import UserDetails from "@/src/components/adminorders/create/UserDetails";
+import AddressForm from "@/src/components/adminorders/create/AddressForm";
+import AddressList from "@/src/components/adminorders/create/AddressList";
 import axios from "axios";
 import { getUserByMail, getUserByContact } from "@/src/actions/User";
 import { toast } from 'react-toastify';
