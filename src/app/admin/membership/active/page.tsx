@@ -147,13 +147,20 @@ export default function OrdersPage() {
                     <table className="table-auto w-full border-collapse border border-gray-300">
                         <thead>
                             <tr>
-                                <th className="border border-gray-300 px-4 py-2">Product Name</th>
-                                <th className="border border-gray-300 px-4 py-2">Message</th>
+                                <th className="border-2 border-black px-4 py-2">Order Details</th>
+                                <th className="border-2 border-black px-4 py-2">Product Name</th>
+                                <th className="border-2 border-black px-4 py-2">Message</th>
                             </tr>
                         </thead>
                         <tbody>
                             {orders.filter((order: any) => order.message).map((orderDet: any, idx: any) =>
                             (<tr key={`${orderDet._id}-${idx}`}>
+
+                                {idx === 0 && (<td className='border border-gray-300 px-4 py-2'>
+                                    <p>Id: {orderDet._id}</p>
+                                    <p>Name: {orderDet.user.name}</p>
+                                    <span>Address:</span> {orderDet.address.address}, {orderDet.address.landmark}, {orderDet.address.pincode}
+                                </td>)}
                                 <td className="border border-gray-300 px-4 py-2">
                                     <p>{orderDet.category.title}</p>
                                 </td>

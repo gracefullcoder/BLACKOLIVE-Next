@@ -1,11 +1,10 @@
+"use client"
 import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
 
-export default function OrderAnalytics() {
-    const [orders, setOrders] = useState<any>([]);
-    const [loading, setLoading] = useState(true);
+export default function OrderAnalytics({ orders }: any) {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [filteredOrders, setFilteredOrders] = useState<any>([]);
@@ -15,7 +14,7 @@ export default function OrderAnalytics() {
         totalOrders: 0,
         topDeliveryPerson: { id: '', count: 0 },
         customerAnalytics: [],
-        productOrderCounts: {}
+        productOrderCounts: []
     });
 
     const applyFilters = () => {
@@ -34,18 +33,6 @@ export default function OrderAnalytics() {
     // Calculate all analytics metrics
     const calculateAnalytics = (filteredOrders: any) => {
         // Most ordered product
-        const productCounts: any = {};
-        filteredOrders.forEach((order: any) => {
-            order.orders.forEach((item: any) => {
-                const productId = item.product._id;
-                productCounts[productId] = (productCounts[productId] || 0) + item.quantity;
-            });
-        });
-
-        const mostOrdered = Object.entries(productCounts).reduce((max: any, [id, count]: any) => {
-            return count > max.count ? { id, count } : max;
-        }, { id: '', count: 0 });
-
         const productOrderCounts: any = {};
         filteredOrders.forEach((order: any) => {
             order.orders.forEach((item: any) => {
@@ -61,9 +48,9 @@ export default function OrderAnalytics() {
             });
         });
 
-        console.log(Object.values(productOrderCounts))
-
-
+        const mostOrdered = Object.values(productOrderCounts).reduce((max: any, { title, count }: any) => {
+            return count > max.count ? { title, count } : max;
+        }, { title: '', count: 0 });
 
         // Calculate revenue and delivery stats
         const revenue = filteredOrders.reduce((total: any, order: any) => {
@@ -83,9 +70,9 @@ export default function OrderAnalytics() {
         // Customer analytics
         const customerStats: any = {};
         filteredOrders.forEach((order: any) => {
-            const userId = order.user;
+            const userId = order.user._id;
             if (!customerStats[userId]) {
-                customerStats[userId] = { revenue: 0, orderCount: 0 };
+                customerStats[userId] = { name: order.user.name, email: order.user.email, revenue: 0, orderCount: 0 };
             }
             customerStats[userId].orderCount += 1;
             customerStats[userId].revenue += order.orders.reduce((total: any, item: any) => {
@@ -98,12 +85,7 @@ export default function OrderAnalytics() {
             .sort((a, b) => b.revenue - a.revenue);
 
         setAnalytics({
-            mostOrderedProduct: {
-                title: filteredOrders.find((order: any) =>
-                    order.orders.some((item: any) => item.product._id === mostOrdered.id)
-                )?.orders.find((item: any) => item.product._id === mostOrdered.id)?.product.title || '',
-                count: mostOrdered.count
-            },
+            mostOrderedProduct: mostOrdered,
             totalRevenue: revenue,
             totalOrders: filteredOrders.length,
             topDeliveryPerson: Object.entries(deliveryStats).reduce(
@@ -117,7 +99,7 @@ export default function OrderAnalytics() {
 
     // Generate and download Excel
     const downloadExcel = () => {
-        let csv = 'Order ID,Date,Customer ID,Status,Assigned To,Products,Quantity,Price,Total\n';
+        let csv = 'Order ID,Date,Customer Name,Customer Email,Address,Mobile Number,Status,Assigned To,Products,Quantity,Price,Total\n';
 
         let grandTotal = 0;
         filteredOrders.forEach((order: any) => {
@@ -125,13 +107,13 @@ export default function OrderAnalytics() {
             order.orders.forEach((item: any) => {
                 const total = item.quantity * item.product.finalPrice;
                 orderTotal += total;
-                csv += `${order._id},${new Date(order.createdAt).toLocaleDateString()},${order.user},${order.status},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${total}\n`;
+                csv += `${order._id},${new Date(order.createdAt).toLocaleDateString()},${order.user.name},${order.user.email},${order.address.address} ${order.address.landmark} ${order.address.pincode},${order.contact},${order.status},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${total}\n`;
             });
-            csv += `,,,,,,,,Order Total: ${orderTotal}\n`;
+            csv += `,,,,,,,,,,,Order Total: ${orderTotal}\n`;
             grandTotal += orderTotal;
         });
 
-        csv += `,,,,,,,,Grand Total: ${grandTotal}\n`;
+        csv += `,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
 
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -143,39 +125,39 @@ export default function OrderAnalytics() {
     };
 
     useEffect(() => {
-        const data = JSON.parse(document?.getElementById('initial-data')?.textContent || "");
-        setOrders(data);
-        setFilteredOrders(data);
-        calculateAnalytics(data);
-        setLoading(false);
+        setFilteredOrders(orders);
+        calculateAnalytics(orders);
     }, []);
 
-    if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
 
     return (
         <div className="space-y-6 p-4">
             <div className="flex flex-wrap gap-4 items-center justify-between">
                 <h1 className="text-2xl font-bold">Order Analytics</h1>
-                <div className="flex gap-4">
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="border rounded p-2"
-                    />
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="border rounded p-2"
-                    />
-                    <button onClick={applyFilters} className="bg-blue-500 text-white px-4 py-2 rounded">
-                        Apply Filter
-                    </button>
-                    <button onClick={downloadExcel} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
-                        <Download className="w-4 h-4" />
-                        Export Excel
-                    </button>
+                <div className="flex gap-4 flex-wrap">
+                    <div className='flex gap-4'>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="border rounded p-2"
+                        />
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="border rounded p-2"
+                        />
+                    </div>
+                    <div className='flex gap-4'>
+                        <button onClick={applyFilters} className="bg-blue-500 text-white px-4 py-2 rounded">
+                            Apply Filter
+                        </button>
+                        <button onClick={downloadExcel} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
+                            <Download className="w-4 h-4" />
+                            Export Excel
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -213,7 +195,7 @@ export default function OrderAnalytics() {
                             </tr>
                         </thead>
                         <tbody>
-                            {analytics.productOrderCounts?.map((product: any) => (
+                            {analytics?.productOrderCounts?.map((product: any) => (
                                 <tr key={product.title}>
                                     <td className="p-2 border">{product.title}</td>
                                     <td className="p-2 border">{product.count}</td>
@@ -241,11 +223,14 @@ export default function OrderAnalytics() {
 
                                     <td className="p-2 border cursor-pointer">
                                         <Link href={`/admin/users/details?userId=${customer.id}`}>
-                                            {customer.id}
+                                            <p>{customer.id}</p>
+                                            <p>{customer.name}</p>
+                                            <p>{customer.email}</p>
                                         </Link>
                                     </td>
                                     <td className="p-2 border">{customer.orderCount}</td>
                                     <td className="p-2 border">₹{customer.revenue}</td>
+
                                 </tr>
                             ))}
                         </tbody>

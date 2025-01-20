@@ -246,7 +246,7 @@ export async function getAllOrders() {
     try {
         await connectToDatabase();
         const orders = await Order.find()
-            .populate({ path: 'orders.product', model: Product })
+            .populate({ path: 'orders.product', model: Product }).populate({path:'user',select:"name email contact"})
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(orders));
     } catch (error) {
@@ -425,7 +425,7 @@ export async function getFilteredOrders(timeRange: any, status: any, inverse: bo
         }
 
         const orders = await Order.find(query)
-            .populate('orders.product')
+            .populate('orders.product').populate({path:'user',select:"name email contact"})
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(orders));
@@ -482,7 +482,7 @@ export async function getFilteredMemberships(timeRange: any, status: any, invers
         }
 
         const mermberships = await MembershipOrder.find(query)
-            .populate('category')
+            .populate('category').populate({path:'user',select:"name email contact"})
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(mermberships));
@@ -497,7 +497,7 @@ export async function getAllMembership() {
     try {
         await connectToDatabase();
         const membership = await MembershipOrder.find({})
-            .populate('category')
+            .populate('category').populate({path:'user',select:"name email contact"})
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(membership));
     } catch (error) {

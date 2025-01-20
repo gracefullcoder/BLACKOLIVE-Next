@@ -32,14 +32,8 @@ export default function Page() {
     return (
         <div className="p-4 max-w-7xl mx-auto">
             {error && <div className="bg-red-100 text-red-700 p-3 mb-4 rounded">{error}</div>}
-            
-            <script 
-                id="initial-data" 
-                type="application/json" 
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(orders) }}
-            />
-            
-            <MembershipAnalytics />
+
+            <MembershipAnalytics memberships={orders} />
         </div>
     );
 }
