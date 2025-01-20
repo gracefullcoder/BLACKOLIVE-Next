@@ -111,7 +111,7 @@ const MyOrders = ({ orders }: any) => {
                     {orders?.membershipDetails?.map((membership: any) => (
                         <div
                             key={membership._id}
-                            // onClick={() => router.push(`/order/membership/?id=${membership._id}`)}
+                            onClick={() => router.push(`/order/membership/?id=${membership._id}`)}
                             className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4"
                         >
                             <div className="space-y-3">

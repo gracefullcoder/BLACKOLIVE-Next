@@ -5,7 +5,6 @@ import AuthConfig from '@/src/lib/auth';
 import { getServerSession } from 'next-auth';
 
 
-
 async function MembershipOrderPage({ searchParams }: { searchParams: any }) {
   const param = await searchParams
   console.log(param)
