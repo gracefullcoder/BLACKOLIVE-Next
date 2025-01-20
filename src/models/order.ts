@@ -39,14 +39,28 @@ const orderSchema = new mongoose.Schema({
         min: 0,
         max: 24
     },
+    instant: {
+        type: Boolean,
+        default: false
+    },
     overallRating: {
         type: Number,
         min: 0,
         max: 5
     },
     status: {
-        type: Boolean,
-        default: false
+        type: String,
+        default: "pending"
+    },
+    assignedTo: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
+    deliveryDate: {
+        type: Date
+    },
+    message: {
+        type: String
     }
 }, { timestamps: true })
 

@@ -66,7 +66,7 @@ function ProductDetails({ product }: { product: productType }) {
 
 
     //for membership
-    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any }>({ time: product?.timings ? product?.timings[1] : 0, startDate: new Date() });
+    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any, message: string }>({ time: product?.timings ? product?.timings[1] : 0, startDate: new Date(), message: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<number>(-1);
 
@@ -126,7 +126,8 @@ function ProductDetails({ product }: { product: productType }) {
                 selectedAddress,
                 userContact,
                 membershipDetails.time,
-                membershipDetails.startDate
+                membershipDetails.startDate,
+                membershipDetails.message
             );
 
             if (response.success) {
@@ -241,6 +242,8 @@ function ProductDetails({ product }: { product: productType }) {
                         }
 
 
+
+
                         {!product.bonus ? (!existingCartItem && (
                             <button
                                 className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
@@ -251,14 +254,24 @@ function ProductDetails({ product }: { product: productType }) {
                                 Add to Cart
                             </button>
                         )) :
-                            <button
-                                className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
+
+                            <div>
+                                <div className="my-4">
+                                    <label className="block text-gray-600 mb-2">Message:</label>
+
+                                    <input type="text" onChange={(e: any) => setMembershipDetails((prev: any) => ({ ...prev, message: e.target.value }))}
+                                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
+                                        placeholder='Need Changes ?' />
+                                </div>
+                                <button
+                                    className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
                                       bg-green-600 hover:bg-green-700 text-white cursor-pointer
                                     `}
-                                onClick={handleMembership}
-                            >
-                                Buy Membership
-                            </button>}
+                                    onClick={handleMembership}
+                                >
+                                    Buy Membership
+                                </button>
+                            </div>}
                     </> :
 
                         <div className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
