@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { UserData } from "@/src/types/user";
 import { createOrder } from "@/src/actions/Order";
-import AdminOrder from "@/src/components/adminorders/AdminOrder";
-import ShowProducts from "@/src/components/adminorders/ShowProducts";
+import AdminOrder from "@/src/components/adminorders/create/AdminOrder";
+import ShowProducts from "@/src/components/adminorders/create/ShowProducts";
 
 
 
@@ -18,7 +18,8 @@ export default function Page() {
         orders: [],
         address: null,
         contact: null,
-        time: null
+        time: null,
+        message: ""
     })
 
 
@@ -33,7 +34,7 @@ export default function Page() {
             return;
         }
         // Handle order submission logic here
-        const response = await createOrder(user?._id || "", orderDetails.orders, orderDetails.address, orderDetails.contact, orderDetails.time)
+        const response = await createOrder(user?._id || "", orderDetails.orders, orderDetails.address, orderDetails.contact, orderDetails.time, orderDetails.message)
 
         if (response.success) {
             toast.success(response.message);
@@ -118,6 +119,13 @@ export default function Page() {
                             <option value="15">03 PM</option>
                             <option value="18">06 PM</option>
                         </select>
+                    </div>
+
+                    <div className="mt-6">
+                        <label className="block text-gray-600 mb-2">Message:</label>
+
+                        <input type="text" onChange={(e: any) => setOrderDetails((prev: any) => ({ ...prev, message: e.target.value }))}
+                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300" />
                     </div>
 
                     <button

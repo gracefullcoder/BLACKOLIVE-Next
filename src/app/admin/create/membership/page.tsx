@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import { UserData } from "@/src/types/user";
-import ShowProducts from "@/src/components/adminorders/ShowProducts";
-import AdminOrder from "@/src/components/adminorders/AdminOrder";
+import ShowProducts from "@/src/components/adminorders/create/ShowProducts";
+import AdminOrder from "@/src/components/adminorders/create/AdminOrder";
 import { toast } from "react-toastify";
 import { createMembership } from "@/src/actions/Order";
 
@@ -17,7 +17,8 @@ export default function Page() {
         address: null,
         contact: null,
         time: null,
-        date: null
+        date: null,
+        message:""
     })
 
     const handleNewMembership = async () => {
@@ -41,7 +42,7 @@ export default function Page() {
             return;
         }
 
-        const response = await createMembership(user?._id || "", membershipDetails.orders[0].product, membershipDetails.address, membershipDetails.contact, membershipDetails.time, membershipDetails.date)
+        const response = await createMembership(user?._id || "", membershipDetails.orders[0].product, membershipDetails.address, membershipDetails.contact, membershipDetails.time, membershipDetails.date,membershipDetails.message)
 
         if (response.success) {
             toast.success(response.message);
@@ -112,6 +113,13 @@ export default function Page() {
                             </div>
                         </div>
                     </div>
+                    <div className="mt-6">
+                        <label className="block text-gray-600 mb-2">Message:</label>
+
+                        <input type="text" onChange={(e: any) => setMembershipsDetails((prev: any) => ({ ...prev, message: e.target.value }))}
+                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300" />
+                    </div>
+
 
                     <button
                         onClick={handleNewMembership}
