@@ -52,7 +52,7 @@ function orderCard({ order, setOrders, setError, session }: any) {
     };
 
     return (
-        <div key={order._id} className="border rounded-lg p-4 bg-white shadow">
+        <div key={order._id} className="border rounded-lg p-4 bg-white shadow" id={order._id}>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="font-semibold">Order #{order._id.slice(-6)}</h2>
                 <span className={`px-2 py-1 rounded text-sm ${order.status == "delivered" ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
@@ -61,13 +61,22 @@ function orderCard({ order, setOrders, setError, session }: any) {
                 </span>
             </div>
 
-            <div className="mb-4">
+            <div className='mb-1 pb-2  border-b'>
+                <h1 className='font-semibold'>User Details</h1>
+                <p>Id: {order.user._id}</p>
+                <p>Name : {order?.user?.name}</p>
+                <p>email: {order?.user?.email}</p>
+            </div>
+
+            <div className="mb-2">
                 <p>Delivery Time: {order.time}:00</p>
                 <p>Contact: {order.contact}</p>
-                <p className="text-sm">
-                    Address: {order.address.address}, {order.address.landmark}, {order.address.pincode}
+                <p className='font-semibold mt-1'>
+                    <span>Address:</span> {order.address.address}, {order.address.landmark}, {order.address.pincode}
                 </p>
             </div>
+
+
 
             <div className="border-t pt-4">
                 <h3 className="font-semibold mb-2">Products</h3>
@@ -102,8 +111,8 @@ function orderCard({ order, setOrders, setError, session }: any) {
                 ))}
             </div>
 
-           {order.message &&  <div className='mt-4'>
-            <h3 className="font-semibold mb-2">Message</h3>
+            {order.message && <div className='mt-4'>
+                <h3 className="font-semibold mb-2">Message</h3>
                 <p className='text-red-400 font-medium'>{order.message}</p>
             </div>}
 

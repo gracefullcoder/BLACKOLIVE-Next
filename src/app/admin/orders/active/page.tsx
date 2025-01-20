@@ -13,6 +13,7 @@ export default function OrdersPage() {
     const [orderItems, setOrderItems] = useState(new Map());
     const [isActive, setIsActive] = useState(false);
 
+
     useEffect(() => {
         fetchFilteredOrders();
     }, [timeFilter, session.data, isActive]);
@@ -53,6 +54,7 @@ export default function OrdersPage() {
                 mapProducts(myOrders);
                 setOrders(myOrders);
             } else {
+                console.log(data)
                 mapProducts(data);
                 setOrders(data);
             }
@@ -115,6 +117,49 @@ export default function OrdersPage() {
 
             </div>
 
+            {/* Messaged Orders */}
+            <div className="my-6">
+                    <h2 className="text-lg font-semibold mb-2">Messaged Orders</h2>
+                    <table className="table-auto w-full border-collapse border border-gray-300">
+                        <thead>
+                            <tr>
+                                <th className="border-2 border-black px-4 py-2">Order Details</th>
+                                <th className="border-2 border-black px-4 py-2">Product Name</th>
+                                <th className="border-2 border-black px-4 py-2">Quantity</th>
+                                <th className="border-2 border-black px-4 py-2">Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {orders
+                                .filter((order: any) => order.message)
+                                .map((orderDet: any) =>
+                                    orderDet.orders.map((item: any, idx: any) => (
+                                        <tr key={`${orderDet._id}-${idx}`}>
+                                            {idx === 0 && (<td className='border-2 border-black border-r-gray-300 px-4 py-2' rowSpan={orderDet.orders.length}>
+                                                <p>Id: {orderDet._id}</p>
+                                                <p>Name: {orderDet.user.name}</p>
+                                                <span>Address:</span> {orderDet.address.address}, {orderDet.address.landmark}, {orderDet.address.pincode}
+                                                </td>)}
+                                            <td className={` border border-gray-300 ${idx == orderDet.orders.length - 1 && 'border-2 border-b-black'} px-4 py-2`}>
+                                                <p>{item.product.title}</p>
+                                            </td>
+                                            <td className={` border border-gray-300 ${idx == orderDet.orders.length - 1 && 'border-2 border-b-black'} px-4 py-2`}>
+                                                <p>{item.quantity}</p>
+                                            </td>
+                                            {idx === 0 && (
+                                                <td className="border-2 border-black border-l-gray-300 px-4 py-2" rowSpan={orderDet.orders.length}>
+                                                    <p className="text-sm text-green-500 font-bold text-right">{orderDet.assignedTo == session.data?.user?._id && <>Assigned <span className="text-black">{orderDet._id.slice(-6)}</span></>}</p>
+                                                    <p className="text-red-500">{orderDet.message}</p>
+                                                </td>
+                                            )}
+                                        </tr>
+                                    ))
+                                )}
+                        </tbody>
+                    </table>
+
+                </div>
+
             {/* Orders Summary */}
             <div className="mb-6">
                 <h2 className="text-lg font-semibold mb-2">Orders Summary</h2>
@@ -140,43 +185,6 @@ export default function OrdersPage() {
                         ))}
                     </tbody>
                 </table>
-
-                {/* Messaged Orders */}
-                <div className="my-6">
-                    <h2 className="text-lg font-semibold mb-2">Messaged Orders</h2>
-                    <table className="table-auto w-full border-collapse border border-gray-300">
-                        <thead>
-                            <tr>
-                                <th className="border border-gray-300 px-4 py-2">Product Name</th>
-                                <th className="border border-gray-300 px-4 py-2">Quantity</th>
-                                <th className="border border-gray-300 px-4 py-2">Message</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders
-                                .filter((order: any) => order.message)
-                                .map((orderDet: any) =>
-                                    orderDet.orders.map((item: any, idx: any) => (
-                                        <tr key={`${orderDet._id}-${idx}`}>
-                                            <td className="border border-gray-300 px-4 py-2">
-                                                <p>{item.product.title}</p>
-                                            </td>
-                                            <td className="border border-gray-300 px-4 py-2">
-                                                <p>{item.quantity}</p>
-                                            </td>
-                                            {idx === 0 && (
-                                                <td className="border border-gray-300 px-4 py-2" rowSpan={orderDet.orders.length}>
-                                                    <p className="text-sm text-green-500 font-bold text-right">{orderDet.assignedTo == session.data?.user?._id && <>Assigned <span className="text-black">{orderDet._id.slice(-6)}</span></>}</p>
-                                                    <p className="text-red-500">{orderDet.message}</p>
-                                                </td>
-                                            )}
-                                        </tr>
-                                    ))
-                                )}
-                        </tbody>
-                    </table>
-
-                </div>
             </div>
         </div>
     );

@@ -122,16 +122,16 @@ function Navbar() {
                 MEMBERSHIP
               </Link>
             </li>
-            {/* <li className="hover:font-bold">
-              <Link href="/customize" onClick={toggleMenu}>
-                CUSTOMIZE
-              </Link>
-            </li> */}
             <li className="hover:font-bold">
               <Link href="/contact" onClick={toggleMenu}>
                 CONTACT
               </Link>
             </li>
+            {session?.data?.user?.isAdmin && <li className="hover:font-bold">
+              <Link href="/admin" onClick={toggleMenu}>
+                ADMIN
+              </Link>
+            </li>}
           </nav>
         </div>
       )}

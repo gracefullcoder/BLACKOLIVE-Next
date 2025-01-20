@@ -66,13 +66,20 @@ function MembershipCard({ order, setOrders, setError, session }: any) {
                 </span>
             </div>
 
-            <div className="mb-4">
+            <div className='mb-1 pb-2  border-b'>
+                <h1 className='font-semibold'>User Details</h1>
+                <p>Id: {order.user._id}</p>
+                <p>Name : {order?.user?.name}</p>
+                <p>email: {order?.user?.email}</p>
+            </div>
+
+            <div className="mb-4 flex flex-col gap-1">
                 <p>Membership Type : {order.category.title}</p>
                 <p>Start Date : {order.startDate.toString().slice(0, 10)}</p>
                 <p>Delivery Time: {order.time}:00</p>
                 <p>Contact: {order.contact}</p>
                 <p>Total Days Delivered : <span className='font-bold'>{order?.deliveryDates?.length || 0}</span></p>
-                <p className="text-sm">
+                <p className="font-semibold">
                     Address: {order.address.address}, {order.address.landmark}, {order.address.pincode}
                 </p>
             </div>

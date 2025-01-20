@@ -3,9 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
 // import { Link } from 'next/link';
 
-export default function MembershipAnalytics() {
-    const [memberships, setMemberships] = useState<any>([]);
-    const [loading, setLoading] = useState(true);
+export default function MembershipAnalytics({ memberships }: any) {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [filteredMemberships, setFilteredMemberships] = useState<any>([]);
@@ -63,7 +61,7 @@ export default function MembershipAnalytics() {
             totalRevenue,
             topCategories,
         });
-    }; 
+    };
 
     // Generate and download Excel
     const downloadExcel = () => {
@@ -88,39 +86,38 @@ export default function MembershipAnalytics() {
     };
 
     useEffect(() => {
-        const data = JSON.parse(document?.getElementById('initial-data')?.textContent || "");
-        setMemberships(data);
-        setFilteredMemberships(data);
-        calculateAnalytics(data);
-        setLoading(false);
+        setFilteredMemberships(memberships);
+        calculateAnalytics(memberships);
     }, []);
-
-    if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
 
     return (
         <div className="space-y-6 p-4">
             <div className="flex flex-wrap gap-4 items-center justify-between">
                 <h1 className="text-2xl font-bold">Membership Analytics</h1>
-                <div className="flex gap-4">
-                    <input
-                        type="date"
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="border rounded p-2"
-                    />
-                    <input
-                        type="date"
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        className="border rounded p-2"
-                    />
-                    <button onClick={applyFilters} className="bg-blue-500 text-white px-4 py-2 rounded">
-                        Apply Filter
-                    </button>
-                    <button onClick={downloadExcel} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
-                        <Download className="w-4 h-4" />
-                        Export Excel
-                    </button>
+                <div className="flex gap-4 flex-wrap">
+                    <div className='flex gap-4'>
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="border rounded p-2"
+                        />
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="border rounded p-2"
+                        />
+                    </div>
+                    <div className='flex gap-4'>
+                        <button onClick={applyFilters} className="bg-blue-500 text-white px-4 py-2 rounded">
+                            Apply Filter
+                        </button>
+                        <button onClick={downloadExcel} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
+                            <Download className="w-4 h-4" />
+                            Export Excel
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -161,34 +158,36 @@ export default function MembershipAnalytics() {
             </div>
 
             <h2 className="text-2xl font-semibold mt-8 mb-4">Active Memberships</h2>
-            <table className="min-w-full table-auto border-collapse">
-                <thead>
-                    <tr className="bg-gray-100">
-                        <th className="py-2 px-4 border">Category</th>
-                        <th className="py-2 px-4 border">Start Date</th>
-                        <th className="py-2 px-4 border">Days Delivered</th>
-                        <th className="py-2 px-4 border">Address</th>
-                        <th className="py-2 px-4 border">Assigned To</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {memberships.map((order: any) => {
-                        const daysDelivered = order.deliveryDates.length;
-                        const categoryTitle = order.category.title;
-                        const { number, address, landmark, pincode } = order.address;
-                        const assignedTo = order.assignedTo ? 'Assigned' : 'Unassigned';
-                        return (
-                            <tr key={order._id}>
-                                <td className="py-2 px-4 border">{categoryTitle}</td>
-                                <td className="py-2 px-4 border">{new Date(order.startDate).toLocaleDateString()}</td>
-                                <td className="py-2 px-4 border">{daysDelivered} / {order.category.days}</td>
-                                <td className="py-2 px-4 border">{`${number} ${address}, ${landmark}, ${pincode}`}</td>
-                                <td className="py-2 px-4 border">{assignedTo}</td>
-                            </tr>
-                        );
-                    })}
-                </tbody>
-            </table>
+            <div className='overflow-x-auto'>
+                <table className="min-w-full table-auto border-collapse overflow-x-auto w-fit">
+                    <thead>
+                        <tr className="bg-gray-100">
+                            <th className="py-2 px-4 border">Category</th>
+                            <th className="py-2 px-4 border">Start Date</th>
+                            <th className="py-2 px-4 border">Days Delivered</th>
+                            <th className="py-2 px-4 border">Address</th>
+                            <th className="py-2 px-4 border">Assigned To</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {memberships.map((order: any) => {
+                            const daysDelivered = order.deliveryDates.length;
+                            const categoryTitle = order.category.title;
+                            const { number, address, landmark, pincode } = order.address;
+                            const assignedTo = order.assignedTo ? 'Assigned' : 'Unassigned';
+                            return (
+                                <tr key={order._id}>
+                                    <td className="py-2 px-4 border">{categoryTitle}</td>
+                                    <td className="py-2 px-4 border">{new Date(order.startDate).toLocaleDateString()}</td>
+                                    <td className="py-2 px-4 border">{daysDelivered} / {order.category.days}</td>
+                                    <td className="py-2 px-4 border">{`${number} ${address}, ${landmark}, ${pincode}`}</td>
+                                    <td className="py-2 px-4 border">{assignedTo}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
 
             {/* Filtered Membership Table based on Date Range */}
             <div>
@@ -210,36 +209,38 @@ export default function MembershipAnalytics() {
                     />
                 </div> */}
 
-                <table className="min-w-full table-auto border-collapse">
-                    <thead>
-                        <tr className="bg-gray-100">
-                            <th className="py-2 px-4 border">Category</th>
-                            <th className="py-2 px-4 border">Start Date</th>
-                            <th className="py-2 px-4 border">Days Delivered</th>
-                            <th className="py-2 px-4 border">Address</th>
-                            <th className="py-2 px-4 border">Assigned To</th>
-                            <th className="py-2 px-4 border">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {filteredMemberships.map((order: any) => {
-                            const daysDelivered = order.deliveryDates.length;
-                            const categoryTitle = order.category.title;
-                            const { number, address, landmark, pincode } = order.address;
-                            const assignedTo = order.assignedTo ? 'Assigned' : 'Unassigned';
-                            return (
-                                <tr key={order._id}>
-                                    <td className="py-2 px-4 border">{categoryTitle}</td>
-                                    <td className="py-2 px-4 border">{new Date(order.startDate).toLocaleDateString()}</td>
-                                    <td className="py-2 px-4 border">{daysDelivered} / {order.category.days}</td>
-                                    <td className="py-2 px-4 border">{`${number} ${address}, ${landmark}, ${pincode}`}</td>
-                                    <td className="py-2 px-4 border">{assignedTo}</td>
-                                    <td className="py-2 px-4 border">{order.status}</td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                <div className='overflow-x-auto'>
+                    <table className="min-w-full table-auto border-collapse">
+                        <thead>
+                            <tr className="bg-gray-100">
+                                <th className="py-2 px-4 border">Category</th>
+                                <th className="py-2 px-4 border">Start Date</th>
+                                <th className="py-2 px-4 border">Days Delivered</th>
+                                <th className="py-2 px-4 border">Address</th>
+                                <th className="py-2 px-4 border">Assigned To</th>
+                                <th className="py-2 px-4 border">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredMemberships.map((order: any) => {
+                                const daysDelivered = order.deliveryDates.length;
+                                const categoryTitle = order.category.title;
+                                const { number, address, landmark, pincode } = order.address;
+                                const assignedTo = order.assignedTo ? 'Assigned' : 'Unassigned';
+                                return (
+                                    <tr key={order._id}>
+                                        <td className="py-2 px-4 border">{categoryTitle}</td>
+                                        <td className="py-2 px-4 border">{new Date(order.startDate).toLocaleDateString()}</td>
+                                        <td className="py-2 px-4 border">{daysDelivered} / {order.category.days}</td>
+                                        <td className="py-2 px-4 border">{`${number} ${address}, ${landmark}, ${pincode}`}</td>
+                                        <td className="py-2 px-4 border">{assignedTo}</td>
+                                        <td className="py-2 px-4 border">{order.status}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
