@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/Cart';
 import { Message } from '@/src/utility/SendMessage';
+import { useEffect } from 'react';
 
 const Cart = () => {
   const router = useRouter();
@@ -18,6 +19,7 @@ const Cart = () => {
   const [time, setTime] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<number>(-1);
+  const [orderMessage, setOrderMessage] = useState("")
 
   const timings = ["09:00 Morning", "12:00 Noon", "15:00 Afternoon", "18:00 Evening"];
   const currTime = new Date().getHours();
@@ -58,6 +60,18 @@ const Cart = () => {
     setIsOpen(!isOpen);
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    return () => {
+      document.body.classList.remove('overflow-hidden');
+    };
+  }, [isOpen]);
+
   const handleCheckout = async () => {
     if (totalAmount == 0) {
       toast.error("Add Something in cart")
@@ -82,7 +96,8 @@ const Cart = () => {
         orderItems,
         selectedAddress,
         userContact,
-        parseInt(time.split(":")[0])
+        parseInt(time.split(":")[0]),
+        orderMessage
       );
 
       if (response.success) {
@@ -143,7 +158,7 @@ const Cart = () => {
 
   return (
     <>
-      <div className={`fixed top-0 right-0 h-full bg-white w-full sm:w-96 shadow-2xl transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full bg-white w-full sm:w-fit shadow-2xl transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold">Shopping Cart</h2>
           <button onClick={toggleCart} className="p-2 hover:bg-gray-100 rounded-full">
@@ -151,146 +166,162 @@ const Cart = () => {
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto h-[calc(100vh-180px)]">
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-500">
-              <ShoppingCart className="w-16 h-16 mb-4" />
-              <p>Your cart is empty</p>
-            </div>
-          ) : (
-            <div className="p-4 space-y-4">
-              {items.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-4 p-2 border rounded-lg">
-                  <img
-                    src={item?.product?.image}
-                    alt={item?.product?.title}
-                    className="w-20 h-20 object-cover rounded-md"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item?.product?.title}</h3>
-                    <p className="text-green-600">Rs. {item?.product?.finalPrice.toFixed(2)}</p>
+        <div className='flex h-full max-sm:flex-wrap overflow-y-auto'>
 
-                    {item.product.isAvailable ?
-                      <div className="flex items-center gap-2 mt-2">
-                        <button
-                          onClick={() => handleDecrease(item)}
-                          className="p-1 hover:bg-gray-100 rounded"
-                          disabled={item.quantity <= 1}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="w-8 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => handleIncrease(item)}
-                          className="p-1 hover:bg-gray-100 rounded"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div> :
-                      <div className='text-red-600 text-sm'>
-                        Out Of Stock
-                      </div>
-                    }
+          <div className='min-w-96 max-sm:w-full'>
+            {items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500">
+                <ShoppingCart className="w-16 h-16 mb-4" />
+                <p>Your cart is empty</p>
+              </div>
+            ) : (
+              <div className="p-4 space-y-4">
+                <p className='font-semibold text-xl'>Items</p>
+                {items.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-4 p-2 border rounded-lg">
+                    <img
+                      src={item?.product?.image}
+                      alt={item?.product?.title}
+                      className="w-20 h-20 object-cover rounded-md"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium">{item?.product?.title}</h3>
+                      <p className="text-green-600">Rs. {item?.product?.finalPrice.toFixed(2)}</p>
 
+                      {item.product.isAvailable ?
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => handleDecrease(item)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                            disabled={item.quantity <= 1}
+                          >
+                            <Minus className="w-4 h-4" />
+                          </button>
+                          <span className="w-8 text-center">{item.quantity}</span>
+                          <button
+                            onClick={() => handleIncrease(item)}
+                            className="p-1 hover:bg-gray-100 rounded"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div> :
+                        <div className='text-red-600 text-sm'>
+                          Out Of Stock
+                        </div>
+                      }
+
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFromCart(item)}
+                      className="p-2 text-red-500 hover:bg-red-50 rounded-full"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleRemoveFromCart(item)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-full"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-        {items.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 border-t bg-white p-4">
-            {/* Time Selection */}
-            <div className="mb-4">
-              <p className="mt-4">Select Delivery Time:</p>
-              <select
-                className="mt-4 border rounded-3xl w-full px-4 py-2"
-                name="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-              >
-                <option value="">Select</option>
-                {currTime >= 17 ? (
-                  timings.map((t, i) => (
-                    <option key={i} value={t + " tomorrow"}>
-                      {formatTime(t, "tomorrow")}
-                    </option>
-                  ))
-                ) : currTime >= 0 && currTime < 8 ? (
-                  timings.map((t, i) => (
-                    <option key={i} value={t + " today"}>
-                      {formatTime(t, "today")}
-                    </option>
-                  ))
-                ) : (
-                  timings.map((t, i) => {
-                    const hour = parseInt(t.slice(0, 2));
-                    if (hour - currTime > 1) {
-                      return (
+          {items.length > 0 && (
+            <div className="border-t w-full bg-white p-4 sm:w-80 flex flex-col justify-between">
+
+              <div>
+                <p className='font-semibold text-xl'>Delivery Details</p>
+
+                <div>
+                  <p className="mt-4">Add Message:</p>
+                  <input type="text" className="mt-2 border rounded-3xl w-full px-4 py-2" placeholder='Need Changes' onChange={(e) => setOrderMessage(e.target.value)} />
+                </div>
+                {/* Time Selection */}
+                <div className="mb-4">
+                  <p className="mt-4">Select Delivery Time:</p>
+                  <select
+                    className="mt-2 border rounded-3xl w-full px-4 py-2"
+                    name="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    {currTime >= 17 ? (
+                      timings.map((t, i) => (
+                        <option key={i} value={t + " tomorrow"}>
+                          {formatTime(t, "tomorrow")}
+                        </option>
+                      ))
+                    ) : currTime >= 0 && currTime < 8 ? (
+                      timings.map((t, i) => (
                         <option key={i} value={t + " today"}>
                           {formatTime(t, "today")}
                         </option>
-                      );
-                    }
-                    return null;
-                  })
-                )}
-              </select>
-            </div>
-
-            {/* Address Selection */}
-            {userAddresses.length > 0 ? (
-              <div className="mb-4">
-                <p className="text-sm font-medium mb-2">Select Delivery Address:</p>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {userAddresses.map((addr: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
-                      onClick={() => setSelectedAddress(idx)}
-                    >
-                      <p className="text-sm">{addr.address}</p>
-                      <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
-                    </div>
-                  ))}
+                      ))
+                    ) : (
+                      timings.map((t, i) => {
+                        const hour = parseInt(t.slice(0, 2));
+                        if (hour - currTime > 1) {
+                          return (
+                            <option key={i} value={t + " today"}>
+                              {formatTime(t, "today")}
+                            </option>
+                          );
+                        }
+                        return null;
+                      })
+                    )}
+                  </select>
                 </div>
-              </div>
-            ) : (
-              <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                <p className="text-sm text-yellow-700">Please add a delivery address in your profile</p>
-              </div>
-            )}
 
-            {/* Contact Information Warning */}
-            {!hasContact && (
-              <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
-              </div>
-            )}
+                {/* Address Selection */}
+                {userAddresses.length > 0 ? (
+                  <div className="mb-4">
+                    <p className="text-sm font-medium mb-2">Select Delivery Address:</p>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {userAddresses.map((addr: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
+                          onClick={() => setSelectedAddress(idx)}
+                        >
+                          <p className="text-sm">{addr.address}</p>
+                          <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                    <p className="text-sm text-yellow-700">Please add a delivery address in your profile</p>
+                  </div>
+                )}
 
-            {/* Total and Checkout Button */}
-            <div className="mt-4">
-              <div className="flex justify-between mb-4">
-                <span className="font-semibold">Total:</span>
-                <span className="font-semibold">₹{totalAmount.toFixed(2)}</span>
+                {/* Contact Information Warning */}
+                {!hasContact && (
+                  <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                    <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
+                  </div>
+                )}
+
               </div>
-              <button
-                disabled={isLoading || !isProfileComplete}
-                className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
-                onClick={handleCheckout}
-              >
-                {isLoading ? 'Processing...' : !isProfileComplete ? 'Complete Profile to Checkout' : 'Checkout'}
-              </button>
+
+              {/* Total and Checkout Button */}
+              <div className='mb-20'>
+                <div className="flex justify-between mb-4">
+                  <span className="font-semibold">Total:</span>
+                  <span className="font-semibold">₹{totalAmount.toFixed(2)}</span>
+                </div>
+                <button
+                  disabled={isLoading || !isProfileComplete}
+                  className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                  onClick={handleCheckout}
+                >
+                  {isLoading ? 'Processing...' : !isProfileComplete ? 'Complete Profile to Checkout' : 'Checkout'}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+
+        </div>
       </div>
 
       {isOpen && (
