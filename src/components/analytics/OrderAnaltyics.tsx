@@ -107,7 +107,9 @@ export default function OrderAnalytics({ orders }: any) {
             order.orders.forEach((item: any) => {
                 const total = item.quantity * item.product.finalPrice;
                 orderTotal += total;
-                csv += `${order._id},${new Date(order.createdAt).toLocaleDateString()},${order.user.name},${order.user.email},${order.address.address} ${order.address.landmark} ${order.address.pincode},${order.contact},${order.status},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${total}\n`;
+                const address = `${order?.address?.address || ""} ${order?.address?.landmark || ""} ${order?.address?.pincode || 0}`.replaceAll(",", "|")
+                console.log(address)
+                csv += `${order._id},${new Date(order.createdAt).toLocaleDateString()},${order.user.name},${order.user.email},${address},${order.contact},${order.status},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${total}\n`;
             });
             csv += `,,,,,,,,,,,Order Total: ${orderTotal}\n`;
             grandTotal += orderTotal;
