@@ -14,13 +14,16 @@ const userSchema = new mongoose.Schema({
     isAdmin: {
         type: Boolean
     },
+    role: {
+        type: String
+    },
     contact: {
         type: Number,
         length: 10
     },
     addresses: [
         {
-            number: Number,
+            number: String,
             address: String,
             landmark: String,
             pincode: {

@@ -18,6 +18,7 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ success: true, user });
     } catch (error) {
+        console.log(error)
         return NextResponse.json(
             { error: "Failed to add address" },
             { status: 500 }

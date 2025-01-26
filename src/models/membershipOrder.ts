@@ -18,7 +18,7 @@ const membershipSchema = new mongoose.Schema({
         max: 24
     },
     address: {
-        number: Number,
+        number: String,
         address: String,
         landmark: String,
         pincode: {
@@ -33,9 +33,15 @@ const membershipSchema = new mongoose.Schema({
     message: {
         type: String
     },
+    extraCharge: {
+        type: String
+    },
+    isPaid: {
+        type: Boolean
+    },
     status: {
         type: String,
-        default:"pending"
+        default: "pending"
     },
     assignedTo: {
         type: mongoose.Schema.Types.ObjectId,

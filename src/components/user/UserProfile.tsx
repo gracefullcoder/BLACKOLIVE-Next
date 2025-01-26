@@ -7,7 +7,7 @@ import MyOrders from '../order/MyOrders';
 import { getOrders } from '@/src/actions/Order';
 
 interface Address {
-    number: number,
+    number: string,
     address: string,
     landmark: string,
     pincode: number
@@ -60,7 +60,7 @@ const UserProfile = ({ user }: any) => {
     const handleAddressSubmit = async (e: any) => {
         e.preventDefault();
         try {
-            const res = await axios.post('/api/user/address', { id: user._id, address: newAddress });
+            const res = await axios.post('/api/user/address', { id: user._id, address: { ...newAddress, pincode: parseInt(newAddress.pincode) } });
 
             if (res.status && res.status < 400) {
                 setIsAddingAddress(false);
@@ -161,7 +161,7 @@ const UserProfile = ({ user }: any) => {
                                             House/Flat Number
                                         </label>
                                         <input
-                                            type="number"
+                                            type="text"
                                             value={newAddress.number}
                                             onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
                                             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -175,7 +175,7 @@ const UserProfile = ({ user }: any) => {
                                         <input
                                             type="number"
                                             value={newAddress.pincode}
-                                            onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+                                            onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value.slice(0, 6) })}
                                             className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             maxLength={6}
                                             required

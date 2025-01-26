@@ -69,9 +69,9 @@ function Navbar() {
 
         <div>
           <ul className="flex gap-6 items-center text-2xl list-none">
-            <li className="cursor-pointer">
+            {/* <li className="cursor-pointer">
               <Search className="text-gray-600 hover:text-black" />
-            </li>
+            </li> */}
             <li className="cursor-pointer relative">
               <ShoppingBag className="text-gray-600 hover:text-black" onClick={() => setIsOpen((p) => !p)} />
               <span className="absolute -top-2 -right-4 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">

@@ -10,7 +10,23 @@ const featureSchema = new Schema({
     },
     shopStatus: {
         type: String
-    }
+    },
+    deliveryTimings: [
+        {
+            startTime: {
+                type: String
+            },
+            endTime: {
+                type: String
+            },
+            deliveryTime: {
+                type: String
+            },
+            display: {
+                type: String
+            }
+        }
+    ]
 })
 
 const Feature = mongoose.models.Feature || mongoose.model("Feature", featureSchema);

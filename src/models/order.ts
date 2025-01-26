@@ -18,11 +18,14 @@ const orderSchema = new mongoose.Schema({
             reponse: {
                 type: Schema.Types.ObjectId,
                 ref: "Feedback"
+            },
+            extraCharge: {
+                type: Number
             }
         }
     ],
     address: {
-        number: Number,
+        number: String,
         address: String,
         landmark: String,
         pincode: {
@@ -30,15 +33,17 @@ const orderSchema = new mongoose.Schema({
             length: 6
         }
     },
+    isPaid: {
+        type: Boolean
+    },
     contact: {
         type: Number,
         length: 10
     },
     time: {
-        type: Number,
-        min: 0,
-        max: 24
+        type: String
     },
+
     instant: {
         type: Boolean,
         default: false

@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/Cart';
 import { Message } from '@/src/utility/SendMessage';
 import { useEffect } from 'react';
+import { featureDetails } from '../actions/Features';
 
 const Cart = () => {
   const router = useRouter();
@@ -21,7 +22,79 @@ const Cart = () => {
   const [selectedAddress, setSelectedAddress] = useState<number>(-1);
   const [orderMessage, setOrderMessage] = useState("")
 
-  const timings = ["09:00 Morning", "12:00 Noon", "15:00 Afternoon", "18:00 Evening"];
+  const [timings, setTimings] = useState<any>([]);
+
+  useEffect(() => {
+    const handleTimings = async () => {
+      const indianTime = new Date((new Date()).getTime() + 19800000);
+      const features = await featureDetails();
+      const deliveryTimings = features.deliveryTimings;
+
+      let finalTimings = deliveryTimings.filter((time: any) => {
+        const start_HH_MM = time.startTime.split(":");
+        const end_HH_MM = time.endTime.split(":");
+
+        const tempStartTime = new Date(indianTime);
+        const tempEndTime = new Date(indianTime);
+
+        tempStartTime.setUTCHours(start_HH_MM[0], start_HH_MM[1], 0, 0);
+        tempEndTime.setUTCHours(end_HH_MM[0], end_HH_MM[1], 0, 0);
+
+        console.log(tempStartTime.toISOString(), tempEndTime.toISOString());
+        console.log(indianTime.toISOString())
+        return indianTime < tempStartTime || indianTime <= tempEndTime;
+      });
+
+      if (finalTimings.length) {
+        setTimings(finalTimings);
+      } else {
+        console.log("No valid timings, fallback to tomorrow");
+        finalTimings = deliveryTimings.map((time: any) => ({
+          ...time,
+          display: time.display.replace("Today", "Tomorrow"),
+        }));
+        setTimings(finalTimings);
+      }
+    };
+
+    handleTimings();
+  }, [items.length]);
+
+  // useEffect(() => {
+  //   const handleTimings = async () => {
+  //     const indianTime = new Date((new Date()).getTime() + 19800000);
+  //     let tempStartTime = new Date(indianTime)
+  //     let tempEndTime = new Date(indianTime);
+  //     const features = await featureDetails();
+  //     const deliveryTimings = features.deliveryTimings;
+  //     let finalTimings: any = []
+  //     deliveryTimings.forEach((time: any) => {
+  //       let start_HH_MM = time.startTime.split(":");
+  //       tempStartTime.setUTCHours(start_HH_MM[0], start_HH_MM[1], 0, 0);
+  //       const end_HH_MM = time.endTime.split(":");
+  //       tempEndTime.setUTCHours(end_HH_MM[0], end_HH_MM[1], 0, 0);
+
+  //       console.log(tempStartTime.toISOString(),tempEndTime.toISOString())
+  //       if ((indianTime < tempStartTime) || (indianTime < tempEndTime)) {
+  //         finalTimings.push(time)
+  //       }
+  //     })
+  //     console.log("appl", finalTimings)
+
+  //     if (finalTimings.length) {
+  //       setTimings(finalTimings)
+  //     } else {
+  //       console.log("in")
+  //       finalTimings = deliveryTimings.map((time: any) => ({ ...time, display: time.display.replace("Today", "Tommorow") }))
+  //       setTimings(finalTimings)
+  //     }
+  //   }
+
+  //   handleTimings()
+  // }, [])
+
+
+
   const currTime = new Date().getHours();
 
   const userAddresses = session?.data?.user?.addresses || [];
@@ -96,7 +169,7 @@ const Cart = () => {
         orderItems,
         selectedAddress,
         userContact,
-        parseInt(time.split(":")[0]),
+        time,
         orderMessage
       );
 
@@ -234,7 +307,7 @@ const Cart = () => {
                   <input type="text" className="mt-2 border rounded-3xl w-full px-4 py-2" placeholder='Need Changes' onChange={(e) => setOrderMessage(e.target.value)} />
                 </div>
                 {/* Time Selection */}
-                <div className="mb-4">
+                {/* <div className="mb-4">
                   <p className="mt-4">Select Delivery Time:</p>
                   <select
                     className="mt-2 border rounded-3xl w-full px-4 py-2"
@@ -244,20 +317,20 @@ const Cart = () => {
                   >
                     <option value="">Select</option>
                     {currTime >= 17 ? (
-                      timings.map((t, i) => (
+                      timings.map((t: any, i: any) => (
                         <option key={i} value={t + " tomorrow"}>
                           {formatTime(t, "tomorrow")}
                         </option>
                       ))
                     ) : currTime >= 0 && currTime < 8 ? (
-                      timings.map((t, i) => (
+                      timings.map((t: any, i: any) => (
                         <option key={i} value={t + " today"}>
                           {formatTime(t, "today")}
                         </option>
                       ))
                     ) : (
-                      timings.map((t, i) => {
-                        const hour = parseInt(t.slice(0, 2));
+                      timings?.map((t: any, i: any) => {
+                        const hour = parseInt(t?.slice(0, 2));
                         if (hour - currTime > 1) {
                           return (
                             <option key={i} value={t + " today"}>
@@ -268,6 +341,21 @@ const Cart = () => {
                         return null;
                       })
                     )}
+                  </select>
+                </div> */}
+
+                <div className="mb-4">
+                  <p className="mt-4">Select Delivery Time:</p>
+                  <select
+                    className="mt-2 border rounded-3xl w-full px-4 py-2"
+                    name="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    {timings.map((time: any) => (
+                      <option value={`${time.deliveryTime}`} key={time.deliveryTime}>{time.display}</option>
+                    ))}
                   </select>
                 </div>
 
