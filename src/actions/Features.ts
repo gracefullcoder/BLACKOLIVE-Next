@@ -1,7 +1,7 @@
 "use server"
 
 import connectToDatabase from "../lib/ConnectDb";
-import Feature from "../models/feature"
+import Feature from "../models/extraFeatures"
 
 export const createFeature = async (heroImage: string, fileId: string) => {
     await connectToDatabase()
@@ -12,8 +12,7 @@ export const createFeature = async (heroImage: string, fileId: string) => {
 
 export const updateFeature = async (heroImage: string, fileId: string) => {
     try {
-        const featureId = process.env.FEATURE_ID
-        const feature = await Feature.findByIdAndUpdate(featureId, { heroImage, fileId });
+        const feature = await Feature.findOneAndUpdate({ heroImage, fileId });
         return { success: true, message: "Image updated Successfully" }
     } catch (error: any) {
         console.log(error);
@@ -22,12 +21,11 @@ export const updateFeature = async (heroImage: string, fileId: string) => {
 }
 
 export const featureDetails = async () => {
-    const featureId = process.env.FEATURE_ID
-    const feature = await Feature.findById(featureId);
+    const feature = await Feature.findOne();
     return JSON.parse(JSON.stringify(feature));
 }
 
-export async function addTiming(formData: FormData) {
+export async function addTimingServer(formData: FormData) {
     const newTime = {
         startTime: formData.get('startTime'),
         endTime: formData.get('endTime'),
@@ -35,11 +33,30 @@ export async function addTiming(formData: FormData) {
         display: formData.get('display')
     }
     console.log('Submitted time:', newTime);
-    const featureId = process.env.FEATURE_ID
 
-    await Feature.findByIdAndUpdate(featureId, {
+    await Feature.findOneAndUpdate({
         $push: { deliveryTimings: newTime },
     });
 
     return { success: true, message: 'Timing added successfully' };
+}
+
+export async function fetchTimingsServer() {
+    const feature = await Feature.find({}).select("deliveryTimings");
+    console.log("apple" ,feature)
+    // return feature?.deliveryTimings || [];
+    return []
+}
+
+
+export async function deleteTimingServer(timingId: any) {
+
+    try {
+        await Feature.findOneAndUpdate({
+            $pull: { deliveryTimings: { _id: timingId } },
+        });
+        return { success: true, message: "Timing deleted successfully" };
+    } catch (error:any) {
+        return { success: false, message: error.message };
+    }
 }

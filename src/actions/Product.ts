@@ -29,6 +29,8 @@ export async function getProducts(type: string) {
         const products = await Product.find();
         const membership = await MembershipProduct.find();
 
+        console.log(products, membership)
+
         if (type == "all") {
             return JSON.parse(JSON.stringify({ products, membership }))
         }

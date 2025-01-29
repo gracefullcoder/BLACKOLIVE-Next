@@ -50,6 +50,18 @@ function Page() {
         >
           <div className="text-lg font-medium text-gray-700">Create Order & Membership</div>
         </Link>
+        <Link
+          href="/admin/features/pincodes"
+          className="p-6 bg-white shadow-lg rounded-lg hover:bg-gray-50 transition"
+        >
+          <div className="text-lg font-medium text-gray-700">Manage Pincodes</div>
+        </Link>
+        <Link
+          href="/admin/features/timings"
+          className="p-6 bg-white shadow-lg rounded-lg hover:bg-gray-50 transition"
+        >
+          <div className="text-lg font-medium text-gray-700">Manage Timings</div>
+        </Link>
       </div>
     </div>
   );

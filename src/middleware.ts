@@ -1,14 +1,13 @@
-import { isAuthenticatedMiddleware, isAuthenticatedConfig, isAdminMiddleware, isAdminConfig } from '@/src/middlewares/authMiddleware';
+import { isAuthenticatedMiddleware, isAuthenticatedConfig, isAdminMiddleware, isAdminConfig, isDeliveryMiddleware, isDeliveryConfig } from '@/src/middlewares/authMiddleware';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 export const config = {
     matcher: [
         ...isAuthenticatedConfig.matcher,
-        ...isAdminConfig.matcher
+        ...isAdminConfig.matcher,
+        ...isDeliveryConfig.matcher
     ],
 };
-
-console.log("in")
 
 export function middleware(request: NextRequest) {
     console.log('Middleware Invoked:', request.nextUrl.pathname);
@@ -19,6 +18,10 @@ export function middleware(request: NextRequest) {
 
     if (request.nextUrl.pathname.startsWith('/admin')) {
         return isAdminMiddleware(request);
+    }
+
+    if (request.nextUrl.pathname.startsWith('/delivery')) {
+        return isDeliveryMiddleware(request);
     }
 
     return NextResponse.next();

@@ -2,7 +2,7 @@ import HeroSection from "@/src/components/HeroSection";
 import Products from "@/src/components/product/Products";
 import { productType } from "../types/product";
 import { getProducts } from "../actions/Product";
-import Feature from "../models/Feature";
+import Feature from "../models/extraFeatures";
 import { featureDetails } from "../actions/Features";
 import MessageBar from "../components/MessageBar";
 
@@ -14,7 +14,7 @@ export default async function Home() {
 
   return (
     <>
-      <MessageBar message={"This website is still under construction"}/>
+      <MessageBar messages={features?.topBarMessages || []} />
       <HeroSection features={features} />
       <Products products={products} title={"PRODUCTS"} />
     </>

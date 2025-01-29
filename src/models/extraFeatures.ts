@@ -26,7 +26,9 @@ const featureSchema = new Schema({
                 type: String
             }
         }
-    ]
+    ],
+    topBarMessages: [String],
+    pincodes: [Number]
 })
 
 const Feature = mongoose.models.Feature || mongoose.model("Feature", featureSchema);

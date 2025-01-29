@@ -13,8 +13,9 @@ export const createOrder = async (
     orderItems: Array<{ product: string, quantity: number }>,
     addressId: number,
     contact: number,
-    time: number,
-    message: string
+    time: string,
+    message: string,
+    isPaid?: boolean
 ) => {
     try {
         const user = await User.findById(userId);
@@ -56,7 +57,8 @@ export const createOrder = async (
             contact: contact || user.contact,
             time,
             overallRating: 0,
-            message
+            message,
+            isPaid: typeof (isPaid) == "boolean" ? isPaid : false
         });
 
         await User.findByIdAndUpdate(userId, {
@@ -103,7 +105,9 @@ export const createMembership = async (
     contact: number,
     time: number,
     startDate: Date,
-    message: string
+    message: string,
+    extraCharge?: number,
+    isPaid?: boolean
 ) => {
     try {
         const user = await User.findById(userId);
@@ -132,6 +136,8 @@ export const createMembership = async (
             overallRating: 0,
             startDate,
             deliveryGraph,
+            isPaid,
+            extraCharge,
             message
         });
 
@@ -246,7 +252,7 @@ export async function getAllOrders() {
     try {
         await connectToDatabase();
         const orders = await Order.find()
-            .populate({ path: 'orders.product', model: Product }).populate({path:'user',select:"name email contact"})
+            .populate({ path: 'orders.product', model: Product }).populate({ path: 'user', select: "name email contact" })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(orders));
     } catch (error) {
@@ -267,7 +273,7 @@ export async function updateOrderStatus(orderId: any, newStatus: any) {
                     orderId,
                     { status: "assigned", assignedTo: user._id },
                     { new: true }
-                ).populate('orders.product');
+                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "unassign") {
@@ -275,7 +281,7 @@ export async function updateOrderStatus(orderId: any, newStatus: any) {
                     orderId,
                     { status: "pending", assignedTo: null },
                     { new: true }
-                ).populate('orders.product');
+                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
                 return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "delivered") {
@@ -283,8 +289,16 @@ export async function updateOrderStatus(orderId: any, newStatus: any) {
                     orderId,
                     { status: "delivered" },
                     { new: true }
-                ).populate('orders.product');
+                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
                 return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+            else if (newStatus == "cancelled") {
+                const updatedOrder = await Order.findByIdAndUpdate(
+                    orderId,
+                    { status: "cancelled" },
+                    { new: true }
+                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
+                return { success: true, message: "Marked as Cancelled", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
         } else {
             return { success: false, message: "You are Not authorized" }
@@ -307,7 +321,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any) {
                     orderId,
                     { status: "assigned", assignedTo: user._id },
                     { new: true }
-                ).populate('category');
+                ).populate('category').populate({ path: "assignedTo", select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "unassign") {
@@ -315,7 +329,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any) {
                     orderId,
                     { status: "pending", assignedTo: null },
                     { new: true }
-                ).populate('category');
+                ).populate('category').populate({ path: "assignedTo", select: "name" });
                 return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "delivered") {
@@ -325,7 +339,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any) {
                     orderId,
                     { $push: { deliveryDates: utcDate } },
                     { new: true }
-                ).populate('category');
+                ).populate('category').populate({ path: "assignedTo", select: "name" });
 
                 if (updatedOrder.deliveryDates.length === updatedOrder.category.days) {
                     updatedOrder.status = "delivered";
@@ -333,6 +347,14 @@ export async function updateMembershipStatus(orderId: any, newStatus: any) {
                 }
 
                 return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(updatedOrder)) }
+            }
+            else if (newStatus == "cancelled") {
+                const updatedOrder = await MembershipOrder.findByIdAndUpdate(
+                    orderId,
+                    { status: "cancelled" },
+                    { new: true }
+                ).populate('category').populate({ path: "assignedTo", select: "name" });
+                return { success: true, message: "Marked as Cancelled", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
         } else {
             return { success: false, message: "You are Not authorized" }
@@ -371,7 +393,6 @@ export async function updateOrderQuantity(orderId: any, productId: any, newQuant
 // Remove product from order
 export async function removeProductFromOrder(orderId: any, productId: any) {
     try {
-        await connectToDatabase();
         const order = await Order.findById(orderId);
 
         order.orders = order.orders.filter(
@@ -387,20 +408,66 @@ export async function removeProductFromOrder(orderId: any, productId: any) {
     }
 }
 
+export async function addExtraCharge(orderId: any, productId: any, extraCharge: any) {
+    try {
+        if (productId) {
+            const order = await Order.findById(orderId);
+            const orderItem = order.orders.find(
+                (item: any) => item._id.toString() === productId
+            );
+
+            if (!orderItem) {
+                throw new Error('Product not found in order');
+            }
+            orderItem.extraCharge = parseInt(extraCharge);
+            await order.save();
+
+            const updatedOrder = await order.populate('orders.product');
+            return { success: true, messsage: "Added extra charge" };
+        } else {
+            const updatedOrder = await MembershipOrder.findByIdAndUpdate(orderId, { extraCharge }, { new: true })
+            return { success: true, messsage: "Added extra charge" };
+        }
+    } catch (error) {
+        console.error("Error updating quantity:", error);
+        throw error;
+        return { success: false, message: "Failed to add extra charges" };
+    }
+}
+
+export const updatePaymentStatus = async (orderId: any, isPaid: any, isMembership: any) => {
+    try {
+        if (isMembership) {
+            const res = await MembershipOrder.findByIdAndUpdate(orderId, { isPaid: isPaid }, { new: true })
+        } else {
+            const res = await Order.findByIdAndUpdate(orderId, { isPaid: isPaid }, { new: true })
+        }
+        return { success: true, message: isPaid ? "Marked as Paid" : "Marked as Unpaid" };
+    } catch (error) {
+        return { success: false, message: "Internal server Error" };
+        console.log(error)
+    }
+}
+
 
 export async function getFilteredOrders(timeRange: any, status: any, inverse: boolean) {
     try {
         await connectToDatabase();
         let query: any = {};
 
-        // Add status filter if provided
+        //inverse bcoz many status possible
         if (status !== null) {
-            query.status = inverse ?
-                { $ne: status }
-                : status
+            if (typeof (status) == 'string') {
+                query.status = inverse ?
+                    { $ne: status }
+                    : status
+            } else {
+                query.status = inverse ?
+                    { $nin: status }
+                    : { $in: status }
+            }
         }
 
-        // Add time filter
         if (timeRange) {
             const currentTime = new Date();
             const startTime = new Date(currentTime);
@@ -425,7 +492,7 @@ export async function getFilteredOrders(timeRange: any, status: any, inverse: bo
         }
 
         const orders = await Order.find(query)
-            .populate('orders.product').populate({path:'user',select:"name email contact"})
+            .populate('orders.product').populate({ path: 'user', select: "name email contact" }).populate({ path: 'assignedTo', select: "name" })
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(orders));
@@ -441,10 +508,17 @@ export async function getFilteredMemberships(timeRange: any, status: any, invers
         let query: any = {};
 
         if (status !== null) {
-            query.status = inverse ?
-                { $ne: status }
-                : status
+            if (typeof (status) == 'string') {
+                query.status = inverse ?
+                    { $ne: status }
+                    : status
+            } else {
+                query.status = inverse ?
+                    { $nin: status }
+                    : { $in: status }
+            }
         }
+
         const utcDate = new Date();
         utcDate.setUTCHours(0, 0, 0, 0);
 
@@ -481,8 +555,9 @@ export async function getFilteredMemberships(timeRange: any, status: any, invers
             }
         }
 
-        const mermberships = await MembershipOrder.find(query)
-            .populate('category').populate({path:'user',select:"name email contact"})
+
+        const mermberships = await MembershipOrder.find(query).populate({ path: "assignedTo", select: "name" })
+            .populate('category').populate({ path: 'user', select: "name email contact" })
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(mermberships));
@@ -497,7 +572,7 @@ export async function getAllMembership() {
     try {
         await connectToDatabase();
         const membership = await MembershipOrder.find({})
-            .populate('category').populate({path:'user',select:"name email contact"})
+            .populate('category').populate({ path: 'user', select: "name email contact" })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(membership));
     } catch (error) {
