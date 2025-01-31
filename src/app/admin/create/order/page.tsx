@@ -2,10 +2,11 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { UserData } from "@/src/types/user";
-import { createOrder } from "@/src/actions/Order";
+import { addExtraCharge, createOrder } from "@/src/actions/Order";
 import AdminOrder from "@/src/components/adminorders/create/AdminOrder";
 import ShowProducts from "@/src/components/adminorders/create/ShowProducts";
-
+import { Minus, Plus } from "lucide-react";
+import { PreviewData } from "next";
 
 
 
@@ -19,9 +20,12 @@ export default function Page() {
         address: null,
         contact: null,
         time: null,
+        isPaid: false,
+        deliveryCharge: 0,
         message: ""
     })
 
+    console.log(orderDetails)
 
     const handleOrderSubmit = async () => {
         if (orderDetails.address === null) {
@@ -34,7 +38,7 @@ export default function Page() {
             return;
         }
         // Handle order submission logic here
-        const response = await createOrder(user?._id || "", orderDetails.orders, orderDetails.address, orderDetails.contact, orderDetails.time, orderDetails.message)
+        const response = await createOrder(user?._id || "", orderDetails.orders, orderDetails.address, orderDetails.contact, orderDetails.time, orderDetails.message, orderDetails.isPaid)
 
         if (response.success) {
             toast.success(response.message);
@@ -83,17 +87,28 @@ export default function Page() {
                                         Product: {order.title}
                                     </div>
 
-                                    <input
-                                        type="number"
-                                        name="quantity"
-                                        value={order.quantity}
-                                        onChange={(e: any) =>
-                                            handleQuantity(order.product, e.target.value)
-                                        }
-                                        className="w-16 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                        min={1}
-                                    />
+                                    <div className="flex gap-2 items-center">
+                                        <div className="mr-1 border border-black rounded-md p-1 cursor-pointer" onClick={() => handleQuantity(order.product, order.quantity - 1)}><Minus /></div>
+                                        <div>
+                                            <div className="px-4 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                                {order.quantity}
+                                            </div>
+                                        </div>
+                                        <div className="border border-black rounded-md p-1 cursor-pointer" onClick={() => handleQuantity(order.product, order.quantity + 1)}><Plus /></div>
+                                    </div>
 
+                                    <div className="flex items-center justify-between">
+
+                                        <input
+                                            type="number"
+                                            name="extraCharges"
+                                            className="border rounded w-20 p-1 mr-2"
+                                            placeholder="Add extra"
+                                            onChange={(e: any) => setOrderDetails((prev: any) => ({ ...prev, orders: prev.orders.map((item: any) => (item.product == order.product ? { ...item, extraCharge: parseInt(e.target.value) } : item)) }))}
+                                            value={order?.extraCharge || 0}
+                                            required
+                                        />
+                                    </div>
 
                                     <button
                                         onClick={() => removeProduct(order.product)}
@@ -120,6 +135,14 @@ export default function Page() {
                             <option value="18">06 PM</option>
                         </select>
                     </div>
+
+                    <div className="flex items-center gap-2 mt-6">
+                        <p className="text-gray-600 mb-2">Paid / Cash : </p>
+                        <div>
+                            <input type="checkbox" className="h-6 w-6" checked={orderDetails?.isPaid || false} onChange={() => setOrderDetails((prev: any) => ({ ...prev, isPaid: !prev.isPaid }))} />
+                        </div>
+                    </div>
+
 
                     <div className="mt-6">
                         <label className="block text-gray-600 mb-2">Message:</label>
