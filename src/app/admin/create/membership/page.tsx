@@ -18,7 +18,9 @@ export default function Page() {
         contact: null,
         time: null,
         date: null,
-        message:""
+        isPaid: false,
+        extraCharge: "",
+        message: ""
     })
 
     const handleNewMembership = async () => {
@@ -42,7 +44,7 @@ export default function Page() {
             return;
         }
 
-        const response = await createMembership(user?._id || "", membershipDetails.orders[0].product, membershipDetails.address, membershipDetails.contact, membershipDetails.time, membershipDetails.date,membershipDetails.message)
+        const response = await createMembership(user?._id || "", membershipDetails.orders[0].product, membershipDetails.address, membershipDetails.contact, membershipDetails.time, membershipDetails.date, membershipDetails.message, parseInt(membershipDetails.extraCharge), membershipDetails.isPaid)
 
         if (response.success) {
             toast.success(response.message);
@@ -88,6 +90,20 @@ export default function Page() {
                                 </div>
                             ))}
                         </div>
+
+                        <div className="flex items-center gap-2 my-4">
+
+                            <p className="">Extra Charge</p>
+                            <input
+                                type="text"
+                                name="extraCharges"
+                                className="border rounded w-20 p-1 mr-2"
+                                placeholder="Add extra"
+                                onChange={(e: any) => setMembershipsDetails((prev: any) => ({ ...prev, extraCharge: e.target.value }))}
+                                value={membershipDetails?.extraCharge || ""}
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="mt-6">
@@ -113,6 +129,14 @@ export default function Page() {
                             </div>
                         </div>
                     </div>
+
+                    <div className="flex items-center gap-2 mt-6">
+                        <p className="text-gray-600 mb-2">Paid / Cash : </p>
+                        <div>
+                            <input type="checkbox" className="h-6 w-6" checked={membershipDetails?.isPaid || false} onChange={() => setMembershipsDetails((prev: any) => ({ ...prev, isPaid: !prev.isPaid }))} />
+                        </div>
+                    </div>
+
                     <div className="mt-6">
                         <label className="block text-gray-600 mb-2">Message:</label>
 

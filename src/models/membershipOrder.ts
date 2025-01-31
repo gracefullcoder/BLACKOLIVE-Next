@@ -13,9 +13,7 @@ const membershipSchema = new mongoose.Schema({
         type: Date
     },
     time: {
-        type: Number,
-        min: 0,
-        max: 24
+       type: String
     },
     address: {
         number: String,
