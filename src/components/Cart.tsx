@@ -20,7 +20,8 @@ const Cart = () => {
   const [time, setTime] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<number>(-1);
-  const [orderMessage, setOrderMessage] = useState("")
+  const [orderMessage, setOrderMessage] = useState("");
+  const [pincodes, setPincodes] = useState([]);
 
   const [timings, setTimings] = useState<any>([]);
 
@@ -29,6 +30,8 @@ const Cart = () => {
       const indianTime = new Date((new Date()).getTime() + 19800000);
       const features = await featureDetails();
       const deliveryTimings = features.deliveryTimings;
+      const availablePins = features.pincodes;
+      setPincodes(availablePins);
 
       let finalTimings = deliveryTimings.filter((time: any) => {
         const start_HH_MM = time.startTime.split(":");
@@ -40,15 +43,12 @@ const Cart = () => {
         tempStartTime.setUTCHours(start_HH_MM[0], start_HH_MM[1], 0, 0);
         tempEndTime.setUTCHours(end_HH_MM[0], end_HH_MM[1], 0, 0);
 
-        console.log(tempStartTime.toISOString(), tempEndTime.toISOString());
-        console.log(indianTime.toISOString())
         return indianTime < tempStartTime || indianTime <= tempEndTime;
       });
 
       if (finalTimings.length) {
         setTimings(finalTimings);
       } else {
-        console.log("No valid timings, fallback to tomorrow");
         finalTimings = deliveryTimings.map((time: any) => ({
           ...time,
           display: time.display.replace("Today", "Tomorrow"),
@@ -93,23 +93,11 @@ const Cart = () => {
   //   handleTimings()
   // }, [])
 
-
-
-  const currTime = new Date().getHours();
-
   const userAddresses = session?.data?.user?.addresses || [];
   const userContact = session?.data?.user?.contact;
   const hasContact = Boolean(userContact);
   const hasAddress = userAddresses.length > 0;
   const isProfileComplete = hasContact && hasAddress;
-
-  const formatTime = (timing: string, suffix: string): string => {
-    const hour = parseInt(timing.slice(0, 2));
-    if (hour > 12) {
-      return (hour - 12).toString().padStart(2, '0').concat(timing.slice(2)).concat(` ${suffix}`);
-    }
-    return timing.concat(` ${suffix}`);
-  };
 
   const validateCheckout = () => {
     if (!time) {
@@ -120,6 +108,15 @@ const Cart = () => {
       toast.error("Please select delivery address!");
       return false;
     }
+
+    const pincode = userAddresses[selectedAddress].pincode;
+    console.log(pincode)
+
+    if (!pincodes.some((pin) => pin == pincode)) {
+      toast.error("Not deliverable in your area!");
+      return false;
+    }
+
     if (!hasContact) {
       toast.error("Please add contact information!");
       return false;
