@@ -52,13 +52,12 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
 export async function PUT(request: NextRequest, { params }: { params: any }) {
     try {
         await connectToDatabase();
-        const { userId } = params;
-        const { isAdmin } = await request.json();
-        console.log(userId, isAdmin);
+        const { userId } = await params;
+        const { isAdmin, isDelivery } = await request.json();
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { isAdmin },
+            { isAdmin, isDelivery},
             { new: true }
         );
 

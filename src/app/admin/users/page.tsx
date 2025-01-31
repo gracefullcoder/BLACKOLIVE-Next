@@ -7,7 +7,6 @@ export default function UserManagementPage() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Fetch users data
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -25,21 +24,20 @@ export default function UserManagementPage() {
     fetchUsers();
   }, []);
 
-  // Handle admin toggle
-  const handleAdminToggle = async (userId:any, currentStatus:any) => {
+  const handleAdminToggle = async (userId: any, isAdmin: any, isDelivery: any) => {
     try {
-      const response :any = await fetch(`/api/admin/users/${userId}`, {
+      const response: any = await fetch(`/api/admin/users/${userId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ isAdmin: !currentStatus }),
+        body: JSON.stringify({ isAdmin, isDelivery }),
       });
 
       if (response.ok) {
-        setUsers(users.map((user:any) => 
-          user._id === userId 
-            ? { ...user, isAdmin: !user.isAdmin }
+        setUsers(users.map((user: any) =>
+          user._id === userId
+            ? { ...user, isAdmin, isDelivery }
             : user
         ));
       }
@@ -48,8 +46,7 @@ export default function UserManagementPage() {
     }
   };
 
-  // Navigate to user details
-  const handleViewDetails = (userId:any) => {
+  const handleViewDetails = (userId: any) => {
     router.push(`/admin/users/details?userId=${userId}`);
   };
 
@@ -85,12 +82,15 @@ export default function UserManagementPage() {
                   Make Admin
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Delivery
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user:any) => (
+              {users.map((user: any) => (
                 <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -112,22 +112,33 @@ export default function UserManagementPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        user.isAdmin ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                      }`}
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isAdmin || user.isDelivery ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}
                     >
-                      {user.isAdmin ? 'Admin' : 'User'}
+                      {user?.isAdmin ? "Admin" : user.isDelivery ? "Delivery" : 'User'}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <input
-                      type="checkbox"
-                      checked={user.isAdmin}
-                      onChange={() => handleAdminToggle(user._id, user.isAdmin)}
-                      className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                    />
+                    <div className='flex justify-center'>
+                      <input
+                        type="checkbox"
+                        checked={user.isAdmin}
+                        onChange={() => handleAdminToggle(user._id, !user.isAdmin, user.isDelivery)}
+                        className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-6 py-4 whitespace-nowrap mx-auto">
+                    <div className='flex justify-center'>
+                      <input
+                        type="checkbox"
+                        checked={user.isDelivery}
+                        onChange={() => handleAdminToggle(user._id, user.isAdmin, !user.isDelivery)}
+                        className="h-5 w-5 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      />
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap mx-auto">
                     <button
                       onClick={() => handleViewDetails(user._id)}
                       className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"

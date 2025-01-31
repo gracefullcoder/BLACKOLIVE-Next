@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Instagram, Facebook, MessageCircle } from 'lucide-react'; // Importing Lucide icons
 
 function Footer() {
   return (
@@ -14,6 +15,23 @@ function Footer() {
         <li><Link href="/policy">PRIVACY POLICY</Link></li>
         <li><Link href="/contact">CONTACT US</Link></li>
       </ul>
+
+      <div className="flex gap-4 my-6 text-center items-center justify-center">
+        <p className="font-bold text-xl text-slate-400 text-center">
+          Follow Us On
+        </p>
+        <div className="flex gap-2 justify-center">
+          <a href="https://www.instagram.com/black.olive._?igsh=em9lYXMydW40bHR6" target='_blank'>
+            <Instagram className="h-8 w-8 text-slate-400 hover:text-white transition-colors duration-200 cursor-pointer" />
+          </a>
+          <a href="https://www.facebook.com/blackoIive0123" target='_blank'>
+            <Facebook className="h-8 w-8 text-slate-400 hover:text-white transition-colors duration-200 cursor-pointer" />
+          </a>
+          <a href="https://wa.me/+917211166616" target='_blank'>
+            <MessageCircle className="h-8 w-8 text-slate-400 hover:text-white transition-colors duration-200 cursor-pointer" />
+          </a>
+        </div>
+      </div>
 
       <div className="mt-8 text-sm text-slate-400 font-medium gap-1 flex flex-wrap justify-center">
         <p>

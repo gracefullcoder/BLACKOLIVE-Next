@@ -8,18 +8,32 @@ import { addToCart, decreaseQuantity, increaseQuantity } from '@/src/actions/Car
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { createMembership } from '@/src/actions/Order';
+import { featureDetails } from '@/src/actions/Features';
 
 function ProductDetails({ product }: { product: productType }) {
     const session = useSession();
     const { items, setItems } = useCartContext();
     const existingCartItem = items.find((item: any) => item?.product?._id === product._id);
     const [quantity, setQuantity] = useState(existingCartItem ? existingCartItem.quantity : 1);
+    const [pincode, setPincode] = useState<any>(null);
+    const [pincodes, setPincodes] = useState([])
+    const [isDeliverable, setIsDeliverable] = useState<any>(null)
+
 
     useEffect(() => {
         if (existingCartItem) {
             setQuantity(existingCartItem.quantity);
         }
     }, [existingCartItem]);
+
+    useEffect(() => {
+        const getPincodes = async () => {
+            const feature = await featureDetails();
+            setPincodes(feature.pincodes)
+        }
+
+        getPincodes()
+    }, [])
 
     const handleDecrease = async () => {
         if (existingCartItem && quantity > 1) {
@@ -142,6 +156,11 @@ function ProductDetails({ product }: { product: productType }) {
         }
     };
 
+    const isPincodeAvailable = () => {
+        const res = pincodes.some((pin) => pincode == pin);
+        setIsDeliverable(res)
+    }
+
     const handleDetailsChange = (e: any) => { setMembershipDetails(prev => { return { ...prev, [e.target.name]: e.target.value } }) }
 
     return (
@@ -177,7 +196,7 @@ function ProductDetails({ product }: { product: productType }) {
                                         <select className='border p-2 rounded-3xl'
                                             name="time" onChange={(e) => handleDetailsChange(e)} >
                                             {
-                                                product?.timings?.map((t, i) => <option key={i} value={t}>{t}</option>)
+                                                product?.timings?.map((t, i) => <option key={i} value={t}>{t > 12 ? `0${t - 12}:00 ${t > 11 ? "PM" : "AM"}` : `${t}:00  ${t > 11 ? "PM" : "AM"}`}</option>)
                                             }
                                         </select>
                                     </div>
@@ -232,7 +251,6 @@ function ProductDetails({ product }: { product: productType }) {
                                     </div>
                                 )}
 
-                                {/* Contact Information Warning */}
                                 {!hasContact && (
                                     <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
                                         <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
@@ -240,9 +258,6 @@ function ProductDetails({ product }: { product: productType }) {
                                 )}
                             </>
                         }
-
-
-
 
                         {!product.bonus ? (!existingCartItem && (
                             <button
@@ -271,6 +286,8 @@ function ProductDetails({ product }: { product: productType }) {
                                 >
                                     Buy Membership
                                 </button>
+
+
                             </div>}
                     </> :
 
@@ -278,6 +295,38 @@ function ProductDetails({ product }: { product: productType }) {
                                       bg-red-600 hover:bg-red-700 text-white cursor-pointer`}>
                             Out Of Stock
                         </div>}
+
+
+                    <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 mt-4 border-t border-black">
+                        <p className="text-sm font-medium text-gray-700 mb-3">
+                            Check if Deliverable in Your Area
+                        </p>
+                        <div className='flex gap-2 w-full justify-center'>
+                            <input
+                                type="number"
+                                placeholder="Enter your Pincode"
+                                className="w-min-20 border border-gray-300 rounded-md p-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                onChange={(e) => setPincode(e.target.value)}
+                            />
+                            <button
+                                onClick={isPincodeAvailable}
+                                className="w-16 h-fit py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-all"
+                            >
+                                Check
+                            </button>
+                        </div>
+                        {isDeliverable !== null && (
+                            <p
+                                className={`text-sm font-medium ${isDeliverable ? 'text-green-600' : 'text-red-600'
+                                    }`}
+                            >
+                                {isDeliverable
+                                    ? 'Deliverable in your area'
+                                    : 'Not Deliverable in your area'}
+                            </p>
+                        )}
+                    </div>
+
 
 
                 </div>

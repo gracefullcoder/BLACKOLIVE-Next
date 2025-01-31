@@ -1,29 +1,15 @@
 import {
-    updateOrderStatus,
     updateOrderQuantity,
     removeProductFromOrder,
+    addExtraCharge,
+    updatePaymentStatus,
 } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
+import { AssignedDetails, OrderButtons, ShowMessage, UserBasicDetails } from './OrderBasicDetails';
 
 function orderCard({ order, setOrders, setError, session }: any) {
 
-    const handleStatusUpdate = async (orderId: any, newStatus: any) => {
-        try {
-            const updatedOrder = await updateOrderStatus(orderId, newStatus);
-            if (updatedOrder?.success) {
-                setOrders((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? updatedOrder.product : order
-                )));
-                toast.success(updatedOrder.message);
-            } else {
-                toast(updatedOrder?.message)
-            }
 
-        } catch (err) {
-            setError('Failed to update order status');
-            console.error(err);
-        }
-    };
 
     const handleQuantityUpdate = async (orderId: any, productId: any, newQuantity: any) => {
         try {
@@ -51,33 +37,43 @@ function orderCard({ order, setOrders, setError, session }: any) {
         }
     };
 
+    const handleExtraCharges = async (e: any, orderId: any, productId: any, extraCharge: any) => {
+        e.preventDefault();
+        try {
+            console.log(extraCharge)
+            const res = await addExtraCharge(orderId, productId, extraCharge);
+            if (res.success) {
+                setOrders((prev: any) => (prev.map((order: any) =>
+                    order._id === orderId ? { ...order, orders: order.orders.map((p: any) => p._id === productId ? { ...p, extraCharge } : p) } : order
+                )));
+                toast.success(res.message)
+            }
+            setError('');
+        } catch (err) {
+            setError('Failed to update quantity');
+            console.error(err);
+        }
+    }
+
+    const handlePaymentStatus = async () => {
+        try {
+            const res = await updatePaymentStatus(order._id, !order?.isPaid, false);
+
+            if (res.success) {
+                setOrders((prev: any) => (prev.map((prevOrder: any) => (prevOrder._id === order._id ? { ...prevOrder, isPaid: !prevOrder.isPaid } : prevOrder))));
+                toast.success(res?.message)
+            } else {
+                toast.error(res?.message)
+            }
+        } catch (error) {
+            console.log(error || "Internal server error")
+        }
+    }
+
     return (
         <div key={order._id} className="border rounded-lg p-4 bg-white shadow" id={order._id}>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold">Order #{order._id.slice(-6)}</h2>
-                <span className={`px-2 py-1 rounded text-sm ${order.status == "delivered" ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {order.status}
-                </span>
-            </div>
 
-            <div className='mb-1 pb-2  border-b'>
-                <h1 className='font-semibold'>User Details</h1>
-                <p>Id: {order.user._id}</p>
-                <p>Name : {order?.user?.name}</p>
-                <p>email: {order?.user?.email}</p>
-            </div>
-
-            <div className="mb-2">
-                <p>Delivery Time: {order.time}:00</p>
-                <p>Contact: {order.contact}</p>
-                <p className='font-semibold mt-1'>
-                    <span>Address:</span> {order.address.address}, {order.address.landmark}, {order.address.pincode}
-                </p>
-            </div>
-
-
-
+            <UserBasicDetails order={order} />
             <div className="border-t pt-4">
                 <h3 className="font-semibold mb-2">Products</h3>
                 {order.orders.map((item: any) => (
@@ -104,47 +100,48 @@ function orderCard({ order, setOrders, setError, session }: any) {
                                 min="1"
                             />
                             <span className="text-sm text-gray-600">
-                                x ₹{item.product.finalPrice}
+                                x ₹{item.product.finalPrice} {item.extraCharge ? `+ ₹${item.extraCharge}` : ""} =
                             </span>
+                            <div>{item.product.finalPrice * item.quantity + (item.extraCharge || 0)} /-</div>
                         </div>
+
+                        <div className='flex flex-col gap-1'>
+                            <p>
+                                Extra Charges : {item?.extraCharge || "No"}
+                            </p>
+                            <form
+                                className="flex"
+                                onSubmit={(e: any) => handleExtraCharges(e, order._id, item._id, parseInt(e.target.extraCharges.value))}
+                            >
+                                <input
+                                    type="text"
+                                    name="extraCharges"
+                                    className="border rounded w-20 p-1 mr-2"
+                                    placeholder="Add extra"
+                                    required
+                                />
+                                <button className='p-1 bg-green-300 rounded-md'>Update</button>
+                            </form>
+                        </div>
+
                     </div>
                 ))}
+
+                <div className='flex justify-between items-center'>
+                    <p>
+                        Total Price: {order.orders.reduce((sum: any, item: any) => (item.product.finalPrice * item.quantity + (item?.extraCharge || 0) + sum), 0)}
+                    </p>
+                    <div className='flex items-center gap-2'>
+                        Paid: <input type="checkbox" className='h-4 w-4' checked={order?.isPaid || false} onChange={handlePaymentStatus} />
+                    </div>
+                </div>
             </div>
 
-            {order.message && <div className='mt-4'>
-                <h3 className="font-semibold mb-2">Message</h3>
-                <p className='text-red-400 font-medium'>{order.message}</p>
-            </div>}
+            <AssignedDetails order={order} />
 
-            {order.status != "pending" ? <div>
+            <ShowMessage message={order.message} />
+            <OrderButtons session={session} order={order} setOrders={setOrders} setError={setError} isMembership={false} />
 
-                {order.assignedTo == session?.data?.user?._id ?
-                    <div>
-                        <button
-                            onClick={() => handleStatusUpdate(order._id, "unassign")}
-                            className='mt-4 px-4 py-2 rounded w-full bg-yellow-100 text-yellow-800 hover:bg-yellow-200'>
-                            Unassign Order
-                        </button>
-
-                        <button
-                            onClick={() => handleStatusUpdate(order._id, "delivered")}
-                            className='mt-4 px-4 py-2 rounded w-full bg-green-100 text-green-800 hover:bg-green-200'>
-                            Mark as Delivered
-                        </button>
-                    </div> :
-                    <div>
-                        <button className='mt-4 px-4 py-2 rounded w-full bg-green-100 text-green-800 hover:bg-green-200'>
-                            Already Assigned
-                        </button>
-                    </div>}
-
-            </div>
-                :
-                <button onClick={() => handleStatusUpdate(order._id, "assign")}
-                    className='mt-4 px-4 py-2 rounded w-full bg-green-100 text-green-800 hover:bg-green-200'>
-                    Assign Yourself
-                </button>
-            }
         </div >
     )
 }

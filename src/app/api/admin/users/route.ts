@@ -6,7 +6,7 @@ export async function GET() {
     try {
         await connectToDatabase();
         const users = await User.find({})
-            .select('name email profileImage isAdmin contact');
+            .select('name email profileImage isAdmin contact isDelivery');
 
         return NextResponse.json(users);
     } catch (error) {
@@ -21,11 +21,11 @@ export async function PUT(request: NextRequest, { params }: { params: any }) {
     try {
         await connectToDatabase();
         const { userId } = await params;
-        const { isAdmin } = await request.json();
+        const { isAdmin, role } = await request.json();
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { isAdmin },
+            { role, isAdmin },
             { new: true }
         );
 
