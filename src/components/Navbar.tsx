@@ -6,7 +6,7 @@ import { menuOutline, closeOutline, searchOutline, bagHandleOutline, personOutli
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { useCartContext } from '../context/CartContext';
 import Image from 'next/image';
-import { Menu, X, Search, ShoppingBag, User } from "lucide-react";
+import { Menu, X, ShoppingBag, User } from "lucide-react";
 
 
 function Navbar() {
@@ -37,33 +37,38 @@ function Navbar() {
 
         <div className="hidden lg:flex gap-8">
           <nav className="flex gap-6 list-none">
-            <li>
+            <li className="hover:font-bold hover:text-green-600">
               <Link href="/">
                 HOME
               </Link>
             </li>
-            <li>
+            <li className="hover:font-bold hover:text-green-600">
               <Link href="/salads" >
                 SALAD
               </Link>
             </li>
-            <li>
+            <li className="hover:font-bold hover:text-green-600">
               <Link href="/membership" >
                 MEMBERSHIP
               </Link>
             </li>
-            <li>
+            <li className="hover:font-bold hover:text-green-600">
               <Link href="/contact" >
                 CONTACT
               </Link>
             </li>
             {
-              session?.data?.user?.isAdmin && <li>
+              session?.data?.user?.isAdmin && <li className="hover:font-bold hover:text-green-600">
                 <Link href="/admin" >
                   ADMIN
                 </Link>
               </li>
             }
+            {(!session?.data?.user?.isAdmin && session?.data?.user?.isDelivery) && <li className="hover:font-bold hover:text-green-600">
+              <Link href="/delivery" onClick={toggleMenu}>
+                DELIVERY
+              </Link>
+            </li>}
           </nav>
         </div>
 
@@ -85,7 +90,10 @@ function Navbar() {
                   <button className='text-slate-600 text-xl hover:text-black' onClick={() => signOut()}>logout</button>
                 </div>
                 :
-                <button className='ml-2 text-white text-xl hover:text-green-500 px-6 py-2 bg-black rounded-3xl' onClick={() => signIn('google')}>login</button>
+                <>
+                  {session.status != "loading" && <button className='ml-2 text-white text-xl hover:text-green-500 px-6 py-2 bg-black rounded-3xl' onClick={() => signIn('google')}>login</button>
+                  }
+                </>
               }
             </li>
             <li>
@@ -130,6 +138,11 @@ function Navbar() {
             {session?.data?.user?.isAdmin && <li className="hover:font-bold">
               <Link href="/admin" onClick={toggleMenu}>
                 ADMIN
+              </Link>
+            </li>}
+            {(!session?.data?.user?.isAdmin && session?.data?.user?.isDelivery) && <li className="hover:font-bold">
+              <Link href="/delivery" onClick={toggleMenu}>
+                DELIVERY
               </Link>
             </li>}
           </nav>

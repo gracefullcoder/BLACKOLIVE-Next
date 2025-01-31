@@ -15,16 +15,23 @@ const MembershipDetailsPage = ({ membership }: any) => {
             day: 'numeric'
         });
     };
+    console.log(membership)
 
     const postponeStatus = () => {
         try {
-            const utcDate = new Date();
-            utcDate.setDate(utcDate.getDate() + 1);
-            utcDate.setUTCHours(0, 0, 0, 0); 
             if (!membership || !Array.isArray(membership.postponedDates)) {
                 return false;
             }
 
+            const utcDate = new Date();
+            utcDate.setUTCHours(0, 0, 0, 0);
+            utcDate.setDate(utcDate.getDate() + 1);
+
+            console.log(utcDate.toISOString(),membership.startDate)
+            if(new Date(membership.startDate) > utcDate) {
+                return true;
+            }
+            
             const targetDateISO = utcDate.toISOString();
             const isDatePostponed = membership.postponedDates.some((date: any) => {
                 const dateISO = new Date(date).toISOString();
