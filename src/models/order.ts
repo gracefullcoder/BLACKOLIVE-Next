@@ -43,11 +43,6 @@ const orderSchema = new mongoose.Schema({
     time: {
         type: String
     },
-
-    instant: {
-        type: Boolean,
-        default: false
-    },
     overallRating: {
         type: Number,
         min: 0,

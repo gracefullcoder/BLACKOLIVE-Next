@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { getFilteredMemberships } from "@/src/actions/Order";
 import OrderGrid from "@/src/components/adminorders/manage/OrderGrid";
 import { useSession } from "next-auth/react";
+import { deliveryUsers } from "@/src/actions/User";
 
 export default function ActiveMembership({ onlyAssigned }: any) {
   const session = useSession();
@@ -16,6 +17,20 @@ export default function ActiveMembership({ onlyAssigned }: any) {
   useEffect(() => {
     fetchFilteredOrders();
   }, [timeFilter, session.data, isActive]);
+
+    const [users, setUsers] = useState([]);
+  
+      useEffect(() => {
+          const getUsers = async () => {
+              const res = await deliveryUsers();
+              console.log(res);
+              if (res.success) {
+                  setUsers(res?.users);
+              }
+          }
+  
+          getUsers();
+      }, [])
 
   const mapProducts = (data: any) => {
     const productMapping = new Map();
@@ -112,6 +127,7 @@ export default function ActiveMembership({ onlyAssigned }: any) {
           setError={() => { }}
           session={session}
           isMembership={true}
+          users = {users}
         />
 
       </div>

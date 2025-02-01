@@ -5,8 +5,9 @@ import {
 } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
 import { AssignedDetails, OrderButtons, ShowMessage, UserBasicDetails } from './OrderBasicDetails';
+import SelectDeliveryUser from './SelectDeliveryUser';
 
-function MembershipCard({ order, setOrders, setError, session }: any) {
+function MembershipCard({ order, setOrders, setError, session, users }: any) {
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -137,6 +138,7 @@ function MembershipCard({ order, setOrders, setError, session }: any) {
 
             <ShowMessage message={order.message} />
             <OrderButtons session={session} order={order} setOrders={setOrders} setError={setError} isMembership={true} />
+            {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={true} setOrders={setOrders} setError={setError} />}
         </div >
     )
 }

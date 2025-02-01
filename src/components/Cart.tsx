@@ -60,39 +60,6 @@ const Cart = () => {
     handleTimings();
   }, [items.length]);
 
-  // useEffect(() => {
-  //   const handleTimings = async () => {
-  //     const indianTime = new Date((new Date()).getTime() + 19800000);
-  //     let tempStartTime = new Date(indianTime)
-  //     let tempEndTime = new Date(indianTime);
-  //     const features = await featureDetails();
-  //     const deliveryTimings = features.deliveryTimings;
-  //     let finalTimings: any = []
-  //     deliveryTimings.forEach((time: any) => {
-  //       let start_HH_MM = time.startTime.split(":");
-  //       tempStartTime.setUTCHours(start_HH_MM[0], start_HH_MM[1], 0, 0);
-  //       const end_HH_MM = time.endTime.split(":");
-  //       tempEndTime.setUTCHours(end_HH_MM[0], end_HH_MM[1], 0, 0);
-
-  //       console.log(tempStartTime.toISOString(),tempEndTime.toISOString())
-  //       if ((indianTime < tempStartTime) || (indianTime < tempEndTime)) {
-  //         finalTimings.push(time)
-  //       }
-  //     })
-  //     console.log("appl", finalTimings)
-
-  //     if (finalTimings.length) {
-  //       setTimings(finalTimings)
-  //     } else {
-  //       console.log("in")
-  //       finalTimings = deliveryTimings.map((time: any) => ({ ...time, display: time.display.replace("Today", "Tommorow") }))
-  //       setTimings(finalTimings)
-  //     }
-  //   }
-
-  //   handleTimings()
-  // }, [])
-
   const userAddresses = session?.data?.user?.addresses || [];
   const userContact = session?.data?.user?.contact;
   const hasContact = Boolean(userContact);

@@ -54,3 +54,10 @@ export const addUserDetails = async (email: string, formData: FormData) => {
     return { success: true, message: "Not able to update user data" }
 }
 
+export const deliveryUsers = async () => {
+    const users = await User.find({
+        $or: [{ isAdmin: true }, { isDelivery: true }]
+    }).select('name email contact');
+    return { success: true, users: JSON.parse(JSON.stringify(users)) };
+}
+

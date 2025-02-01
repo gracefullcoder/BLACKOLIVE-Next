@@ -4,6 +4,7 @@ import { Calendar, Clock, MapPin, Package, CreditCard, ChevronLeft } from 'lucid
 import { useRouter } from 'next/navigation';
 import { postponeMembership, useBonus } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
+import { formatTime } from '@/src/utility/basic';
 
 const MembershipDetailsPage = ({ membership }: any) => {
     const router = useRouter();
@@ -118,7 +119,7 @@ const MembershipDetailsPage = ({ membership }: any) => {
                                     <Clock className="text-blue-600" />
                                     <div>
                                         <p className="text-sm text-gray-500">Daily Delivery Time</p>
-                                        <p className="font-medium">{membership?.time}:00</p>
+                                        <p className="font-medium">{formatTime(membership?.time)}</p>
                                     </div>
                                 </div>
                                 <div className="bg-blue-50 p-4 rounded-lg">
