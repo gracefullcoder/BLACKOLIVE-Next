@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { getFilteredOrders } from "@/src/actions/Order";
 import OrderGrid from "@/src/components/adminorders/manage/OrderGrid";
 import { useSession } from "next-auth/react";
+import { deliveryUsers } from "@/src/actions/User";
 
 function ActiveOrders({ onlyAssigned }: any) {
     const session = useSession();
@@ -12,6 +13,20 @@ function ActiveOrders({ onlyAssigned }: any) {
     const [timeFilter, setTimeFilter] = useState("all");
     const [orderItems, setOrderItems] = useState(new Map());
     const [isActive, setIsActive] = useState(false);
+
+    const [users, setUsers] = useState([]);
+
+    useEffect(() => {
+        const getUsers = async () => {
+            const res = await deliveryUsers();
+            console.log(res);
+            if (res.success) {
+                setUsers(res?.users);
+            }
+        }
+
+        getUsers();
+    }, [])
 
     useEffect(() => {
         fetchFilteredOrders();
@@ -112,6 +127,7 @@ function ActiveOrders({ onlyAssigned }: any) {
                     setError={() => { }}
                     session={session}
                     isMembership={false}
+                    users={users}
                 />
 
             </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Clock, MapPin, Star, Package, CreditCard } from 'lucide-react';
+import { formatTime } from '@/src/utility/basic';
 
 const MyOrders = ({ orders }: any) => {
     const router = useRouter();
@@ -24,7 +25,6 @@ const MyOrders = ({ orders }: any) => {
         } else {
             const daysDelivered = (currDate.getTime() - startDateFormat.getTime()) / (1000 * 60 * 60 * 24);
 
-            console.log("vaibhavrt", daysDelivered)
 
             const remDays = numOfDays - Math.floor(daysDelivered)
 
@@ -57,7 +57,7 @@ const MyOrders = ({ orders }: any) => {
                                         </div>
                                         <div className="flex items-center gap-2 text-gray-600 text-sm">
                                             <Clock size={14} />
-                                            {order.time}:00
+                                            {formatTime(order.time)}
                                         </div>
                                     </div>
                                     {order.overallRating > 0 && (
@@ -118,7 +118,7 @@ const MyOrders = ({ orders }: any) => {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <h3 className="font-medium text-gray-800 capitalize">
-                                            {membership.category.title} Plan
+                                            {membership.category.title}
                                         </h3>
                                         <div className="flex items-center gap-2 mt-1">
                                             <Calendar size={14} className="text-gray-500" />
@@ -129,23 +129,23 @@ const MyOrders = ({ orders }: any) => {
                                     </div>
                                     <div className="bg-blue-50 px-3 py-1 rounded-full">
                                         <p className="text-sm text-blue-600">
-                                            {daysRemaining(membership.startDate, membership.category.days)} days
+                                            {membership.category.days - membership.deliveryDates.length} days
                                         </p>
                                     </div>
                                 </div>
 
-                                <div className="flex justify-between items-center text-sm">
+                                {/* <div className="flex justify-between items-center text-sm">
                                     <div className="text-gray-600">
                                         Bonus Days: {membership.category.bonus}
                                     </div>
                                     <div className="text-gray-600">
                                         Used: {membership.bonusUsed}
                                     </div>
-                                </div>
+                                </div> */}
 
                                 <div className="flex items-center gap-2 text-gray-600 text-sm">
                                     <Clock size={14} />
-                                    Delivery at {membership.time}:00
+                                    Delivery at {formatTime(membership.time)}
                                 </div>
 
                                 <div className="flex items-start gap-2 text-sm text-gray-600">

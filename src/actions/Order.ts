@@ -262,16 +262,16 @@ export async function getAllOrders() {
 }
 
 // Update order status
-export async function updateOrderStatus(orderId: any, newStatus: any) {
+export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?: boolean, assignUser?: string) {
     try {
         await connectToDatabase();
         const { user } = await getServerSession(AuthConfig);
 
-        if (user && user.isAdmin) {
-            if (newStatus == "assign") {
+        if (user && user.isDelivery) {
+            if (newStatus == "assign" && user.isAdmin) {
                 const updatedOrder = await Order.findByIdAndUpdate(
                     orderId,
-                    { status: "assigned", assignedTo: user._id },
+                    { status: "assigned", assignedTo: assignReq ? assignUser : user._id },
                     { new: true }
                 ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
@@ -310,16 +310,16 @@ export async function updateOrderStatus(orderId: any, newStatus: any) {
     }
 }
 
-export async function updateMembershipStatus(orderId: any, newStatus: any) {
+export async function updateMembershipStatus(orderId: any, newStatus: any, assignReq?: boolean, assignUser?: string) {
     try {
         await connectToDatabase();
         const { user } = await getServerSession(AuthConfig);
 
-        if (user && user.isAdmin) {
-            if (newStatus == "assign") {
+        if (user && user.isDelivery) {
+            if (newStatus == "assign" && user.isAdmin) {
                 const updatedOrder = await MembershipOrder.findByIdAndUpdate(
                     orderId,
-                    { status: "assigned", assignedTo: user._id },
+                    { status: "assigned", assignedTo: assignReq ? assignUser : user._id },
                     { new: true }
                 ).populate('category').populate({ path: "assignedTo", select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }

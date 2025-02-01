@@ -6,10 +6,9 @@ import {
 } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
 import { AssignedDetails, OrderButtons, ShowMessage, UserBasicDetails } from './OrderBasicDetails';
+import SelectDeliveryUser from './SelectDeliveryUser';
 
-function orderCard({ order, setOrders, setError, session }: any) {
-
-
+function orderCard({ order, setOrders, setError, session, users }: any) {
 
     const handleQuantityUpdate = async (orderId: any, productId: any, newQuantity: any) => {
         try {
@@ -141,7 +140,7 @@ function orderCard({ order, setOrders, setError, session }: any) {
 
             <ShowMessage message={order.message} />
             <OrderButtons session={session} order={order} setOrders={setOrders} setError={setError} isMembership={false} />
-
+            {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={false} setOrders={setOrders} setError={setError} />}
         </div >
     )
 }

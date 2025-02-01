@@ -1,8 +1,9 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Link from 'next/link';
+import OrderTable from './OrderTable';
+import { formatTime } from '@/src/utility/basic';
 
 export default function OrderAnalytics({ orders }: any) {
     const [startDate, setStartDate] = useState('');
@@ -10,11 +11,11 @@ export default function OrderAnalytics({ orders }: any) {
     const [filteredOrders, setFilteredOrders] = useState<any>([]);
     const [analytics, setAnalytics] = useState<any>({
         mostOrderedProduct: { title: '', count: 0 },
-        totalRevenue: 0,
         totalOrders: 0,
         topDeliveryPerson: { id: '', count: 0 },
         customerAnalytics: [],
-        productOrderCounts: []
+        productOrderCounts: [],
+        cancelProductOrderCount: []
     });
 
     const applyFilters = () => {
@@ -30,54 +31,62 @@ export default function OrderAnalytics({ orders }: any) {
         setFilteredOrders(filtered);
         calculateAnalytics(filtered);
     };
-    // Calculate all analytics metrics
+
     const calculateAnalytics = (filteredOrders: any) => {
-        // Most ordered product
         const productOrderCounts: any = {};
+        const cancelProductOrderCount: any = {};
+
         filteredOrders.forEach((order: any) => {
-            order.orders.forEach((item: any) => {
-                const productId = item.product._id;
-                const productTitle = item.product.title;
-                if (!productOrderCounts[productId]) {
-                    productOrderCounts[productId] = {
-                        title: productTitle,
-                        count: 0
-                    };
-                }
-                productOrderCounts[productId].count += item.quantity;
-            });
+            if (order.status == "cancelled") {
+                order.orders.forEach((item: any) => {
+                    const productId = item.product._id;
+                    const productTitle = item.product.title;
+                    if (!cancelProductOrderCount[productId]) {
+                        cancelProductOrderCount[productId] = {
+                            title: productTitle,
+                            count: 0
+                        };
+                    }
+                    cancelProductOrderCount[productId].count += item.quantity;
+                });
+            } else {
+                order.orders.forEach((item: any) => {
+                    const productId = item.product._id;
+                    const productTitle = item.product.title;
+                    if (!productOrderCounts[productId]) {
+                        productOrderCounts[productId] = {
+                            title: productTitle,
+                            count: 0
+                        };
+                    }
+                    productOrderCounts[productId].count += item.quantity;
+                });
+            }
         });
 
         const mostOrdered = Object.values(productOrderCounts).reduce((max: any, { title, count }: any) => {
             return count > max.count ? { title, count } : max;
         }, { title: '', count: 0 });
 
-        // Calculate revenue and delivery stats
-        const revenue = filteredOrders.reduce((total: any, order: any) => {
-            return total + order.orders.reduce((orderTotal: any, item: any) => {
-                return orderTotal + (item.product.finalPrice * item.quantity);
-            }, 0);
-        }, 0);
-
-        // Delivery person stats
         const deliveryStats: any = {};
         filteredOrders.forEach((order: any) => {
-            if (order.assignedTo) {
+            if (order.assignedTo && order.status != "cancelled") {
                 deliveryStats[order.assignedTo] = (deliveryStats[order.assignedTo] || 0) + 1;
             }
         });
 
-        // Customer analytics
         const customerStats: any = {};
         filteredOrders.forEach((order: any) => {
-            const userId = order.user._id;
-            if (!customerStats[userId]) {
-                customerStats[userId] = { name: order.user.name, email: order.user.email, revenue: 0, orderCount: 0 };
+            if (order.status != "cancelled") {
+                const userId = order.user._id;
+                if (!customerStats[userId]) {
+                    customerStats[userId] = { name: order.user.name, email: order.user.email, revenue: 0, orderCount: 0 };
+                }
+                customerStats[userId].orderCount += 1;
+                customerStats[userId].revenue += order.orders.reduce((total: any, item: any) => {
+                    return total + (item.product.finalPrice * item.quantity) + (item.extraCharge || 0);
+                }, 0);
             }
-            customerStats[userId].orderCount += 1;
-            customerStats[userId].revenue += order.orders.reduce((total: any, item: any) => {
-                return total + (item.product.finalPrice * item.quantity);
-            }, 0);
         });
 
         const sortedCustomers = Object.entries(customerStats)
@@ -86,7 +95,6 @@ export default function OrderAnalytics({ orders }: any) {
 
         setAnalytics({
             mostOrderedProduct: mostOrdered,
-            totalRevenue: revenue,
             totalOrders: filteredOrders.length,
             topDeliveryPerson: Object.entries(deliveryStats).reduce(
                 (max, [id, count]: any) => count > max.count ? { id, count } : max,
@@ -97,25 +105,27 @@ export default function OrderAnalytics({ orders }: any) {
         });
     };
 
-    // Generate and download Excel
+
     const downloadExcel = () => {
-        let csv = 'Order ID,Date,Customer Name,Customer Email,Address,Mobile Number,Status,Assigned To,Products,Quantity,Price,Total\n';
+        let csv = 'Order ID,Customer Name,Customer Email,Mobile Number,Address,Status,Date,Delivery Time,Assigned To,Products,Quantity,Price,Extra Price,Total\n';
+        
 
         let grandTotal = 0;
         filteredOrders.forEach((order: any) => {
             let orderTotal = 0;
             order.orders.forEach((item: any) => {
-                const total = item.quantity * item.product.finalPrice;
+                const total = item.quantity * item.product.finalPrice + (item.extraCharge || 0);
                 orderTotal += total;
                 const address = `${order?.address?.address || ""} ${order?.address?.landmark || ""} ${order?.address?.pincode || 0}`.replaceAll(",", "|")
                 console.log(address)
-                csv += `${order._id},${new Date(order.createdAt).toLocaleDateString()},${order.user.name},${order.user.email},${address},${order.contact},${order.status},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${total}\n`;
+                const hrs = parseInt(order.time.slice(0,2))
+                csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${total}\n`;
             });
-            csv += `,,,,,,,,,,,Order Total: ${orderTotal}\n`;
+            csv += `,,,,,,,,,,,,Order Total: ${orderTotal}\n`;
             grandTotal += orderTotal;
         });
 
-        csv += `,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
+        csv += `,,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
 
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -127,6 +137,7 @@ export default function OrderAnalytics({ orders }: any) {
     };
 
     useEffect(() => {
+        console.log(orders)
         setFilteredOrders(orders);
         calculateAnalytics(orders);
     }, []);
@@ -163,6 +174,11 @@ export default function OrderAnalytics({ orders }: any) {
                 </div>
             </div>
 
+            <OrderTable orders={orders} />
+
+
+
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-4 border rounded shadow">
                     <h2 className="text-lg font-bold">Most Ordered Product</h2>
@@ -171,9 +187,8 @@ export default function OrderAnalytics({ orders }: any) {
                 </div>
 
                 <div className="p-4 border rounded shadow">
-                    <h2 className="text-lg font-bold">Total Revenue</h2>
-                    <p className="text-2xl">₹{analytics.totalRevenue}</p>
-                    <p className="text-gray-500">{analytics.totalOrders} orders</p>
+                    <h2 className="text-lg font-bold">Total Orders</h2>
+                    <p className="text-2xl">{analytics.totalOrders} orders</p>
                 </div>
 
                 <Link href={`/admin/users/details?userId=${analytics.topDeliveryPerson.id}`}>
@@ -239,6 +254,7 @@ export default function OrderAnalytics({ orders }: any) {
                     </table>
                 </div>
             </div>
+
         </div >
     );
 }
