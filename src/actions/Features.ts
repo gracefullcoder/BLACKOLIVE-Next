@@ -1,5 +1,4 @@
 "use server"
-
 import connectToDatabase from "../lib/ConnectDb";
 import Feature from "../models/extraFeatures"
 
@@ -42,9 +41,16 @@ export async function addTimingServer(formData: FormData) {
 }
 
 export async function fetchTimingsServer() {
-    const feature: any = await Feature.findOne().select("deliveryTimings");
-    console.log("apple", feature.deliveryTimings)
-    return JSON.parse(JSON.stringify(feature?.deliveryTimings))
+    try {
+        await connectToDatabase()
+        const feature: any = await Feature.findOne().select("deliveryTimings");
+        console.log("apple", feature.deliveryTimings)
+        return { success: true, message: 'Timing added successfully', data: JSON.parse(JSON.stringify(feature?.deliveryTimings)) };
+    } catch (error) {
+        console.log(error)
+        return { success: false, message: 'Timing added successfully' };
+
+    }
 }
 
 

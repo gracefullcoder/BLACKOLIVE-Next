@@ -52,10 +52,14 @@ const TimingManager = () => {
 
     const fetchTimings = async () => {
         setLoading(true);
-        const data = await fetchTimingsServer();
-        setTimings(data);
-        setLoading(false);
+        const res = await fetchTimingsServer();
+        if(res.success) {
+            setTimings(res?.data)
+            setLoading(false);
+        }
     };
+
+    console.log(timings)
 
     useEffect(() => {
         fetchTimings();
