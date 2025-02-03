@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Download } from 'lucide-react';
 import Link from 'next/link';
 import OrderTable from './OrderTable';
-import { formatTime } from '@/src/utility/basic';
+import { downloadExcel } from './analyticsFunctions';
 
 export default function OrderAnalytics({ orders }: any) {
     const [startDate, setStartDate] = useState('');
@@ -106,35 +106,7 @@ export default function OrderAnalytics({ orders }: any) {
     };
 
 
-    const downloadExcel = () => {
-        let csv = 'Order ID,Customer Name,Customer Email,Mobile Number,Address,Status,Date,Delivery Time,Assigned To,Products,Quantity,Price,Extra Price,Total\n';
-        
-
-        let grandTotal = 0;
-        filteredOrders.forEach((order: any) => {
-            let orderTotal = 0;
-            order.orders.forEach((item: any) => {
-                const total = item.quantity * item.product.finalPrice + (item.extraCharge || 0);
-                orderTotal += total;
-                const address = `${order?.address?.address || ""} ${order?.address?.landmark || ""} ${order?.address?.pincode || 0}`.replaceAll(",", "|")
-                console.log(address)
-                const hrs = parseInt(order.time.slice(0,2))
-                csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${total}\n`;
-            });
-            csv += `,,,,,,,,,,,,Order Total: ${orderTotal}\n`;
-            grandTotal += orderTotal;
-        });
-
-        csv += `,,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
-
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'order_analytics.csv';
-        a.click();
-        window.URL.revokeObjectURL(url);
-    };
+   
 
     useEffect(() => {
         console.log(orders)
@@ -166,7 +138,7 @@ export default function OrderAnalytics({ orders }: any) {
                         <button onClick={applyFilters} className="bg-blue-500 text-white px-4 py-2 rounded">
                             Apply Filter
                         </button>
-                        <button onClick={downloadExcel} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
+                        <button onClick={() => downloadExcel(filteredOrders)} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
                             <Download className="w-4 h-4" />
                             Export Excel
                         </button>

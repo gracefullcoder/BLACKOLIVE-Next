@@ -2,6 +2,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Clock, MapPin, Star, Package, CreditCard } from 'lucide-react';
 import { formatTime } from '@/src/utility/basic';
+import { generateOrderReceipt } from '../analytics/analyticsFunctions';
 
 const MyOrders = ({ orders }: any) => {
     const router = useRouter();
@@ -48,6 +49,7 @@ const MyOrders = ({ orders }: any) => {
                             key={order._id}
                             // onClick={() => router.push(`/order/${order._id}`)}
                             className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4"
+                            onClick={() => generateOrderReceipt(order)}
                         >
                             <div className="space-y-3">
                                 <div className="flex justify-between items-start">
@@ -129,7 +131,7 @@ const MyOrders = ({ orders }: any) => {
                                     </div>
                                     <div className="bg-blue-50 px-3 py-1 rounded-full">
                                         <p className="text-sm text-blue-600">
-                                            {membership.category.days - membership.deliveryDates.length} days
+                                            {membership.category.days - membership.deliveryDates.length} Days Rem.
                                         </p>
                                     </div>
                                 </div>

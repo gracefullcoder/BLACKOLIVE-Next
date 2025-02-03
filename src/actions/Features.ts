@@ -42,10 +42,9 @@ export async function addTimingServer(formData: FormData) {
 }
 
 export async function fetchTimingsServer() {
-    const feature = await Feature.find({}).select("deliveryTimings");
-    console.log("apple" ,feature)
-    // return feature?.deliveryTimings || [];
-    return []
+    const feature: any = await Feature.findOne().select("deliveryTimings");
+    console.log("apple", feature.deliveryTimings)
+    return JSON.parse(JSON.stringify(feature?.deliveryTimings))
 }
 
 
@@ -56,7 +55,27 @@ export async function deleteTimingServer(timingId: any) {
             $pull: { deliveryTimings: { _id: timingId } },
         });
         return { success: true, message: "Timing deleted successfully" };
-    } catch (error:any) {
+    } catch (error: any) {
         return { success: false, message: error.message };
     }
 }
+
+
+export async function updateTimingServer(timingDetails: any) {
+    try {
+        const result = await Feature.findOneAndUpdate(
+            { "deliveryTimings._id": timingDetails._id },
+            { $set: { "deliveryTimings.$": timingDetails } },
+            { new: true }
+        );
+
+        if (!result) {
+            return { success: false, message: "Timing not found" };
+        }
+
+        return { success: true, message: "Timing updated successfully" };
+    } catch (error: any) {
+        return { success: false, message: error.message };
+    }
+}
+

@@ -4,6 +4,7 @@ import { getFilteredOrders } from "@/src/actions/Order";
 import OrderGrid from "@/src/components/adminorders/manage/OrderGrid";
 import { useSession } from "next-auth/react";
 import { deliveryUsers } from "@/src/actions/User";
+import PreLoader from "../../PreLoader";
 
 function ActiveOrders({ onlyAssigned }: any) {
     const session = useSession();
@@ -79,12 +80,8 @@ function ActiveOrders({ onlyAssigned }: any) {
         }
     };
 
-    if (loading)
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                Loading...
-            </div>
-        );
+    if (loading) <PreLoader />
+
 
     return (
         <div className="p-4 max-w-7xl mx-auto">
@@ -133,7 +130,7 @@ function ActiveOrders({ onlyAssigned }: any) {
             </div>
 
             {/* Messaged Orders */}
-            <div className="my-6">
+            <div className="my-6 overflow-x-auto">
                 <h2 className="text-lg font-semibold mb-2">Messaged Orders</h2>
                 <table className="table-auto w-full border-collapse border border-gray-300">
                     <thead>
@@ -153,7 +150,12 @@ function ActiveOrders({ onlyAssigned }: any) {
                                         {idx === 0 && (<td className='border-2 border-black border-r-gray-300 px-4 py-2' rowSpan={orderDet.orders.length}>
                                             <p>Id: {orderDet._id}</p>
                                             <p>Name: {orderDet.user.name}</p>
-                                            <span>Address:</span> {orderDet.address.address}, {orderDet.address.landmark}, {orderDet.address.pincode}
+                                            <p><span>Address:</span> {orderDet.address.address}, {orderDet.address.landmark}, {orderDet.address.pincode}</p>
+                                            <p>
+                                                <span className="font-bold">{orderDet?.assignedTo?._id == session.data?.user?._id ? "Assigned To Me " : "Assigned To"}</span>
+                                                {orderDet.assignedTo ? <span className="font-bold text-green-500"> {orderDet?.assignedTo?.name}</span> : <span className="font-bold text-red-500">None</span>}
+                                            </p>
+
                                         </td>)}
                                         <td className={` border border-gray-300 ${idx == orderDet.orders.length - 1 && 'border-2 border-b-black'} px-4 py-2`}>
                                             <p>{item.product.title}</p>

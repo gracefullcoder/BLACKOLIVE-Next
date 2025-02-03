@@ -2,7 +2,6 @@ import HeroSection from "@/src/components/HeroSection";
 import Products from "@/src/components/product/Products";
 import { productType } from "../types/product";
 import { getProducts } from "../actions/Product";
-import Feature from "../models/extraFeatures";
 import { featureDetails } from "../actions/Features";
 import MessageBar from "../components/MessageBar";
 

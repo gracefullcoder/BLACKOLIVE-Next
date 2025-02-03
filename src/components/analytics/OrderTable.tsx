@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Download, FileText } from 'lucide-react';
+import { downloadExcel, generateOrderReceipt } from './analyticsFunctions';
 
 const OrderTable = ({ orders }: any) => {
     const [filteredOrders, setFilteredOrders] = useState(orders);
@@ -14,43 +15,7 @@ const OrderTable = ({ orders }: any) => {
         }, 0);
     };
 
-    const generatePDF = (order: any) => {
-        let receiptContent = `ORDER RECEIPT\n`;
-        receiptContent += `Order ID: ${order._id}\n`;
-        receiptContent += `Date: ${new Date(order.createdAt).toLocaleDateString()}\n`;
-        receiptContent += `Customer: ${order.user.name}\n`;
-        receiptContent += `Contact: ${order.contact}\n`;
-        receiptContent += `Address: ${order.address.address}, ${order.address.landmark}, ${order.address.pincode}\n\n`;
-        receiptContent += `Items:\n`;
 
-        let subtotal = 0;
-        let totalExtraCharges = 0;
-
-        order.orders.forEach((item: any) => {
-            const itemTotal = item.product.finalPrice * item.quantity;
-            subtotal += itemTotal;
-            totalExtraCharges += item.extraCharge || 0;
-
-            receiptContent += `${item.product.title}\n`;
-            receiptContent += `  Quantity: ${item.quantity} × ₹${item.product.finalPrice}\n`;
-            receiptContent += `  Extra Charges: ₹${item.extraCharge || 0}\n`;
-            receiptContent += `  Total: ₹${itemTotal + (item.extraCharge || 0)}\n\n`;
-        });
-
-        receiptContent += `\nSubtotal: ₹${subtotal}\n`;
-        receiptContent += `Extra Charges: ₹${totalExtraCharges}\n`;
-        receiptContent += `Grand Total: ₹${subtotal + totalExtraCharges}\n`;
-
-        const blob = new Blob([receiptContent], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `order-receipt-${order._id}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    };
 
     useEffect(() => {
         if (statusFilter === 'all') {
@@ -77,12 +42,20 @@ const OrderTable = ({ orders }: any) => {
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Order Details</h2>
                 <div className="relative">
-                    <button
-                        onClick={() => setIsSelectOpen(!isSelectOpen)}
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        {statusFilter === 'all' ? 'All Orders' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-                    </button>
+
+                    <div className='flex gap-4'>
+                        <button
+                            onClick={() => setIsSelectOpen(!isSelectOpen)}
+                            className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {statusFilter === 'all' ? 'All Orders' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                        </button>
+                        <button onClick={() => downloadExcel(filteredOrders)} className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2">
+                            <Download className="w-4 h-4" />
+                            Export Excel
+                        </button>
+                    </div>
+
 
                     {isSelectOpen && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
@@ -155,9 +128,9 @@ const OrderTable = ({ orders }: any) => {
                                     </td>
                                     <td className="p-2 border">
                                         <span className={`px-2 py-1 rounded-full text-xs ${order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                                                order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                                                    order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-blue-100 text-blue-800'
+                                            order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                                                order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                    'bg-blue-100 text-blue-800'
                                             }`}>
                                             {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                         </span>
@@ -167,7 +140,7 @@ const OrderTable = ({ orders }: any) => {
                                     </td>
                                     <td className="p-2 text-center border">
                                         <button
-                                            onClick={() => generatePDF(order)}
+                                            onClick={() => generateOrderReceipt(order)}
                                             className="inline-flex items-center justify-center p-2 text-gray-600 hover:text-blue-600"
                                             title="Download Receipt"
                                         >

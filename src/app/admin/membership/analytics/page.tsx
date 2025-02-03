@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getAllMembership } from '@/src/actions/Order';
 import MembershipAnalytics from '@/src/components/analytics/MembershipAnalytics';
+import PreLoader from '@/src/components/PreLoader';
 
 export default function Page() {
     const [orders, setOrders] = useState<any>([]);
@@ -27,7 +28,7 @@ export default function Page() {
         }
     };
 
-    if (loading) return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
+    if (loading) return <PreLoader />
 
     return (
         <div className="p-4 max-w-7xl mx-auto">

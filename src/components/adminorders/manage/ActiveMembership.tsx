@@ -4,6 +4,7 @@ import { getFilteredMemberships } from "@/src/actions/Order";
 import OrderGrid from "@/src/components/adminorders/manage/OrderGrid";
 import { useSession } from "next-auth/react";
 import { deliveryUsers } from "@/src/actions/User";
+import PreLoader from "../../PreLoader";
 
 export default function ActiveMembership({ onlyAssigned }: any) {
   const session = useSession();
@@ -18,19 +19,19 @@ export default function ActiveMembership({ onlyAssigned }: any) {
     fetchFilteredOrders();
   }, [timeFilter, session.data, isActive]);
 
-    const [users, setUsers] = useState([]);
-  
-      useEffect(() => {
-          const getUsers = async () => {
-              const res = await deliveryUsers();
-              console.log(res);
-              if (res.success) {
-                  setUsers(res?.users);
-              }
-          }
-  
-          getUsers();
-      }, [])
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    const getUsers = async () => {
+      const res = await deliveryUsers();
+      console.log(res);
+      if (res.success) {
+        setUsers(res?.users);
+      }
+    }
+
+    getUsers();
+  }, [])
 
   const mapProducts = (data: any) => {
     const productMapping = new Map();
@@ -79,12 +80,8 @@ export default function ActiveMembership({ onlyAssigned }: any) {
     }
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        Loading...
-      </div>
-    );
+  if (loading) <PreLoader />
+
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
@@ -127,7 +124,7 @@ export default function ActiveMembership({ onlyAssigned }: any) {
           setError={() => { }}
           session={session}
           isMembership={true}
-          users = {users}
+          users={users}
         />
 
       </div>
@@ -177,7 +174,11 @@ export default function ActiveMembership({ onlyAssigned }: any) {
                   <p>Id: {orderDet._id}</p>
                   <p>Name: {orderDet.user.name}</p>
                   <span>Address:</span> {orderDet.address.address}, {orderDet.address.landmark}, {orderDet.address.pincode}
-                  <p className="text-sm text-green-500 font-bold">{orderDet?.assignedTo?._id == session.data?.user?._id && <>Assigned <span className="text-black">{orderDet._id.slice(-6)} To {orderDet?.assignedTo?.name}</span></>}</p>
+                  <p>
+                    <span className="font-bold">{orderDet?.assignedTo?._id == session.data?.user?._id ? "Assigned To Me " : "Assigned To"}</span>
+                    {orderDet.assignedTo ? <span className="font-bold text-green-500"> {orderDet?.assignedTo?.name}</span> : <span className="font-bold text-red-500">None</span>}
+                  </p>
+
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
                   <p>{orderDet.category.title}</p>
