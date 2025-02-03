@@ -4,7 +4,6 @@ import { getSpecificProduct } from '@/src/actions/Product'
 
 async function renderProduct({ searchParams }: { searchParams: any }) {
     const params = await searchParams
-
     const id = params.id
     const product = await getSpecificProduct(id);
 

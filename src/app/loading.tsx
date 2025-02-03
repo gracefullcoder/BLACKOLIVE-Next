@@ -1,8 +1,8 @@
-import React from 'react'
+import PreLoader from "../components/PreLoader"
 
 function loading() {
   return (
-    <div>loading</div>
+    <PreLoader />
   )
 }
 

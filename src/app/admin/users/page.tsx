@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import PreLoader from '@/src/components/PreLoader';
 
 export default function UserManagementPage() {
   const [users, setUsers] = useState<any>([]);
@@ -50,13 +51,8 @@ export default function UserManagementPage() {
     router.push(`/admin/users/details?userId=${userId}`);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
+  if (loading) <PreLoader />
+
 
   return (
     <div className="container mx-auto p-6">

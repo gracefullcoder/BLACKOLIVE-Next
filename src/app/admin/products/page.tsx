@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getProducts } from "@/src/actions/Product";
+import PreLoader from "@/src/components/PreLoader";
 
 export default function ProductManagementPage() {
   const [allProducts, setAllProducts] = useState<any>({ products: [], membership: [] });
@@ -71,13 +72,8 @@ export default function ProductManagementPage() {
       router.push(`/admin/products/edit/?Mid=${productId}`)
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
+  if (loading) <PreLoader />
+
 
   return (
     <div className="container mx-auto p-6">

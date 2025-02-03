@@ -114,6 +114,7 @@ export async function PATCH(req: Request) {
             });
             revalidatePath("/salads");
         }
+        revalidatePath("/");
 
         return NextResponse.json(
             { message: "Product created successfully", product },

@@ -1,9 +1,6 @@
-import React from 'react'
-
+import PreLoader from "@/src/components/PreLoader"
 function loading() {
-  return (
-    <div>loading</div>
-  )
+  return (<PreLoader />)
 }
 
 export default loading

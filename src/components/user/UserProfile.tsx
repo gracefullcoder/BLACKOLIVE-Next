@@ -81,11 +81,11 @@ const UserProfile = ({ user }: any) => {
                 <div className="bg-white shadow rounded-lg">
                     {/* Profile Header */}
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-t-lg">
-                        <div className="flex items-center space-x-6">
+                        <div className="flex items-center gap-4">
                             <div className="relative">
-                                {user.image ? (
+                                {user.profileImage ? (
                                     <img
-                                        src={user.image}
+                                        src={user.profileImage}
                                         alt={user.name}
                                         className="h-24 w-24 rounded-full border-4 border-white object-cover"
                                     />
@@ -95,7 +95,7 @@ const UserProfile = ({ user }: any) => {
                                     </div>
                                 )}
                             </div>
-                            <div className="text-white">
+                            <div className="text-white overflow-hidden">
                                 <h1 className="text-2xl font-bold">{user?.name}</h1>
                                 <p className="text-blue-100">{user?.email}</p>
                             </div>
