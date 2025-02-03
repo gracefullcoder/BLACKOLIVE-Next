@@ -41,9 +41,24 @@ const Cart = () => {
   const isProfileComplete = useMemo(() => hasContact && userAddresses?.length, [userAddresses?.length, hasContact])
 
   useEffect(() => {
-    setContactNumber(session?.data?.user?.contact || '');
-    setUserAddresses(session?.data?.user?.addresses)
-    setHasContact(session?.data?.user?.contact ? true : false);
+    let contactDetails = session?.data?.user?.contact
+    let addressesDetails = session?.data?.user?.addresses;
+
+    if (contactDetails) {
+      setContactNumber(contactDetails)
+      setHasContact(true)
+      setIsEditingContact(false)
+    } else {
+      setIsEditingContact(true);
+    }
+
+    if (addressesDetails?.length) {
+      setUserAddresses(addressesDetails)
+      setIsAddingAddress(false);
+    } else {
+      setIsAddingAddress(true);
+    }
+
   }, [session])
 
   useEffect(() => {
@@ -146,7 +161,7 @@ const Cart = () => {
       return false;
     }
 
-    if(contactNumber.toString().length != 10) {
+    if (contactNumber.toString().length != 10) {
       toast.error("Please Enter valid contact!");
       return false;
     }
@@ -349,7 +364,11 @@ const Cart = () => {
 
                 {/* Address Selection */}
                 {userAddresses.length > 0 ? (
-                  <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                  <div className="my-2 max-h-60 overflow-y-auto">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold">Select Address </p>
+                    </div>
+
                     {userAddresses.map((addr: any, idx: number) => (
                       <div
                         key={idx}
