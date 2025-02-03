@@ -1,6 +1,5 @@
 // components/TimingManager.tsx
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { addTimingServer, fetchTimingsServer, deleteTimingServer, updateTimingServer } from "@/src/actions/Features";
 import { toast } from "react-toastify";

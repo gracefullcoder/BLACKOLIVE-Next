@@ -91,7 +91,7 @@ function Navbar() {
                 </div>
                 :
                 <>
-                  {session.status != "loading" && <button className='ml-2 text-white text-xl hover:text-green-500 px-6 py-2 bg-black rounded-3xl' onClick={() => signIn('google')}>login</button>
+                  {session.status != "loading" && <button className='ml-2 text-white text-lg px-6 py-1 duration-200 hover:shadow-gray-600 hover:shadow-md bg-black rounded-3xl' onClick={() => signIn('google')}>login</button>
                   }
                 </>
               }

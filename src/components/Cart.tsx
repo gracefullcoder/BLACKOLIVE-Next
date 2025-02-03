@@ -1,16 +1,16 @@
 "use client"
-import { X, ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
+import { X, ShoppingCart, Minus, Plus, Trash2, Phone, MapPin, Save, Pencil } from 'lucide-react';
 import { useCartContext } from '../context/CartContext';
 import { IncQty, DecQty, removeItem } from '../utility/CartFunction';
 import { createOrder } from '../actions/Order';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/Cart';
 import { Message } from '@/src/utility/SendMessage';
-import { useEffect } from 'react';
 import { featureDetails } from '../actions/Features';
+import axios from 'axios';
 
 const Cart = () => {
   const router = useRouter();
@@ -22,8 +22,29 @@ const Cart = () => {
   const [selectedAddress, setSelectedAddress] = useState<number>(-1);
   const [orderMessage, setOrderMessage] = useState("");
   const [pincodes, setPincodes] = useState([]);
-
   const [timings, setTimings] = useState<any>([]);
+
+  // New state for contact and address management
+  const [userAddresses, setUserAddresses] = useState(session?.data?.user?.addresses || []);
+  const [contactNumber, setContactNumber] = useState(session?.data?.user?.contact || '');
+
+  const [isEditingContact, setIsEditingContact] = useState(false);
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState<any>({
+    number: '',
+    address: '',
+    landmark: '',
+    pincode: ''
+  });
+
+  const [hasContact, setHasContact] = useState(Boolean(session?.data?.user?.contact))
+  const isProfileComplete = useMemo(() => hasContact && userAddresses?.length, [userAddresses?.length, hasContact])
+
+  useEffect(() => {
+    setContactNumber(session?.data?.user?.contact || '');
+    setUserAddresses(session?.data?.user?.addresses)
+    setHasContact(session?.data?.user?.contact ? true : false);
+  }, [session])
 
   useEffect(() => {
     const handleTimings = async () => {
@@ -60,11 +81,49 @@ const Cart = () => {
     handleTimings();
   }, [items.length]);
 
-  const userAddresses = session?.data?.user?.addresses || [];
-  const userContact = session?.data?.user?.contact;
-  const hasContact = Boolean(userContact);
-  const hasAddress = userAddresses.length > 0;
-  const isProfileComplete = hasContact && hasAddress;
+  // Update contact number
+  const handleUpdateContact = async (e: any) => {
+    e.preventDefault();
+    try {
+      const res = await axios.put('/api/user/contact', {
+        id: session?.data?.user?._id,
+        contact: contactNumber
+      });
+
+      if (res.status && res.status < 400) {
+        toast.success("Contact number updated successfully");
+        setHasContact(true);
+        setIsEditingContact(false);
+      }
+    } catch (error) {
+      toast.error("Failed to update contact number");
+      console.error(error);
+    }
+  };
+
+  // Add new address
+  const handleAddAddress = async (e: any) => {
+    e.preventDefault();
+    try {
+      const res = await axios.post('/api/user/address', {
+        id: session?.data?.user?._id,
+        address: {
+          ...newAddress,
+          pincode: parseInt(newAddress.pincode)
+        }
+      });
+
+      if (res.status && res.status < 400) {
+        toast.success("Address added successfully");
+        setUserAddresses(res.data.addresses);
+        setIsAddingAddress(false);
+        setNewAddress({ number: '', address: '', landmark: '', pincode: '' });
+      }
+    } catch (error) {
+      toast.error("Failed to add address");
+      console.error(error);
+    }
+  };
 
   const validateCheckout = () => {
     if (!time) {
@@ -77,8 +136,6 @@ const Cart = () => {
     }
 
     const pincode = userAddresses[selectedAddress].pincode;
-    console.log(pincode)
-
     if (!pincodes.some((pin) => pin == pincode)) {
       toast.error("Not deliverable in your area!");
       return false;
@@ -86,6 +143,11 @@ const Cart = () => {
 
     if (!hasContact) {
       toast.error("Please add contact information!");
+      return false;
+    }
+
+    if(contactNumber.toString().length != 10) {
+      toast.error("Please Enter valid contact!");
       return false;
     }
     return true;
@@ -132,7 +194,7 @@ const Cart = () => {
         session?.data?.user?._id,
         orderItems,
         selectedAddress,
-        userContact,
+        contactNumber,
         time,
         orderMessage
       );
@@ -147,7 +209,6 @@ const Cart = () => {
         Message(message);
         setItems([]);
         setIsOpen(false);
-        // router.push(`/orders/${response.orderId}`);
       } else {
         toast.error(response.message);
       }
@@ -195,7 +256,7 @@ const Cart = () => {
 
   return (
     <>
-      <div className={`fixed top-0 right-0 h-full bg-white w-full sm:w-fit shadow-2xl transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full bg-white w-full sm:w-[700px] shadow-2xl transform transition-transform duration-300 ease-in-out z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-xl font-semibold">Shopping Cart</h2>
           <button onClick={toggleCart} className="p-2 hover:bg-gray-100 rounded-full">
@@ -203,16 +264,16 @@ const Cart = () => {
           </button>
         </div>
 
-        <div className='flex h-full max-sm:flex-wrap overflow-y-auto'>
-
-          <div className='min-w-96 max-sm:w-full'>
+        <div className='flex h-[calc(100%-56px)] max-sm:flex-col overflow-y-auto'>
+          {/* Items Section */}
+          <div className='flex-1 p-4 overflow-y-auto border-r max-sm:border-b'>
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <ShoppingCart className="w-16 h-16 mb-4" />
                 <p>Your cart is empty</p>
               </div>
             ) : (
-              <div className="p-4 space-y-4">
+              <div className="space-y-4">
                 <p className='font-semibold text-xl'>Items</p>
                 {items.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-4 p-2 border rounded-lg">
@@ -260,9 +321,9 @@ const Cart = () => {
             )}
           </div>
 
+          {/* Delivery Details Section */}
           {items.length > 0 && (
-            <div className="border-t w-full bg-white p-4 sm:w-80 flex flex-col justify-between">
-
+            <div className='flex-1 p-4 overflow-y-auto'>
               <div>
                 <p className='font-semibold text-xl'>Delivery Details</p>
 
@@ -270,43 +331,6 @@ const Cart = () => {
                   <p className="mt-4">Add Message:</p>
                   <input type="text" className="mt-2 border rounded-3xl w-full px-4 py-2" placeholder='Need Changes' onChange={(e) => setOrderMessage(e.target.value)} />
                 </div>
-                {/* Time Selection */}
-                {/* <div className="mb-4">
-                  <p className="mt-4">Select Delivery Time:</p>
-                  <select
-                    className="mt-2 border rounded-3xl w-full px-4 py-2"
-                    name="time"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {currTime >= 17 ? (
-                      timings.map((t: any, i: any) => (
-                        <option key={i} value={t + " tomorrow"}>
-                          {formatTime(t, "tomorrow")}
-                        </option>
-                      ))
-                    ) : currTime >= 0 && currTime < 8 ? (
-                      timings.map((t: any, i: any) => (
-                        <option key={i} value={t + " today"}>
-                          {formatTime(t, "today")}
-                        </option>
-                      ))
-                    ) : (
-                      timings?.map((t: any, i: any) => {
-                        const hour = parseInt(t?.slice(0, 2));
-                        if (hour - currTime > 1) {
-                          return (
-                            <option key={i} value={t + " today"}>
-                              {formatTime(t, "today")}
-                            </option>
-                          );
-                        }
-                        return null;
-                      })
-                    )}
-                  </select>
-                </div> */}
 
                 <div className="mb-4">
                   <p className="mt-4">Select Delivery Time:</p>
@@ -317,46 +341,148 @@ const Cart = () => {
                     onChange={(e) => setTime(e.target.value)}
                   >
                     <option value="">Select</option>
-                    {timings.map((time: any) => (
-                      <option value={`${time.deliveryTime}`} key={time.deliveryTime}>{time.display}</option>
+                    {timings.map((time: any, idx: any) => (
+                      <option value={`${time.deliveryTime}`} key={time._id}>{time.display}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Address Selection */}
                 {userAddresses.length > 0 ? (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium mb-2">Select Delivery Address:</p>
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {userAddresses.map((addr: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
-                          onClick={() => setSelectedAddress(idx)}
-                        >
-                          <p className="text-sm">{addr.address}</p>
-                          <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
-                        </div>
-                      ))}
-                    </div>
+                  <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
+                    {userAddresses.map((addr: any, idx: number) => (
+                      <div
+                        key={idx}
+                        className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
+                        onClick={() => setSelectedAddress(idx)}
+                      >
+                        <p className="text-sm">{addr.address}</p>
+                        <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
+                      </div>
+                    ))}
                   </div>
                 ) : (
-                  <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                    <p className="text-sm text-yellow-700">Please add a delivery address in your profile</p>
+                  <div className="mt-2 p-3 bg-yellow-50 rounded-lg text-center">
+                    <p className="text-sm text-yellow-700">No addresses added yet</p>
                   </div>
                 )}
 
-                {/* Contact Information Warning */}
-                {!hasContact && (
-                  <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                    <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
-                  </div>
-                )}
+                {/* Contact Number Management */}
+                {hasContact ?
+                  <div className="my-4">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold">Contact Number</p>
+                    </div>
+                    <input
+                      type="tel"
+                      value={contactNumber}
+                      onChange={(e) => setContactNumber(parseInt(e.target.value) ? parseInt(e.target.value) : '')}
+                      placeholder="Enter contact number"
+                      className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                      required
+                    />
+                  </div> :
+                  <div className="my-4">
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold">Contact Number</p>
+                      <button
+                        onClick={() => setIsEditingContact(!isEditingContact)}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {isEditingContact ? <X size={20} /> : <Pencil size={20} />}
+                      </button>
+                    </div>
 
+                    {isEditingContact ? (
+                      <form onSubmit={handleUpdateContact} className="mt-2 space-y-2">
+                        <input
+                          type="tel"
+                          value={contactNumber}
+                          onChange={(e) => setContactNumber(e.target.value)}
+                          placeholder="Enter contact number"
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                          maxLength={10}
+                          pattern="[0-9]{10}"
+                          required
+                        />
+                        <button
+                          type="submit"
+                          className="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 flex items-center justify-center gap-2"
+                        >
+                          <Save size={16} /> Add Contact
+                        </button>
+                      </form>
+                    ) : (
+                      <p className="text-gray-600 mt-1">
+                        {hasContact || 'No contact number'}
+                      </p>
+                    )}
+                  </div>
+                }
+
+                {/* Address Management */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center">
+                    <p className="font-semibold">Delivery Address</p>
+                    <button
+                      onClick={() => setIsAddingAddress(!isAddingAddress)}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      {isAddingAddress ? <X size={20} /> : <Plus size={20} />}
+                    </button>
+                  </div>
+
+                  {isAddingAddress && (
+                    <form onSubmit={handleAddAddress} className="mt-2 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={newAddress.number}
+                          onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
+                          placeholder="House/Flat No."
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                        <input
+                          type="text"
+                          value={newAddress.pincode}
+                          onChange={(e) => setNewAddress({ ...newAddress, pincode: parseInt(e.target.value) ? parseInt(e.target.value) : '' })}
+                          placeholder="Pincode"
+                          maxLength={6}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                      <textarea
+                        value={newAddress.address}
+                        onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
+                        placeholder="Full Address"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                        required
+                      />
+                      <input
+                        type="text"
+                        value={newAddress.landmark}
+                        onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
+                        placeholder="Landmark (Optional)"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
+                      >
+                        <Save size={16} /> Add Address
+                      </button>
+                    </form>
+                  )}
+                </div>
               </div>
 
               {/* Total and Checkout Button */}
-              <div className='mb-20'>
+              <div className='mb-4'>
                 <div className="flex justify-between mb-4">
                   <span className="font-semibold">Total:</span>
                   <span className="font-semibold">₹{totalAmount.toFixed(2)}</span>
@@ -371,8 +497,6 @@ const Cart = () => {
               </div>
             </div>
           )}
-
-
         </div>
       </div>
 

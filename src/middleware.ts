@@ -10,7 +10,6 @@ export const config = {
 };
 
 export function middleware(request: NextRequest) {
-    console.log('Middleware Invoked:', request.nextUrl.pathname);
 
     if (request.nextUrl.pathname.startsWith('/user')) {
         return isAuthenticatedMiddleware(request);

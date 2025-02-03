@@ -67,6 +67,22 @@ const ManagePincodes = () => {
         <div className="p-4 max-w-lg mx-auto">
             <h2 className="text-2xl font-bold mb-4">Manage Pincodes</h2>
 
+            <div className="mt-4 flex space-x-2">
+                <input
+                    type="text"
+                    value={newPincode}
+                    onChange={(e) => setNewPincode(e.target.value)}
+                    placeholder="Enter new pincode"
+                    className="border p-2 flex-grow rounded-md"
+                />
+                <button
+                    onClick={addPincode}
+                    className="px-4 py-2 bg-indigo-500 text-white rounded-md"
+                >
+                    Add
+                </button>
+            </div>
+            
             <ul className="space-y-2">
                 {pincodes.map((pincode, index) => (
                     <li key={index} className="flex items-center justify-between p-2 border rounded-md shadow-sm">
@@ -110,22 +126,6 @@ const ManagePincodes = () => {
                     </li>
                 ))}
             </ul>
-
-            <div className="mt-4 flex space-x-2">
-                <input
-                    type="text"
-                    value={newPincode}
-                    onChange={(e) => setNewPincode(e.target.value)}
-                    placeholder="Enter new pincode"
-                    className="border p-2 flex-grow rounded-md"
-                />
-                <button
-                    onClick={addPincode}
-                    className="px-4 py-2 bg-indigo-500 text-white rounded-md"
-                >
-                    Add
-                </button>
-            </div>
         </div>
     );
 };

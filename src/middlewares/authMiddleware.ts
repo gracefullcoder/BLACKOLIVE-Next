@@ -25,7 +25,6 @@ export const isAdminConfig = {
 
 export async function isAdminMiddleware(request: NextRequest) {
     const token = await getToken({ req: request });
-    console.log("In admin middleware token is ", token)
 
     if (!token) {
         return NextResponse.json(
@@ -50,7 +49,6 @@ export const isDeliveryConfig = {
 
 export async function isDeliveryMiddleware(request: NextRequest) {
     const token = await getToken({ req: request });
-    console.log(token)
 
     if (!token) {
         return NextResponse.json(
