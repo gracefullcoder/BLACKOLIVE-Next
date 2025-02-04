@@ -4,6 +4,7 @@ import connectToDatabase from '@/src/lib/ConnectDb';
 import Order from "@/src/models/order";
 import MembershipOrder from "@/src/models/membershipOrder";
 import Product from '@/src/models/product';
+import MembershipProduct from '@/src/models/membershipproducts';
 
 export async function GET(request: NextRequest, { params }: { params: any }) {
     try {
@@ -15,22 +16,35 @@ export async function GET(request: NextRequest, { params }: { params: any }) {
             .populate({
                 path: "orderDetails",
                 model: Order,
-                populate: {
-                    path: "orders.product",
-                    model: Product,
-                },
+                populate: [
+                    {
+                        path: "orders.product",
+                        model: Product
+                    },
+                    {
+                        path: "assignedTo",
+                        select: "name"
+                    }
+                ]
             })
             .populate({
                 path: "membershipDetails",
                 model: MembershipOrder,
-                populate: {
+                populate: [{
                     path: "category",
-                    model: Product,
+                    model: MembershipProduct
                 },
+
+                {
+                    path: "assignedTo",
+                    select: "name"
+                }
+                ]
             })
             .populate("cart.product");
 
-        console.log(user);
+
+        console.log(user, "yes");
 
         if (!user) {
             return new Response(
@@ -57,7 +71,7 @@ export async function PUT(request: NextRequest, { params }: { params: any }) {
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { isAdmin, isDelivery},
+            { isAdmin, isDelivery },
             { new: true }
         );
 

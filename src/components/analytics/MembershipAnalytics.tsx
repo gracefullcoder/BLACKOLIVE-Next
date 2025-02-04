@@ -78,11 +78,11 @@ export default function MembershipAnalytics({ memberships }: any) {
     }, [memberships]);
 
     return (
-        <div className="space-y-6 p-4">
+        <div className="space-y-6 p-4 max-sm:px-0">
             <div className="flex flex-wrap gap-4 items-center justify-between">
                 <h1 className="text-2xl font-bold">Membership Analytics</h1>
                 <div className="flex gap-4 flex-wrap">
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 flex-wrap">
                         <input
                             type="date"
                             value={startDate}

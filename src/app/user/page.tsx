@@ -4,7 +4,6 @@ import UserProfile from '@/src/components/user/UserProfile';
 
 async function getUser() {
   const session = await getServerSession(AuthConfig);
-  console.log(session);
 
   return session;
 }

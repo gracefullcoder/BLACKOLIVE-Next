@@ -87,7 +87,6 @@ function Navbar() {
               {session?.data?.user ?
                 <div className='flex gap-2 items-center'>
                   <Link href="/user"><User className='text-gray-600 hover:text-black' /></Link>
-                  <button className='text-slate-600 text-xl hover:text-black' onClick={() => signOut()}>logout</button>
                 </div>
                 :
                 <>

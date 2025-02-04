@@ -10,10 +10,7 @@ export async function isAuthenticatedMiddleware(request: NextRequest) {
     const token = await getToken({ req: request });
 
     if (!token) {
-        return NextResponse.json(
-            { message: 'Unauthorized: Please log in to access this resource.' },
-            { status: 401 }
-        );
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     return NextResponse.next();
@@ -27,17 +24,11 @@ export async function isAdminMiddleware(request: NextRequest) {
     const token = await getToken({ req: request });
 
     if (!token) {
-        return NextResponse.json(
-            { message: 'Unauthorized: Please log in to access this resource.' },
-            { status: 401 }
-        );
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     if (!token.isAdmin) {
-        return NextResponse.json(
-            { message: 'Forbidden: You do not have permission to access this resource.' },
-            { status: 403 }
-        );
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     return NextResponse.next();
@@ -51,17 +42,11 @@ export async function isDeliveryMiddleware(request: NextRequest) {
     const token = await getToken({ req: request });
 
     if (!token) {
-        return NextResponse.json(
-            { message: 'Unauthorized: Please log in to access this resource.' },
-            { status: 401 }
-        );
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     if (!token.isDelivery) {
-        return NextResponse.json(
-            { message: 'Forbidden: You do not have permission to access this resource.' },
-            { status: 403 }
-        );
+        return NextResponse.redirect(new URL("/", request.url));
     }
 
     return NextResponse.next();

@@ -87,7 +87,8 @@ export const generateOrderReceipt = (order: any) => {
     receiptContent += `Date: ${new Date(order.createdAt).toLocaleDateString()}\n`;
     receiptContent += `Customer: ${order.user.name}\n`;
     receiptContent += `Contact: ${order.contact}\n`;
-    receiptContent += `Address: ${order.address.address}, ${order.address.landmark}, ${order.address.pincode}\n\n`;
+    receiptContent += `Address: ${order.address.address}, ${order.address.landmark}, ${order.address.pincode}\n`;
+    receiptContent += `Delivered By: ${order?.assignedTo?.name || "Not delivered"}\n\n`;
     receiptContent += `Items:\n`;
 
     let subtotal = 0;

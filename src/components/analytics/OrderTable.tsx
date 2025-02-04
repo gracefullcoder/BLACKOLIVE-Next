@@ -43,7 +43,7 @@ const OrderTable = ({ orders }: any) => {
                 <h2 className="text-xl font-semibold">Order Details</h2>
                 <div className="relative">
 
-                    <div className='flex gap-4'>
+                    <div className='flex gap-2 flex-wrap max-sm:justify-center'>
                         <button
                             onClick={() => setIsSelectOpen(!isSelectOpen)}
                             className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -99,6 +99,7 @@ const OrderTable = ({ orders }: any) => {
                                 <th className="p-2 text-left border">Customer</th>
                                 <th className="p-2 text-left border">Items</th>
                                 <th className="p-2 text-left border">Status</th>
+                                <th className="p-2 text-left border">Assigned To</th>
                                 <th className="p-2 text-right border">Total</th>
                                 <th className="p-2 text-center border">Actions</th>
                             </tr>
@@ -134,6 +135,10 @@ const OrderTable = ({ orders }: any) => {
                                             }`}>
                                             {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                         </span>
+                                    </td>
+                                    <td className="p-2 text-left border">
+                                        <p>{order?.assignedTo?._id || ""}</p>
+                                        <p>{order?.assignedTo?.name || ""}</p>
                                     </td>
                                     <td className="p-2 text-right border">
                                         ₹{calculateOrderTotal(order)}

@@ -12,11 +12,13 @@ export default function OrderAnalytics({ orders }: any) {
     const [analytics, setAnalytics] = useState<any>({
         mostOrderedProduct: { title: '', count: 0 },
         totalOrders: 0,
-        topDeliveryPerson: { id: '', count: 0 },
+        topDeliveryPerson: { id: '', count: 0, name: '' },
         customerAnalytics: [],
         productOrderCounts: [],
         cancelProductOrderCount: []
     });
+
+    console.log(analytics)
 
     const applyFilters = () => {
         let filtered = orders;
@@ -71,7 +73,7 @@ export default function OrderAnalytics({ orders }: any) {
         const deliveryStats: any = {};
         filteredOrders.forEach((order: any) => {
             if (order.assignedTo && order.status != "cancelled") {
-                deliveryStats[order.assignedTo] = (deliveryStats[order.assignedTo] || 0) + 1;
+                deliveryStats[order?.assignedTo?._id] = (deliveryStats[order?.assignedTo?._id] || 0) + 1;
             }
         });
 
@@ -106,21 +108,20 @@ export default function OrderAnalytics({ orders }: any) {
     };
 
 
-   
+
 
     useEffect(() => {
-        console.log(orders)
         setFilteredOrders(orders);
         calculateAnalytics(orders);
-    }, []);
+    }, [orders]);
 
 
     return (
-        <div className="space-y-6 p-4">
+        <div className="space-y-6 p-4 max-sm:px-0">
             <div className="flex flex-wrap gap-4 items-center justify-between">
                 <h1 className="text-2xl font-bold">Order Analytics</h1>
                 <div className="flex gap-4 flex-wrap">
-                    <div className='flex gap-4'>
+                    <div className='flex gap-4 flex-wrap'>
                         <input
                             type="date"
                             value={startDate}

@@ -34,7 +34,7 @@ const MembershipTable = ({ memberships }: any) => {
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Membership Details</h2>
                 <div className="relative">
-                    <div className='flex gap-2'>
+                    <div className='flex gap-2 flex-wrap max-sm:justify-center'>
                     <button
                         onClick={() => setIsSelectOpen(!isSelectOpen)}
                         className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"

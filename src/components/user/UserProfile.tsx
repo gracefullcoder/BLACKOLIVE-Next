@@ -1,10 +1,12 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { User, Plus, Pencil, Save, X, MapPin, Trash2 } from 'lucide-react';
+import { User, Plus, Pencil, Save, X, MapPin, Trash2, LogOut } from 'lucide-react';
 import axios from 'axios';
 import MyOrders from '../order/MyOrders';
 import { getOrders } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 
 interface Address {
     _id?: String,
@@ -19,6 +21,7 @@ const UserProfile = ({ user }: any) => {
     const [isAddingAddress, setIsAddingAddress] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
     const [contact, setContact] = useState(user?.contact || '');
+    const router = useRouter();
     const [newAddress, setNewAddress] = useState({
         number: '',
         address: '',
@@ -148,6 +151,14 @@ const UserProfile = ({ user }: any) => {
                             <div className="text-white overflow-hidden">
                                 <h1 className="text-2xl font-bold">{user?.name}</h1>
                                 <p className="text-blue-100">{user?.email}</p>
+                                <button
+                                    className="flex items-center gap-1 text-lg mt-1 text-gray-200 hover:text-white transition-all"
+                                    onClick={() => signOut()}
+                                >
+                                    <LogOut size={20} className="text-white hover:text-white" />
+                                    Logout
+                                </button>
+
                             </div>
                         </div>
                     </div>
