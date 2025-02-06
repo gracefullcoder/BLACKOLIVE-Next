@@ -279,7 +279,7 @@ const Cart = () => {
           </button>
         </div>
 
-        <div className='flex h-[calc(100%-56px)] max-sm:flex-col overflow-y-auto'>
+        <div className='flex h-[calc(100%-56px)] max-sm:block overflow-y-auto'>
           {/* Items Section */}
           <div className='flex-1 p-4 overflow-y-auto border-r max-sm:border-b'>
             {items.length === 0 ? (
@@ -372,7 +372,7 @@ const Cart = () => {
                     {userAddresses.map((addr: any, idx: number) => (
                       <div
                         key={idx}
-                        className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
+                        className={`p-2 border rounded-lg cursor-pointer my-2 ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
                         onClick={() => setSelectedAddress(idx)}
                       >
                         <p className="text-sm">{addr.address}</p>

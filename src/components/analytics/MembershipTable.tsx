@@ -91,6 +91,7 @@ const MembershipTable = ({ memberships }: any) => {
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membership</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned To</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
@@ -127,6 +128,10 @@ const MembershipTable = ({ memberships }: any) => {
                                                         'bg-blue-100 text-blue-800'}`}>
                                             {membership.status.charAt(0).toUpperCase() + membership.status.slice(1)}
                                         </span>
+                                    </td>
+                                    <td className="p-2 text-left border">
+                                        <p>{membership?.assignedTo?._id?.slice(-6) || ""}</p>
+                                        <p>{membership?.assignedTo?.name || ""}</p>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900">
                                         ₹{calculateTotal(membership)}

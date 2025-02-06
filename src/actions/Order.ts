@@ -572,7 +572,7 @@ export async function getAllMembership() {
     try {
         await connectToDatabase();
         const membership = await MembershipOrder.find({})
-            .populate('category').populate({ path: 'user', select: "name email contact" })
+            .populate('category').populate({ path: 'user', select: "name email contact" }).populate({ path: "assignedTo", select: "name" })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(membership));
     } catch (error) {

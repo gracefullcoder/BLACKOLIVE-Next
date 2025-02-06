@@ -4,17 +4,25 @@ import ListProducts from "./ListProducts";
 import { useState } from "react";
 import { productType } from "../../types/product";
 
-function Products({ products, title }: { products: productType[], title: string }) {
-  const [isClick, setIsClick] = useState(false);
-  const [allProducts, setAllProducts] = useState<productType[]>(products);
+function Products({ products, title }: { products: productType[]; title: string }) {
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const displayedProducts = showAllProducts ? products : products.slice(0, 4);
 
   return (
-    <section className="relative py-4 px-8 flex flex-col gap-12 items-center">
-      <h1 className="font-semibold text-2xl tracking-wide">{title}</h1>
-      <ListProducts products={isClick && allProducts.length > 4 ? allProducts : allProducts.slice(0, 4)} />
-      {allProducts.length > 4 && <span onClick={() => setIsClick((prev) => !prev)} className={isClick ? "hidden" : ""}>
-        <Button />
-      </span>}
+    <section className="relative py-12 px-8 flex flex-col items-center bg-gray-50 rounded-lg shadow-md">
+      <h1 className="font-bold text-3xl text-gray-800 mb-8 tracking-wide uppercase">
+        {title}
+      </h1>
+      <ListProducts products={displayedProducts} />
+      {products.length > 4 && (
+        <div className="mt-8">
+
+          <button className={`rounded-3xl bg-black px-8 py-2 text-white w-fit`} onClick={() => setShowAllProducts((prev) => !prev)}>
+            {showAllProducts ? "Show Less" : "Show More"}
+          </button>
+
+        </div>
+      )}
     </section>
   );
 }

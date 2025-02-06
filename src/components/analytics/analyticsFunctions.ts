@@ -28,7 +28,7 @@ export const downloadMembershipExcel = (filteredMemberships: any) => {
             `"${address}",` +
             `${membership.category.title},` +
             `${membership.status},` +
-            `${membership.assignedTo || "unassigned"},` +
+            `${membership?.assignedTo?.name || "unassigned"},` +
             `${new Date(membership.startDate).toLocaleDateString()},` +
             `${formatTime(membership.time)},` +
             `${membership.message || ""},` +
@@ -63,7 +63,7 @@ export const downloadExcel = (filteredOrders: any) => {
             const address = `${order?.address?.address || ""} ${order?.address?.landmark || ""} ${order?.address?.pincode || 0}`.replaceAll(",", "|")
             console.log(address)
             const hrs = parseInt(order.time.slice(0, 2))
-            csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order.assignedTo || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${total}\n`;
+            csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order?.assignedTo?.name || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${total}\n`;
         });
         csv += `,,,,,,,,,,,,Order Total: ${orderTotal}\n`;
         grandTotal += orderTotal;
@@ -88,7 +88,7 @@ export const generateOrderReceipt = (order: any) => {
     receiptContent += `Customer: ${order.user.name}\n`;
     receiptContent += `Contact: ${order.contact}\n`;
     receiptContent += `Address: ${order.address.address}, ${order.address.landmark}, ${order.address.pincode}\n`;
-    receiptContent += `Delivered By: ${order?.assignedTo?.name || "Not delivered"}\n\n`;
+    receiptContent += `Assigned To: ${order?.assignedTo?.name || "Not delivered"}\n\n`;
     receiptContent += `Items:\n`;
 
     let subtotal = 0;
@@ -127,7 +127,8 @@ export const generateMembershipReceipt = (membership: any) => {
     receiptContent += `Start Date: ${new Date(membership.startDate).toLocaleDateString()}\n`;
     receiptContent += `Customer: ${membership.user.name}\n`;
     receiptContent += `Contact: ${membership.contact}\n`;
-    receiptContent += `Address: ${membership.address.address}, ${membership.address.landmark}, ${membership.address.pincode}\n\n`;
+    receiptContent += `Address: ${membership.address.address}, ${membership.address.landmark}, ${membership.address.pincode}\n`;
+    receiptContent += `Assigned To: ${membership?.assignedTo?.name || "Not delivered"}\n\n`;
 
     receiptContent += `Membership Details:\n`;
     receiptContent += `${membership.category.title}\n`;

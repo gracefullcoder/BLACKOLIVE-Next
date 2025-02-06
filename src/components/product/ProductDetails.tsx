@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { createMembership } from '@/src/actions/Order';
 import { featureDetails } from '@/src/actions/Features';
+import ExcludedProduct from './ExcludedProduct';
 
 function ProductDetails({ product }: { product: productType }) {
     const session = useSession();
@@ -164,173 +165,179 @@ function ProductDetails({ product }: { product: productType }) {
     const handleDetailsChange = (e: any) => { setMembershipDetails(prev => { return { ...prev, [e.target.name]: e.target.value } }) }
 
     return (
-        <section className="relative py-16 px-6 md:px-12 lg:px-20">
-            <div className="flex flex-col lg:flex-row justify-center items-center gap-10 lg:gap-20">
-                <img src={product.image} alt={product.title} className="h-[32rem] rounded-3xl" />
+        <section >
+            <div className="relative py-16 px-6 md:px-12 lg:px-20">
+                <div className="flex flex-col lg:flex-row justify-center items-center gap-10 lg:gap-20">
+                    <img src={product.image} alt={product.title} className="h-[32rem] rounded-3xl" />
 
-                <div className="max-w-xl text-center lg:text-left">
-                    <p className="text-sm md:text-base text-slate-400">{product.speciality}</p>
-                    <h1 className="text-3xl md:text-5xl font-bold tracking-wide mt-4">{product.title}</h1>
+                    <div className="max-w-xl text-center lg:text-left">
+                        <p className="text-sm md:text-base text-slate-400">{product.speciality}</p>
+                        <h1 className="text-3xl md:text-5xl font-bold tracking-wide mt-4">{product.title}</h1>
 
-                    <div className="flex md:flex-row items-center gap-2 md:gap-4 mt-4 max-lg:justify-center">
-                        <p className="text-sm md:text-base line-through text-slate-400">Rs. {product.price}.00</p>
-                        <p className="text-lg md:text-xl">Rs. {product.finalPrice}.00</p>
-                    </div>
+                        <div className="flex md:flex-row items-center gap-2 md:gap-4 mt-4 max-lg:justify-center">
+                            <p className="text-sm md:text-base line-through text-slate-400">Rs. {product.price}.00</p>
+                            <p className="text-lg md:text-xl">Rs. {product.finalPrice}.00</p>
+                        </div>
 
-                    <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
-                    <p className="mt-8 text-sm md:text-base text-slate-600">
-                        Delivery Time: 9:00 AM, 12:00 PM, 3:00 PM, 6:00 PM
-                    </p>
+                        <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
+                        <p className="mt-8 text-sm md:text-base text-slate-600">
+                            Delivery Time: 9:00 AM, 12:00 PM, 3:00 PM, 6:00 PM
+                        </p>
 
-                    <div>
-                        {
-                            product.bonus ?
-                                <div className='flex items-center gap-8'>
+                        <div>
+                            {
+                                product.bonus ?
+                                    <div className='flex items-center gap-8'>
+                                        <div>
+                                            <p className="text-black mt-6 mb-2">Select Start Date</p>
+                                            <input type="date" className='border p-2 rounded-3xl'
+                                                name='startDate' onChange={(e) => handleDetailsChange(e)} />
+                                        </div>
+                                        <div>
+                                            <p className="text-black mt-6 mb-2">Timings</p>
+                                            <select className='border p-2 rounded-3xl'
+                                                name="time" onChange={(e) => handleDetailsChange(e)} >
+                                                {
+                                                    product?.timings?.map((t, i) => <option key={i} value={t}>{t > 12 ? `0${t - 12}:00 ${t > 11 ? "PM" : "AM"}` : `${t}:00  ${t > 11 ? "PM" : "AM"}`}</option>)
+                                                }
+                                            </select>
+                                        </div>
+                                    </div> :
+
                                     <div>
-                                        <p className="text-black mt-6 mb-2">Select Start Date</p>
-                                        <input type="date" className='border p-2 rounded-3xl'
-                                            name='startDate' onChange={(e) => handleDetailsChange(e)} />
-                                    </div>
-                                    <div>
-                                        <p className="text-black mt-6 mb-2">Timings</p>
-                                        <select className='border p-2 rounded-3xl'
-                                            name="time" onChange={(e) => handleDetailsChange(e)} >
-                                            {
-                                                product?.timings?.map((t, i) => <option key={i} value={t}>{t > 12 ? `0${t - 12}:00 ${t > 11 ? "PM" : "AM"}` : `${t}:00  ${t > 11 ? "PM" : "AM"}`}</option>)
-                                            }
-                                        </select>
-                                    </div>
-                                </div> :
+                                        <p className="text-slate-500 mt-6">Quantity</p>
 
-                                <div>
-                                    <p className="text-slate-500 mt-6">Quantity</p>
-
-                                    <div className="flex gap-8 px-4 py-2 border w-fit rounded-3xl mt-2 items-center text-3xl max-lg:mx-auto">
-                                        <button
-                                            className={`cursor-pointer font-bold`}
-                                            onClick={handleDecrease}
-                                        >
-                                            -
-                                        </button>
-                                        <div className="text-xl">{quantity}</div>
-                                        <button
-                                            className={`cursor-pointer font-bold`}
-                                            onClick={handleIncrease}
-                                        >
-                                            +
-                                        </button>
-                                    </div>
-                                </div>
-                        }
-                    </div>
-
-                    {product.isAvailable ? <>
-                        {
-                            product.bonus &&
-                            <>
-                                {/* Address Selection */}
-                                {userAddresses.length > 0 ? (
-                                    <div className="mb-4">
-                                        <p className="my-2">Select Delivery Address:</p>
-                                        <div className="space-y-2 max-h-32 overflow-y-auto">
-                                            {userAddresses.map((addr: any, idx: number) => (
-                                                <div
-                                                    key={idx}
-                                                    className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
-                                                    onClick={() => setSelectedAddress(idx)}
-                                                >
-                                                    <p className="text-sm">{addr.address}</p>
-                                                    <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
-                                                </div>
-                                            ))}
+                                        <div className="flex gap-8 px-4 py-2 border w-fit rounded-3xl mt-2 items-center text-3xl max-lg:mx-auto">
+                                            <button
+                                                className={`cursor-pointer font-bold`}
+                                                onClick={handleDecrease}
+                                            >
+                                                -
+                                            </button>
+                                            <div className="text-xl">{quantity}</div>
+                                            <button
+                                                className={`cursor-pointer font-bold`}
+                                                onClick={handleIncrease}
+                                            >
+                                                +
+                                            </button>
                                         </div>
                                     </div>
-                                ) : (
-                                    <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                                        <p className="text-sm text-yellow-700">Please add a delivery address in your profile</p>
-                                    </div>
-                                )}
-
-                                {!hasContact && (
-                                    <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
-                                        <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
-                                    </div>
-                                )}
-                            </>
-                        }
-
-                        {!product.bonus ? (!existingCartItem && (
-                            <button
-                                className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer
-                                    `}
-                                onClick={handleAddToCart}
-                            >
-                                Add to Cart
-                            </button>
-                        )) :
-
-                            <div>
-                                <div className="my-4">
-                                    <label className="block text-gray-600 mb-2">Message:</label>
-
-                                    <input type="text" onChange={(e: any) => setMembershipDetails((prev: any) => ({ ...prev, message: e.target.value }))}
-                                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
-                                        placeholder='Need Changes ?' />
-                                </div>
-                                <button
-                                    className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer
-                                    `}
-                                    onClick={handleMembership}
-                                >
-                                    Buy Membership
-                                </button>
-
-
-                            </div>}
-                    </> :
-
-                        <div className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-red-600 hover:bg-red-700 text-white cursor-pointer`}>
-                            Out Of Stock
-                        </div>}
-
-
-                    <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 mt-4 border-t border-black">
-                        <p className="text-sm font-medium text-gray-700 mb-3">
-                            Check if Deliverable in Your Area
-                        </p>
-                        <div className='flex gap-2 w-full justify-center'>
-                            <input
-                                type="number"
-                                placeholder="Enter your Pincode"
-                                className="w-min-20 border border-gray-300 rounded-md p-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                onChange={(e) => setPincode(e.target.value)}
-                            />
-                            <button
-                                onClick={isPincodeAvailable}
-                                className="w-16 h-fit py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-all"
-                            >
-                                Check
-                            </button>
+                            }
                         </div>
-                        {isDeliverable !== null && (
-                            <p
-                                className={`text-sm font-medium ${isDeliverable ? 'text-green-600' : 'text-red-600'
-                                    }`}
-                            >
-                                {isDeliverable
-                                    ? 'Deliverable in your area'
-                                    : 'Not Deliverable in your area'}
+
+                        {product.isAvailable ? <>
+                            {
+                                product.bonus &&
+                                <>
+                                    {/* Address Selection */}
+                                    {userAddresses.length > 0 ? (
+                                        <div className="mb-4">
+                                            <p className="my-2">Select Delivery Address:</p>
+                                            <div className="space-y-2 max-h-32 overflow-y-auto">
+                                                {userAddresses.map((addr: any, idx: number) => (
+                                                    <div
+                                                        key={idx}
+                                                        className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
+                                                        onClick={() => setSelectedAddress(idx)}
+                                                    >
+                                                        <p className="text-sm">{addr.address}</p>
+                                                        <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                                            <p className="text-sm text-yellow-700">Please add a delivery address in your profile</p>
+                                        </div>
+                                    )}
+
+                                    {!hasContact && (
+                                        <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                                            <p className="text-sm text-yellow-700">Please add contact information in your profile</p>
+                                        </div>
+                                    )}
+                                </>
+                            }
+
+                            {!product.bonus ? (!existingCartItem && (
+                                <button
+                                    className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
+                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer
+                                    `}
+                                    onClick={handleAddToCart}
+                                >
+                                    Add to Cart
+                                </button>
+                            )) :
+
+                                <div>
+                                    <div className="my-4">
+                                        <label className="block text-gray-600 mb-2">Message:</label>
+
+                                        <input type="text" onChange={(e: any) => setMembershipDetails((prev: any) => ({ ...prev, message: e.target.value }))}
+                                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
+                                            placeholder='Need Changes ?' />
+                                    </div>
+                                    <button
+                                        className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
+                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer
+                                    `}
+                                        onClick={handleMembership}
+                                    >
+                                        Buy Membership
+                                    </button>
+
+
+                                </div>}
+                        </> :
+
+                            <div className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
+                                      bg-red-600 hover:bg-red-700 text-white cursor-pointer`}>
+                                Out Of Stock
+                            </div>}
+
+
+                        <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 mt-4 border-t border-black">
+                            <p className="text-sm font-medium text-gray-700 mb-3">
+                                Check if Deliverable in Your Area
                             </p>
-                        )}
+                            <div className='flex gap-2 w-full justify-center'>
+                                <input
+                                    type="number"
+                                    placeholder="Enter your Pincode"
+                                    className="w-min-20 border border-gray-300 rounded-md p-2 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                    onChange={(e) => setPincode(e.target.value)}
+                                />
+                                <button
+                                    onClick={isPincodeAvailable}
+                                    className="w-16 h-fit py-2 bg-green-500 text-white rounded-md text-sm hover:bg-green-600 transition-all"
+                                >
+                                    Check
+                                </button>
+                            </div>
+                            {isDeliverable !== null && (
+                                <p
+                                    className={`text-sm font-medium ${isDeliverable ? 'text-green-600' : 'text-red-600'
+                                        }`}
+                                >
+                                    {isDeliverable
+                                        ? 'Deliverable in your area'
+                                        : 'Not Deliverable in your area'}
+                                </p>
+                            )}
+                        </div>
+
+
+
                     </div>
+                </div >
+            </div>
 
-
-
-                </div>
-            </div >
+            <div>
+                <ExcludedProduct id={product?._id} />
+            </div>
         </section >
     );
 }
