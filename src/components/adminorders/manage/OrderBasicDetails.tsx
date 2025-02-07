@@ -6,8 +6,8 @@ import { updateOrderStatus, updateMembershipStatus } from "@/src/actions/Order"
 export const UserBasicDetails = ({ order }: any) => {
     return (
         <>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold">Order #{order._id.slice(-6)}</h2>
+            <div className="flex justify-between items-center mb-2">
+                <h2 className={`font-semibold p-2 rounded-md ${order?.isPaid ? 'bg-green-100' : 'bg-yellow-100'}`}>Order #{order._id.slice(-6)}</h2>
                 <span className={`px-2 py-1 rounded text-sm ${order.status == "delivered" ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                     }`}>
                     {order.status}
@@ -38,7 +38,7 @@ export const AssignedDetails = ({ order }: any) => {
             <div>Assigned To: <span>{order?.assignedTo?.name || "None"}</span></div>
 
             <div>
-                <button className={'border py-1 px-2 bg-green-200 rounded-md'} onClick={() => openInGoogleMaps(`${order.address.number} ${order.address.address}, ${order.address.landmark} , ${order.address.pincode}`)}>
+                <button className={'border py-1 px-2 bg-green-200 rounded-md'} onClick={() => openInGoogleMaps(`${order.address.number}, ${order.address.address}, ${order.address.landmark} , ${order.address.pincode}`)}>
                     Open Location <MapPin className='inline' />
                 </button>
 

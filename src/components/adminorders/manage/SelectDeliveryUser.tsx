@@ -18,7 +18,8 @@ function SelectDeliveryUser({ users, orderId, isMembership, setOrders, setError 
 
     const handleAssign = async (newStatus: any) => {
         try {
-            const updatedOrder = !isMembership ? await updateOrderStatus(orderId, newStatus, true, selectedUser) : await updateMembershipStatus(orderId, newStatus, true, selectedUser);
+            if(selectedUser){
+                const updatedOrder = !isMembership ? await updateOrderStatus(orderId, newStatus, true, selectedUser) : await updateMembershipStatus(orderId, newStatus, true, selectedUser);
             console.log("updatedorder status", updatedOrder)
             if (updatedOrder?.success) {
                 setOrders((prev: any) => (prev.map((order: any) =>
@@ -27,6 +28,9 @@ function SelectDeliveryUser({ users, orderId, isMembership, setOrders, setError 
                 toast.success(updatedOrder.message);
             } else {
                 toast(updatedOrder?.message)
+            }
+            }else{
+                toast.error("Select Delivery User!")
             }
 
         } catch (err) {

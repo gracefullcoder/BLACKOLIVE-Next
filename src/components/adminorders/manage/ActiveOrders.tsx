@@ -5,6 +5,8 @@ import OrderGrid from "@/src/components/adminorders/manage/OrderGrid";
 import { useSession } from "next-auth/react";
 import { deliveryUsers } from "@/src/actions/User";
 import PreLoader from "../../PreLoader";
+import { Route } from "lucide-react";
+import { openInGoogleMaps, openRouteInMaps } from "@/src/utility/basic";
 
 function ActiveOrders({ onlyAssigned }: any) {
     const session = useSession();
@@ -115,6 +117,13 @@ function ActiveOrders({ onlyAssigned }: any) {
                         />
                         <label htmlFor="assigned">Assigned to me</label>
                     </div>}
+
+                    {(onlyAssigned || isActive) && <div>
+                        <button className={'border p-3 bg-white rounded-md'} onClick={() => openRouteInMaps(orders)}>
+                            <Route className='inline' /> &nbsp; Open Route
+                        </button>
+                    </div>}
+
                 </div>
 
                 <OrderGrid

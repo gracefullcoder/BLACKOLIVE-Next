@@ -17,3 +17,17 @@ export const formatTime = (time:any) => {
     const hour12 = hourNum % 12 || 12;
     return `${hour12}:00 ${period}`;
 };
+
+export const openRouteInMaps = (orders: any[]) => {
+    if (!orders || orders.length === 0) {
+        return;
+    }
+
+    const locations = orders.map(order =>
+        `${order.address.number}, ${order.address.address}, ${order.address.landmark}, ${order.address.pincode}`
+    );
+
+    const googleMapsUrl = `https://www.google.com/maps/dir/${locations.join("/")}`;
+
+    window.open(googleMapsUrl, "_blank");
+};

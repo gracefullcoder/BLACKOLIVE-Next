@@ -120,12 +120,12 @@ export const createMembership = async (
             return { success: false, message: "Address not found" };
         }
 
-        const memebershipDetails = await MembershipProduct.findById(orderItem);
+        // const memebershipDetails = await MembershipProduct.findById(orderItem);
 
-        const graphLength = memebershipDetails.days + memebershipDetails.bonus
-        const deliveryGraph = new Array(graphLength).fill(1);
+        // const graphLength = memebershipDetails.days + memebershipDetails.bonus
+        // const deliveryGraph = new Array(graphLength).fill(1);
 
-        for (let i = memebershipDetails.days; i < graphLength; i++) deliveryGraph[i] = 0
+        // for (let i = memebershipDetails.days; i < graphLength; i++) deliveryGraph[i] = 0
 
         const order = await MembershipOrder.create({
             category: orderItem,
@@ -135,7 +135,7 @@ export const createMembership = async (
             time,
             overallRating: 0,
             startDate,
-            deliveryGraph,
+            // deliveryGraph,
             isPaid,
             extraCharge,
             message
@@ -247,12 +247,38 @@ export const postponeMembership = async (mId: string) => {
     }
 }
 
+export const postponeMembershipByDate = async (mId: string, date: any) => {
+    const membership = await MembershipOrder.findById(mId);
+
+    if (!membership) return { success: false, message: "Membership doesn't exist" }
+
+
+    if (membership.status != "delivered") {
+        // const currDate = new Date();
+        // currDate.setMinutes(currDate.getMinutes() - currDate.getTimezoneOffset());
+        // currDate.setUTCHours(0, 0, 0, 0);
+
+        const postponeDate = new Date(date);
+
+        if (membership?.postponedDates?.some((date: any) => (date.toString() == postponeDate.toString()))) {
+            return { success: false, message: "Already Added for postpone" }
+        } else {
+            console.log("Herer to update psotoen dat", membership.postponedDates, postponeDate)
+            await MembershipOrder.findByIdAndUpdate(mId, { $push: { postponedDates: postponeDate } })
+            return { success: true, message: `Order Postponed for Date ${postponeDate.getDate()}` }
+        }
+
+    } else {
+        return { success: false, message: "Membership Is Completed" }
+    }
+}
+
 // Get all orders
 export async function getAllOrders() {
     try {
         await connectToDatabase();
         const orders = await Order.find()
-            .populate([{ path: 'orders.product', model: Product },{path:"assignedTo",select:"name"}]).populate({ path: 'user', select: "name email contact" })
+            .populate([{ path: 'orders.product', model: Product }, { path: "assignedTo", select: "name" }]).populate({ path: 'user', select: "name email contact" })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(orders));
     } catch (error) {

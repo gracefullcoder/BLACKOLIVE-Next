@@ -5,7 +5,8 @@ import Navbar from "@/src/components/Navbar";
 import WhatsAppButton from "@/src/components/WhatsappButton";
 import Cart from "@/src/components/Cart";
 import Footer from "@/src/components/Footer";
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Providers } from "./Providers";
 
 const geistSans = Geist({
@@ -39,16 +40,14 @@ export default function RootLayout({
         <Providers>
           <div>
             <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
+              position="top-center"
+              autoClose={1000}
+              hideProgressBar={true}
               newestOnTop={false}
-              closeOnClick={false}
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
+              closeButton={false}
               theme="light"
+              className="custom-toast-container"
+              toastClassName="custom-toast"
             />
             <Navbar />
             <Cart />

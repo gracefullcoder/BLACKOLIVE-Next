@@ -1,5 +1,6 @@
 import {
     addExtraCharge,
+    postponeMembershipByDate,
     updateMembershipStatus,
     updatePaymentStatus
 } from '@/src/actions/Order';
@@ -49,6 +50,25 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
         }
     }
 
+    const handlePostpone = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const postponeDate = formData.get("postponeDate");
+
+        if (postponeDate) {
+            const res = await postponeMembershipByDate(order._id, postponeDate);
+
+            if (res?.success) {
+                toast.success(res.message);
+            } else {
+                toast.error(res.message);
+            }
+        } else {
+            toast.error("Enter a valid Date!");
+        }
+    };
+
+
     const handleExtraCharges = async (e: any, orderId: any, productId: any, extraCharge: any) => {
         e.preventDefault();
         try {
@@ -68,7 +88,7 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
     }
 
     return (
-        <div key={order._id} className="border rounded-lg p-4 bg-white shadow">
+        <div key={order._id} className={`border rounded-lg p-4 shadow`}>
 
             <UserBasicDetails order={order} />
 
@@ -114,20 +134,26 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
                         return <div key={idx}>
                             <div className='p-2 border-black border rounded-lg bg-green-300'>
                                 {
-                                    formatDate(date)
+                                    new Date(date).toUTCString().slice(0, 3) + " " + formatDate(date)
                                 }
                             </div>
                         </div>
                     })}
                 </div>
 
-                <h3 className="font-medium text-gray-800 mt-4 mb-2">Postponed Dates</h3>
+                <div className='flex justify-between items-center mt-4 mb-2'>
+                    <h3 className="font-medium text-gray-800">Postponed Dates</h3>
+                    <form onSubmit={handlePostpone} className='flex gap-1'>
+                        <input type="date" name='postponeDate' className='border rounded-md border-black p-1' />
+                        <button className='p-1 bg-red-300 rounded-md'>Postpone</button>
+                    </form>
+                </div>
                 <div className='flex gap-4 flex-wrap'>
                     {order?.postponedDates?.map((date: any, idx: any) => {
                         return <div key={idx}>
                             <div className='p-2 border-black border rounded-lg bg-yellow-300'>
                                 {
-                                    formatDate(date)
+                                    new Date(date).toUTCString().slice(0, 3) + " " + formatDate(date)
                                 }
                             </div>
                         </div>

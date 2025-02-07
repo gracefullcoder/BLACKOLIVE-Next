@@ -102,12 +102,13 @@ export const generateOrderReceipt = (order: any) => {
         receiptContent += `${item.product.title}\n`;
         receiptContent += `  Quantity: ${item.quantity} × ₹${item.product.finalPrice}\n`;
         receiptContent += `  Extra Charges: ₹${item.extraCharge || 0}\n`;
-        receiptContent += `  Total: ₹${itemTotal + (item.extraCharge || 0)}\n\n`;
+        receiptContent += `  Total: ₹${itemTotal + (item.extraCharge || 0)}\n`;
     });
 
     receiptContent += `\nSubtotal: ₹${subtotal}\n`;
     receiptContent += `Extra Charges: ₹${totalExtraCharges}\n`;
     receiptContent += `Grand Total: ₹${subtotal + totalExtraCharges}\n`;
+    receiptContent += `Payment Status: ${order?.isPaid ? 'PAID' : 'COD'}\n`;
 
     const blob = new Blob([receiptContent], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
@@ -136,7 +137,7 @@ export const generateMembershipReceipt = (membership: any) => {
     receiptContent += `Extra Charges: ₹${membership.extraCharge || 0}\n`;
     receiptContent += `Total Amount: ₹${membership.category.finalPrice + (membership.extraCharge ? parseInt(membership.extraCharge) : 0)}\n\n`;
     receiptContent += `Delivery Time: ${membership.time}\n`;
-    receiptContent += `Payment Status: ${membership.isPaid ? 'Paid' : 'Pending'}\n`;
+    receiptContent += `Payment Status: ${membership?.isPaid ? 'PAID' : 'COD'}\n`;
     receiptContent += `Membership Status: ${membership.status}\n`;
 
     const blob = new Blob([receiptContent], { type: 'text/plain' });
