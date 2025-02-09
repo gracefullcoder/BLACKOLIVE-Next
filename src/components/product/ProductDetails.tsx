@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { IncQty, DecQty } from '@/src/utility/CartFunction';
 import { productType } from '@/src/types/product';
 import { useSession } from 'next-auth/react';
@@ -19,6 +19,13 @@ function ProductDetails({ product }: { product: productType }) {
     const [pincode, setPincode] = useState<any>(null);
     const [pincodes, setPincodes] = useState([])
     const [isDeliverable, setIsDeliverable] = useState<any>(null)
+    const porductDetail = useRef<any>(null);
+
+    useEffect(() => {
+        if (porductDetail.current) {
+          porductDetail?.current?.scrollIntoView({ behavior: "smooth" });
+        }
+      }, []);
 
 
     useEffect(() => {
@@ -166,10 +173,10 @@ function ProductDetails({ product }: { product: productType }) {
 
     return (
         <section >
+                    <div ref={porductDetail} />
             <div className="relative py-16 px-6 md:px-12 lg:px-20">
                 <div className="flex flex-col lg:flex-row justify-center items-center gap-10 lg:gap-20">
                     <img src={product.image} alt={product.title} className="h-[32rem] rounded-3xl" />
-
                     <div className="max-w-xl text-center lg:text-left">
                         <p className="text-sm md:text-base text-slate-400">{product.speciality}</p>
                         <h1 className="text-3xl md:text-5xl font-bold tracking-wide mt-4">{product.title}</h1>
