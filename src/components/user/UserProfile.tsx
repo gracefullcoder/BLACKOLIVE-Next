@@ -383,7 +383,7 @@ const UserProfile = ({ user }: any) => {
                         </div>
                     </div>
 
-                    <MyOrders orders={orders} />
+                    <MyOrders orders={orders} user={user}/>
                 </div>
             </div>
         </div>

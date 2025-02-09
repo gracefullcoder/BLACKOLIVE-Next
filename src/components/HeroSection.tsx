@@ -12,7 +12,7 @@ function HeroSection({ features }: { features: any }) {
       <img
         src={features?.heroImage || '/assets/salad.jpg'}
         alt="Delicious Salad"
-        className="h-full w-full object-cover md:object-center"
+        className="h-full w-full object-cover md:object-center max-sm:min-h-[65vh]"
       />
       {/* <HeroCard /> */}
     </div>

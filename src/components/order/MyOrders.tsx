@@ -4,7 +4,7 @@ import { Calendar, Clock, MapPin, Star, Package, CreditCard } from 'lucide-react
 import { formatTime } from '@/src/utility/basic';
 import { generateOrderReceipt } from '../analytics/analyticsFunctions';
 
-const MyOrders = ({ orders }: any) => {
+const MyOrders = ({ orders,user }: any) => {
     const router = useRouter();
 
     const formatDate = (dateString: string) => {
@@ -49,7 +49,7 @@ const MyOrders = ({ orders }: any) => {
                             key={order._id}
                             // onClick={() => router.push(`/order/${order._id}`)}
                             className="bg-white border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer p-4"
-                            onClick={() => generateOrderReceipt(order)}
+                            onClick={() => generateOrderReceipt({...order,user})}
                         >
                             <div className="space-y-3">
                                 <div className="flex justify-between items-start">
