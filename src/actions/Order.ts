@@ -164,14 +164,14 @@ export const getOrders = async (userId: string) => {
                     path: "orderDetails",
                     populate: {
                         path: "orders.product",
-                        model: "Product"
+                        model: Product
                     }
                 },
                 {
                     path: "membershipDetails",
                     populate: {
                         path: "category",
-                        model: "MembershipProduct"
+                        model: MembershipProduct
                     }
                 }
             ]);
@@ -188,7 +188,7 @@ export async function getMembershipOrder(id: string, userId: string) {
         const details = await User.findById(userId).select("membershipDetails");
 
         if (details.membershipDetails.includes(id)) {
-            const data = await MembershipOrder.findById(id).populate('category');
+            const data = await MembershipOrder.findById(id).populate({ path: 'category', model: MembershipProduct });
             console.log(data)
             return JSON.parse(JSON.stringify(data));
         }
@@ -202,7 +202,7 @@ export async function getMembershipOrder(id: string, userId: string) {
 }
 
 export async function useBonus(idx: number, orderId: String) {
-    const membershipDetails = await MembershipOrder.findById(orderId).populate("category");
+    const membershipDetails = await MembershipOrder.findById(orderId).populate({ path: 'category', model: MembershipProduct });
 
     if (membershipDetails.bonusUsed < membershipDetails.category.bonus) {
         let updatedIdx = -1;
@@ -278,7 +278,7 @@ export async function getAllOrders() {
     try {
         await connectToDatabase();
         const orders = await Order.find()
-            .populate([{ path: 'orders.product', model: Product }, { path: "assignedTo", select: "name" }]).populate({ path: 'user', select: "name email contact" })
+            .populate([{ path: 'orders.product', model: Product }, { path: "assignedTo", model: User, select: "name" }]).populate({ path: 'user', model: User, select: "name email contact" })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(orders));
     } catch (error) {
@@ -299,7 +299,7 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "assigned", assignedTo: assignReq ? assignUser : user._id },
                     { new: true }
-                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "unassign") {
@@ -307,7 +307,7 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "pending", assignedTo: null },
                     { new: true }
-                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "delivered") {
@@ -315,7 +315,7 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "delivered" },
                     { new: true }
-                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "cancelled") {
@@ -323,7 +323,7 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "cancelled" },
                     { new: true }
-                ).populate('orders.product').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Marked as Cancelled", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
         } else {
@@ -347,7 +347,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any, assig
                     orderId,
                     { status: "assigned", assignedTo: assignReq ? assignUser : user._id },
                     { new: true }
-                ).populate('category').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "unassign") {
@@ -355,7 +355,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any, assig
                     orderId,
                     { status: "pending", assignedTo: null },
                     { new: true }
-                ).populate('category').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "delivered") {
@@ -365,7 +365,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any, assig
                     orderId,
                     { $push: { deliveryDates: utcDate } },
                     { new: true }
-                ).populate('category').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
 
                 if (updatedOrder.deliveryDates.length === updatedOrder.category.days) {
                     updatedOrder.status = "delivered";
@@ -379,7 +379,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any, assig
                     orderId,
                     { status: "cancelled" },
                     { new: true }
-                ).populate('category').populate({ path: "assignedTo", select: "name" });
+                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Marked as Cancelled", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
         } else {
@@ -408,7 +408,7 @@ export async function updateOrderQuantity(orderId: any, productId: any, newQuant
         orderItem.quantity = newQuantity;
         await order.save();
 
-        const updatedOrder = await order.populate('orders.product');
+        const updatedOrder = await order.populate({ path: 'orders.product', model: Product });
         return JSON.parse(JSON.stringify(updatedOrder));
     } catch (error) {
         console.error("Error updating quantity:", error);
@@ -426,7 +426,7 @@ export async function removeProductFromOrder(orderId: any, productId: any) {
         );
 
         await order.save();
-        const updatedOrder = await order.populate('orders.product');
+        const updatedOrder = await order.populate({ path: 'orders.product', model: Product });
         return JSON.parse(JSON.stringify(updatedOrder));
     } catch (error) {
         console.error("Error removing product:", error);
@@ -448,7 +448,7 @@ export async function addExtraCharge(orderId: any, productId: any, extraCharge: 
             orderItem.extraCharge = parseInt(extraCharge);
             await order.save();
 
-            const updatedOrder = await order.populate('orders.product');
+            const updatedOrder = await order.populate({ path: 'orders.product', model: Product });
             return { success: true, messsage: "Added extra charge" };
         } else {
             const updatedOrder = await MembershipOrder.findByIdAndUpdate(orderId, { extraCharge }, { new: true })
@@ -518,7 +518,7 @@ export async function getFilteredOrders(timeRange: any, status: any, inverse: bo
         }
 
         const orders = await Order.find(query)
-            .populate('orders.product').populate({ path: 'user', select: "name email contact" }).populate({ path: 'assignedTo', select: "name" })
+            .populate({ path: 'orders.product', model: Product }).populate({ path: 'user', model: User, select: "name email contact" }).populate({ path: 'assignedTo', model: User, select: "name" })
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(orders));
@@ -582,8 +582,8 @@ export async function getFilteredMemberships(timeRange: any, status: any, invers
         }
 
 
-        const mermberships = await MembershipOrder.find(query).populate({ path: "assignedTo", select: "name" })
-            .populate('category').populate({ path: 'user', select: "name email contact" })
+        const mermberships = await MembershipOrder.find(query).populate({ path: "assignedTo", model: User, select: "name" })
+            .populate({ path: "category", model: MembershipProduct }).populate({ path: 'user', model: User, select: "name email contact" })
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(mermberships));
@@ -598,7 +598,7 @@ export async function getAllMembership() {
     try {
         await connectToDatabase();
         const membership = await MembershipOrder.find({})
-            .populate('category').populate({ path: 'user', select: "name email contact" }).populate({ path: "assignedTo", select: "name" })
+            .populate('category').populate({ path: 'user', model: User, select: "name email contact" }).populate({ path: "assignedTo", model: User, select: "name" })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(membership));
     } catch (error) {
