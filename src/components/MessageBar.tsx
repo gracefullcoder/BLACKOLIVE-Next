@@ -23,7 +23,7 @@ const MessageBar: React.FC<MessageBarProps> = ({ messages }) => {
           }
         `}
       </style>
-      <div className="relative px-1 h-full left-0 flex items-center gap-2 z-10 bg-black">
+      <div className="relative px-1 h-full left-0 flex items-center gap-2 z-20 bg-black">
         <Megaphone className="w-6 text-green-400 animate-pulse" />
       </div>
       <div

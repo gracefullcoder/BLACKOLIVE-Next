@@ -227,6 +227,11 @@ const Cart = () => {
       } else {
         toast.error(response.message);
       }
+
+
+      if(response?.mailRes?.success){
+        toast.success("Order Mail Sent")
+      }
     } catch (error) {
       toast.error("Failed to create order");
     } finally {

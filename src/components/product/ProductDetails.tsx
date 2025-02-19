@@ -23,9 +23,9 @@ function ProductDetails({ product }: { product: productType }) {
 
     useEffect(() => {
         if (porductDetail.current) {
-          porductDetail?.current?.scrollIntoView({ behavior: "smooth" });
+            porductDetail?.current?.scrollIntoView({ behavior: "smooth" });
         }
-      }, []);
+    }, []);
 
 
     useEffect(() => {
@@ -77,12 +77,15 @@ function ProductDetails({ product }: { product: productType }) {
 
     const handleAddToCart = async () => {
         try {
+            setIsLoading(true);
             const res = await addToCart(session?.data?.user._id, product._id, quantity);
             if (res.success) {
                 setItems(prev => [...prev, { product: { ...product }, quantity: quantity }]);
             }
+            setIsLoading(false);
         } catch (error) {
             console.error("Error adding to cart:", error);
+            setIsLoading(false)
         }
     };
 
@@ -157,6 +160,12 @@ function ProductDetails({ product }: { product: productType }) {
             } else {
                 toast.error(response.message);
             }
+
+            if (response?.mailRes?.success) {
+                toast.success("Order Mail Sent")
+            }
+
+
         } catch (error) {
             toast.error("Failed to create order");
         } finally {
@@ -173,7 +182,7 @@ function ProductDetails({ product }: { product: productType }) {
 
     return (
         <section >
-                    <div ref={porductDetail} />
+            <div ref={porductDetail} />
             <div className="relative py-16 px-6 md:px-12 lg:px-20">
                 <div className="flex flex-col lg:flex-row justify-center items-center gap-10 lg:gap-20">
                     <img src={product.image} alt={product.title} className="h-[32rem] rounded-3xl" />
@@ -269,14 +278,16 @@ function ProductDetails({ product }: { product: productType }) {
                             }
 
                             {!product.bonus ? (!existingCartItem && (
-                                <button
-                                    className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer
-                                    `}
+                                <div className='px-8'>
+                                    <button
+                                    disabled={isLoading}
+                                    className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
                                     onClick={handleAddToCart}
                                 >
-                                    Add to Cart
+                                    {isLoading ? 'Processing...' :'Add to Cart'}
                                 </button>
+                                </div>
+                                
                             )) :
 
                                 <div>
@@ -287,14 +298,22 @@ function ProductDetails({ product }: { product: productType }) {
                                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
                                             placeholder='Need Changes ?' />
                                     </div>
-                                    <button
+                                    {/* <button
                                         className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
                                       bg-green-600 hover:bg-green-700 text-white cursor-pointer
                                     `}
                                         onClick={handleMembership}
                                     >
                                         Buy Membership
+                                    </button> */}
+                                    <button
+                                        disabled={isLoading}
+                                        className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                                        onClick={handleMembership}
+                                    >
+                                        {isLoading ? 'Processing...' : 'Buy Membership'}
                                     </button>
+
 
 
                                 </div>}

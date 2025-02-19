@@ -81,45 +81,45 @@ export const downloadExcel = (filteredOrders: any) => {
 };
 
 
-// export const generateOrderReceipt = (order: any) => {
-//     let receiptContent = `ORDER RECEIPT\n`;
-//     receiptContent += `Order ID: ${order._id}\n`;
-//     receiptContent += `Date: ${new Date(order.createdAt).toLocaleDateString()}\n`;
-//     receiptContent += `Customer: ${order.user.name}\n`;
-//     receiptContent += `Contact: ${order.contact}\n`;
-//     receiptContent += `Address: ${order.address.address}, ${order.address.landmark}, ${order.address.pincode}\n`;
-//     receiptContent += `Assigned To: ${order?.assignedTo?.name || "Not delivered"}\n\n`;
-//     receiptContent += `Items:\n`;
+export const generateOrderTXTReceipt = (order: any) => {
+    let receiptContent = `ORDER RECEIPT\n`;
+    receiptContent += `Order ID: ${order._id}\n`;
+    receiptContent += `Date: ${new Date(order.createdAt).toLocaleDateString()}\n`;
+    receiptContent += `Customer: ${order.user.name}\n`;
+    receiptContent += `Contact: ${order.contact}\n`;
+    receiptContent += `Address: ${order.address.address}, ${order.address.landmark}, ${order.address.pincode}\n`;
+    receiptContent += `Assigned To: ${order?.assignedTo?.name || "Not delivered"}\n\n`;
+    receiptContent += `Items:\n`;
 
-//     let subtotal = 0;
-//     let totalExtraCharges = 0;
+    let subtotal = 0;
+    let totalExtraCharges = 0;
 
-//     order.orders.forEach((item: any) => {
-//         const itemTotal = item.product.finalPrice * item.quantity;
-//         subtotal += itemTotal;
-//         totalExtraCharges += item.extraCharge || 0;
+    order.orders.forEach((item: any) => {
+        const itemTotal = item.product.finalPrice * item.quantity;
+        subtotal += itemTotal;
+        totalExtraCharges += item.extraCharge || 0;
 
-//         receiptContent += `${item.product.title}\n`;
-//         receiptContent += `  Quantity: ${item.quantity} × ₹${item.product.finalPrice}\n`;
-//         receiptContent += `  Extra Charges: ₹${item.extraCharge || 0}\n`;
-//         receiptContent += `  Total: ₹${itemTotal + (item.extraCharge || 0)}\n`;
-//     });
+        receiptContent += `${item.product.title}\n`;
+        receiptContent += `  Quantity: ${item.quantity} × ₹${item.product.finalPrice}\n`;
+        receiptContent += `  Extra Charges: ₹${item.extraCharge || 0}\n`;
+        receiptContent += `  Total: ₹${itemTotal + (item.extraCharge || 0)}\n`;
+    });
 
-//     receiptContent += `\nSubtotal: ₹${subtotal}\n`;
-//     receiptContent += `Extra Charges: ₹${totalExtraCharges}\n`;
-//     receiptContent += `Grand Total: ₹${subtotal + totalExtraCharges}\n`;
-//     receiptContent += `Payment Status: ${order?.isPaid ? 'PAID' : 'COD'}\n`;
+    receiptContent += `\nSubtotal: ₹${subtotal}\n`;
+    receiptContent += `Extra Charges: ₹${totalExtraCharges}\n`;
+    receiptContent += `Grand Total: ₹${subtotal + totalExtraCharges}\n`;
+    receiptContent += `Payment Status: ${order?.isPaid ? 'PAID' : 'COD'}\n`;
 
-//     const blob = new Blob([receiptContent], { type: 'text/plain' });
-//     const url = window.URL.createObjectURL(blob);
-//     const a = document.createElement('a');
-//     a.href = url;
-//     a.download = `order-receipt-${order._id}.txt`;
-//     document.body.appendChild(a);
-//     a.click();
-//     document.body.removeChild(a);
-//     window.URL.revokeObjectURL(url);
-// };
+    const blob = new Blob([receiptContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `order-receipt-${order._id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+};
 
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 

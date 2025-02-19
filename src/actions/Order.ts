@@ -7,6 +7,8 @@ import MembershipProduct from "../models/membershipproducts";
 import Product from "../models/product";
 import { getServerSession } from "next-auth";
 import AuthConfig from "../lib/auth";
+import { membershipEmailTemplate, orderEmailTemplate, resendMail, sendMail } from "../utility/mail";
+import { toast } from "react-toastify";
 
 export const createOrder = async (
     userId: string,
@@ -31,11 +33,13 @@ export const createOrder = async (
         console.log(products)
 
         const unavailableProducts: string[] = [];
+        const orderedProducts: any = [];
 
-        products.forEach((product) => {
+        products.forEach((product, idx) => {
             if (!product.isAvailable) {
                 unavailableProducts.push(product.title)
             }
+            orderedProducts.push({ product: product.title, price: product.finalPrice, quantity: orderItems[idx].quantity });
         })
 
         if (unavailableProducts.length != 0) {
@@ -66,7 +70,10 @@ export const createOrder = async (
             $set: { cart: [] }
         });
 
-        return { success: true, message: "Order created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
+        const orderDetails = { userName: user.name, orderId: order._id, address: selectedAddress, contact, time, orderItems: orderedProducts, totalPrice: orderedProducts.reduce((acc: any, item: any) => acc + item.finalPrice * item.quantity, 0) };
+        const mailRes = await resendMail({ email: user.email, subject: "Order Confirmation", html: orderEmailTemplate(orderDetails) });
+
+        return { success: true, mailRes, message: "Order created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
     } catch (error) {
         console.error("Error creating order:", error);
         return { success: false, message: "Failed to create order" };
@@ -120,7 +127,7 @@ export const createMembership = async (
             return { success: false, message: "Address not found" };
         }
 
-        // const memebershipDetails = await MembershipProduct.findById(orderItem);
+        const memebershipDetails = await MembershipProduct.findById(orderItem);
 
         // const graphLength = memebershipDetails.days + memebershipDetails.bonus
         // const deliveryGraph = new Array(graphLength).fill(1);
@@ -146,7 +153,11 @@ export const createMembership = async (
             $set: { cart: [] }
         });
 
-        return { success: true, message: "Membership created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
+        const orderDetails = { userName: user.name, orderId: order._id, address: selectedAddress, contact, time, orderItems: [{ product: memebershipDetails.title, price: memebershipDetails.finalPrice, days: memebershipDetails.days }], totalPrice: memebershipDetails.finalPrice };
+        const mailRes = await resendMail({ email: user.email, subject: "Membership Confirmation", html: membershipEmailTemplate(orderDetails) });
+
+
+        return { success: true, mailRes, message: "Membership created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
     } catch (error) {
         console.error("Error creating order:", error);
         return { success: false, message: "Failed to create order" };

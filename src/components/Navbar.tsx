@@ -27,7 +27,7 @@ function Navbar() {
   const { items, setIsOpen } = useCartContext();
 
   return (
-    <header className="fixed w-full bg-white z-10 shadow-md">
+    <header className="fixed w-full bg-white z-30 shadow-md">
       <div className="flex justify-between px-6 md:px-12 lg:px-32 py-4 items-center">
         <div>
           <Link href="/" className="text-xl font-bold">
