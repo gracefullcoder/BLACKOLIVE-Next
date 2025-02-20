@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, Package, CreditCard, ChevronLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { postponeMembership, useBonus } from '@/src/actions/Order';
+import { postponeMembership, postponeMembershipByDate, useBonus } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
 import { formatTime } from '@/src/utility/basic';
 
@@ -18,46 +18,73 @@ const MembershipDetailsPage = ({ membership }: any) => {
     };
     console.log(membership)
 
-    const postponeStatus = () => {
-        try {
-            if (!membership || !Array.isArray(membership.postponedDates)) {
-                return false;
-            }
+    // const postponeStatus = () => {
+    //     try {
+    //         if (!membership || !Array.isArray(membership.postponedDates)) {
+    //             return false;
+    //         }
 
-            const utcDate = new Date();
-            utcDate.setUTCHours(0, 0, 0, 0);
-            utcDate.setDate(utcDate.getDate() + 1);
+    //         const utcDate = new Date();
+    //         utcDate.setUTCHours(0, 0, 0, 0);
+    //         utcDate.setDate(utcDate.getDate() + 1);
 
-            console.log(utcDate.toISOString(),membership.startDate)
-            if(new Date(membership.startDate) > utcDate) {
-                return true;
-            }
-            
-            const targetDateISO = utcDate.toISOString();
-            const isDatePostponed = membership.postponedDates.some((date: any) => {
-                const dateISO = new Date(date).toISOString();
-                return dateISO === targetDateISO;
-            });
+    //         console.log(utcDate.toISOString(), membership.startDate)
+    //         if (new Date(membership.startDate) > utcDate) {
+    //             return true;
+    //         }
 
-            return isDatePostponed;
-        } catch (error) {
-            console.error("Error in postponeStatus:", error);
-            return false;
-        }
-    };
+    //         const targetDateISO = utcDate.toISOString();
+    //         const isDatePostponed = membership.postponedDates.some((date: any) => {
+    //             const dateISO = new Date(date).toISOString();
+    //             return dateISO === targetDateISO;
+    //         });
+
+    //         return isDatePostponed;
+    //     } catch (error) {
+    //         console.error("Error in postponeStatus:", error);
+    //         return false;
+    //     }
+    // };
 
 
-    const [isPostpone, setPostpone] = useState(postponeStatus())
+    // const [isPostpone, setPostpone] = useState(postponeStatus());
+    const [selectedDate, setSelectedDate] = useState(null);
 
     const handlePostpone = async () => {
-        const res = await postponeMembership(membership._id);
-        if (res.success) {
-            toast.success(res.message);
-            setPostpone(true)
+        if (!selectedDate) {
+            toast.error("Select Date");
             return;
         }
-        toast.error(res.message)
-    }
+    
+        const confirmPostpone = window.confirm(
+            `Are you sure you want to postpone to ${selectedDate}?`
+        );
+    
+        if (!confirmPostpone) return;
+
+        const date = new Date(selectedDate);
+        date.setUTCHours(0, 0, 0, 0);
+
+        if(membership.postponedDates.some((prev:any) => prev == date.toISOString())) {toast.error("Already Postponed Date") ; return;}
+        
+        try {
+            const res = await postponeMembershipByDate(membership._id, selectedDate);
+            if (res.success) {
+                toast.success(res.message);
+                membership.postponedDates = membership.postponedDates
+                    ? [...membership.postponedDates, date]
+                    : [date];
+    
+                setSelectedDate(null);
+            } else {
+                toast.error(res.message);
+            }
+        } catch (error) {
+            toast.error("Failed to postpone");
+            console.error(error);
+        }
+    };
+    
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -165,10 +192,15 @@ const MembershipDetailsPage = ({ membership }: any) => {
                                         })}
                                     </div>
 
-                                    {!isPostpone && <div className='mt-8 gap-4 flex items-center border-t pt-4'>
-                                        <h3 className='font-medium text-gray-800 text-xl'>Feature😎</h3>
-                                        <button className='border bg-red-300 p-2 rounded' onClick={handlePostpone}>Postpone Tommorrow Order</button>
-                                    </div>}
+                                    {/* {!isPostpone ||  */}
+                                    <div className='mt-8 gap-4 flex items-center border-t pt-4 flex-wrap'>
+                                        <h3 className='font-medium text-gray-800 text-xl'>Postpone Specific Date</h3>
+                                        <div className='flex gap-4'>
+                                        <input type="date" className='border border-black p-2 rounded-md' onChange={(e: any) => { setSelectedDate(e.target.value) }} min={new Date(Date.now() + 86400000).toISOString().split("T")[0]} />
+                                        <button className='border bg-red-300 p-2 rounded' onClick={handlePostpone}>Postpone</button>
+                                        </div>
+                                    </div>
+                                    {/* } */}
                                 </div>
                             </div>
                         </div>
