@@ -134,6 +134,7 @@ export const createMembership = async (
 
         // for (let i = memebershipDetails.days; i < graphLength; i++) deliveryGraph[i] = 0
 
+        console.log(time)
         const order = await MembershipOrder.create({
             category: orderItem,
             user: userId,

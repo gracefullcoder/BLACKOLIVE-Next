@@ -32,7 +32,7 @@ const membershipSchema = new mongoose.Schema({
         type: String
     },
     extraCharge: {
-        type: String
+        type: Number
     },
     isPaid: {
         type: Boolean

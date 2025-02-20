@@ -24,9 +24,7 @@ const memProductSchema = new mongoose.Schema({
         type: Number
     },
     timings: [{
-        type: Number,
-        min: 0,
-        max: 24
+        type: String
     }],
     days: {
         type: Number

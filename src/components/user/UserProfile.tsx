@@ -109,6 +109,7 @@ const UserProfile = ({ user }: any) => {
 
     const handleDeleteAddress = async (addressId: string) => {
         try {
+            setIsAddingAddress(true);
             const res = await axios.delete('/api/user/address', {
                 data: {
                     id: user._id,
@@ -118,7 +119,9 @@ const UserProfile = ({ user }: any) => {
 
             if (res.status && res.status < 400) {
                 if (res?.data?.addresses?.length) {
+                    console.log(res?.data?.addresses)
                     user.addresses = res?.data?.addresses
+                    setIsAddingAddress(false);
                 }
                 toast.success("Deleted!")
             }

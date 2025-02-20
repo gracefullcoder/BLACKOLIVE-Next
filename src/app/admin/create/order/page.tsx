@@ -126,10 +126,10 @@ export default function Page() {
                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
                         >
                             <option value="0">Select</option>
-                            <option value="9">09 AM</option>
-                            <option value="12">12 PM</option>
-                            <option value="15">03 PM</option>
-                            <option value="18">06 PM</option>
+                            <option value="09:00">09 AM</option>
+                            <option value="12:00">12 PM</option>
+                            <option value="15:00">03 PM</option>
+                            <option value="18:00">06 PM</option>
                         </select>
                     </div>
 

@@ -44,7 +44,7 @@ export default function Page() {
             return;
         }
 
-        const response = await createMembership(user?._id || "", membershipDetails.orders[0].product, membershipDetails.address, membershipDetails.contact, membershipDetails.time, membershipDetails.date, membershipDetails.message, parseInt(membershipDetails.extraCharge), membershipDetails.isPaid)
+        const response = await createMembership(user?._id || "", membershipDetails.orders[0].product, membershipDetails.address, membershipDetails.contact, membershipDetails.time, membershipDetails.date, membershipDetails.message, parseInt('0' + membershipDetails.extraCharge), membershipDetails.isPaid)
 
         if (response.success) {
             toast.success(response.message);
@@ -54,7 +54,6 @@ export default function Page() {
     const removeProduct = (pId: any) => {
         setMembershipsDetails((prev: any) => ({ ...prev, orders: prev.orders.filter((order: any) => order.product != pId) }))
     }
-
 
     return (
         <div className="container mx-auto p-6 space-y-6">
@@ -116,10 +115,10 @@ export default function Page() {
                                     className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
                                 >
                                     <option value="0">Select</option>
-                                    <option value="9">09 AM</option>
-                                    <option value="12">12 PM</option>
-                                    <option value="15">03 PM</option>
-                                    <option value="18">06 PM</option>
+                                    <option value="09:00">09 AM</option>
+                                    <option value="12:00">12 PM</option>
+                                    <option value="15:00">03 PM</option>
+                                    <option value="18:00">06 PM</option>
                                 </select>
                             </div>
                             <div>

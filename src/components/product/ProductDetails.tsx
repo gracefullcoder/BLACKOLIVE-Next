@@ -91,7 +91,7 @@ function ProductDetails({ product }: { product: productType }) {
 
 
     //for membership
-    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any, message: string }>({ time: product?.timings ? product?.timings[1] : 0, startDate: new Date(), message: "" });
+    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any, message: string }>({ time: product?.timings ? product?.timings[0] : 0, startDate: new Date(), message: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<number>(-1);
 
@@ -180,6 +180,21 @@ function ProductDetails({ product }: { product: productType }) {
 
     const handleDetailsChange = (e: any) => { setMembershipDetails(prev => { return { ...prev, [e.target.name]: e.target.value } }) }
 
+    const formattedTime = (time: any): string => {
+        let [hrs, min] = time.split(":").map(Number); // Convert to numbers
+
+        let period = "AM";
+        if (hrs >= 12) {
+            period = "PM";
+            if (hrs > 12) hrs -= 12;
+        } else if (hrs === 0) {
+            hrs = 12;
+        }
+
+        return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${period}`;
+    };
+
+
     return (
         <section >
             <div ref={porductDetail} />
@@ -214,7 +229,7 @@ function ProductDetails({ product }: { product: productType }) {
                                             <select className='border p-2 rounded-3xl'
                                                 name="time" onChange={(e) => handleDetailsChange(e)} >
                                                 {
-                                                    product?.timings?.map((t, i) => <option key={i} value={t}>{t > 12 ? `0${t - 12}:00 ${t > 11 ? "PM" : "AM"}` : `${t}:00  ${t > 11 ? "PM" : "AM"}`}</option>)
+                                                    product?.timings?.map((t, i) => <option key={i} value={t}>{formattedTime(t)}</option>)
                                                 }
                                             </select>
                                         </div>
@@ -280,14 +295,14 @@ function ProductDetails({ product }: { product: productType }) {
                             {!product.bonus ? (!existingCartItem && (
                                 <div className='px-8'>
                                     <button
-                                    disabled={isLoading}
-                                    className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
-                                    onClick={handleAddToCart}
-                                >
-                                    {isLoading ? 'Processing...' :'Add to Cart'}
-                                </button>
+                                        disabled={isLoading}
+                                        className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                                        onClick={handleAddToCart}
+                                    >
+                                        {isLoading ? 'Processing...' : 'Add to Cart'}
+                                    </button>
                                 </div>
-                                
+
                             )) :
 
                                 <div>
