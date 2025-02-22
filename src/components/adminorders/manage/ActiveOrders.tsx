@@ -16,7 +16,7 @@ function ActiveOrders({ onlyAssigned }: any) {
     const [timeFilter, setTimeFilter] = useState("all");
     const [orderItems, setOrderItems] = useState(new Map());
     const [isActive, setIsActive] = useState(false);
-    const prevRead = useRef(0);
+    const [prevRead,setPrevRead] = useState(0);
     const pendingOrders = useMemo(() => orders.reduce((acc: any, order: any) => (order.status == "pending" ? acc += 1 : acc), 0), [orders])
 
     const [users, setUsers] = useState([]);
@@ -159,12 +159,12 @@ function ActiveOrders({ onlyAssigned }: any) {
                         <div className="flex gap-6 justify-center">
                             <div className="flex flex-col items-center">
                                 <p className="text-gray-700 font-medium">Unread Orders</p>
-                                <p className="text-3xl font-bold text-orange-500">{pendingOrders - prevRead.current}</p>
+                                <p className="text-3xl font-bold text-orange-500">{pendingOrders - prevRead}</p>
                             </div>
                             <div className="mt-auto pb-2">
                                 <button
                                     className="mt-3 p-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-all flex items-center justify-center"
-                                    onClick={() => (prevRead.current = pendingOrders)}
+                                    onClick={() => (setPrevRead(pendingOrders))}
                                     title="Mark as Read"
                                 >
                                     <Check size={20} />
