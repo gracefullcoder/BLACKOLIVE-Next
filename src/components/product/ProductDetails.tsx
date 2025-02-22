@@ -222,7 +222,9 @@ function ProductDetails({ product }: { product: productType }) {
                                         <div>
                                             <p className="text-black mt-6 mb-2">Select Start Date</p>
                                             <input type="date" className='border p-2 rounded-3xl'
-                                                name='startDate' onChange={(e) => handleDetailsChange(e)} />
+                                                name='startDate' onChange={(e) => handleDetailsChange(e)}
+                                                min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
+                                            />
                                         </div>
                                         <div>
                                             <p className="text-black mt-6 mb-2">Timings</p>

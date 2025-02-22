@@ -1,11 +1,11 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { getFilteredOrders } from "@/src/actions/Order";
 import OrderGrid from "@/src/components/adminorders/manage/OrderGrid";
 import { useSession } from "next-auth/react";
 import { deliveryUsers } from "@/src/actions/User";
 import PreLoader from "../../PreLoader";
-import { Route } from "lucide-react";
+import { Check, Route } from "lucide-react";
 import { openInGoogleMaps, openRouteInMaps } from "@/src/utility/basic";
 
 function ActiveOrders({ onlyAssigned }: any) {
@@ -16,6 +16,8 @@ function ActiveOrders({ onlyAssigned }: any) {
     const [timeFilter, setTimeFilter] = useState("all");
     const [orderItems, setOrderItems] = useState(new Map());
     const [isActive, setIsActive] = useState(false);
+    const prevRead = useRef(0);
+    const pendingOrders = useMemo(() => orders.reduce((acc: any, order: any) => (order.status == "pending" ? acc += 1 : acc), 0), [orders])
 
     const [users, setUsers] = useState([]);
 
@@ -34,6 +36,12 @@ function ActiveOrders({ onlyAssigned }: any) {
     useEffect(() => {
         fetchFilteredOrders();
     }, [timeFilter, session.data, isActive]);
+
+    useEffect(() => {
+        const interval = setInterval(fetchFilteredOrders, 60000);
+
+        return () => clearInterval(interval)
+    }, []);
 
     const mapProducts = (data: any) => {
         const productMapping = new Map();
@@ -62,6 +70,7 @@ function ActiveOrders({ onlyAssigned }: any) {
     const fetchFilteredOrders = async () => {
         try {
             setLoading(true);
+            console.log("Here we go again")
             const status = ["delivered", "cancelled"];
             const time = timeFilter === "all" ? null : timeFilter;
             const data = await getFilteredOrders(time, status, true);
@@ -92,39 +101,80 @@ function ActiveOrders({ onlyAssigned }: any) {
                 <h1 className="text-2xl font-bold mb-4">Order Management</h1>
 
                 {/* Filters */}
-                <div className="flex gap-4">
-                    <div className="flex gap-4 mb-6">
-                        <select
-                            value={timeFilter}
-                            onChange={(e) => setTimeFilter(e.target.value)}
-                            className="border p-2 rounded"
-                        >
-                            <option value="all">All Times</option>
-                            <option value="morning">Slot-1 (6AM-11AM)</option>
-                            <option value="afternoon">Slot-2 (11AM-2PM)</option>
-                            <option value="evening">Slot-3 (2PM-5PM)</option>
-                            <option value="night">Slot-4 (5PM-12AM)</option>
-                        </select>
+                <div className="flex flex-col lg:flex-row items-center gap-6 mb-4 justify-between">
+
+                    <div className="flex gap-4">
+
+                        <div className="flex gap-4 w-full lg:w-auto">
+                            <select
+                                value={timeFilter}
+                                onChange={(e) => setTimeFilter(e.target.value)}
+                                className="border p-3 rounded-lg bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                            >
+                                <option value="all">All Times</option>
+                                <option value="morning">Slot-1 (6AM-11AM)</option>
+                                <option value="afternoon">Slot-2 (11AM-2PM)</option>
+                                <option value="evening">Slot-3 (2PM-5PM)</option>
+                                <option value="night">Slot-4 (5PM-12AM)</option>
+                            </select>
+                        </div>
+
+                        {!onlyAssigned && (
+                            <div className="flex items-center gap-3 border p-3 rounded-lg bg-white shadow-md">
+                                <input
+                                    type="checkbox"
+                                    id="assigned"
+                                    checked={isActive}
+                                    onChange={() => setIsActive((prev) => !prev)}
+                                    className="h-5 w-5 accent-blue-500 cursor-pointer"
+                                />
+                                <label htmlFor="assigned" className="text-gray-700 font-medium">
+                                    Assigned to me
+                                </label>
+                            </div>
+                        )}
+
+                        {(onlyAssigned || isActive) && (
+                            <button
+                                className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-all"
+                                onClick={() => openRouteInMaps(orders)}
+                            >
+                                <Route size={20} /> Open Route
+                            </button>
+                        )}
                     </div>
 
-                    {!onlyAssigned && <div className="flex items-center gap-2 mb-6 border p-4 rounded">
-                        <input
-                            type="checkbox"
-                            id="assigned"
-                            checked={isActive}
-                            onChange={() => setIsActive((prev) => !prev)}
-                            className="h-4 w-4"
-                        />
-                        <label htmlFor="assigned">Assigned to me</label>
-                    </div>}
+                    <div className="flex flex-col lg:flex-row bg-gray-50 p-6 rounded-xl shadow-md border w-full lg:w-auto gap-6">
 
-                    {(onlyAssigned || isActive) && <div>
-                        <button className={'border p-3 bg-white rounded-md'} onClick={() => openRouteInMaps(orders)}>
-                            <Route className='inline' /> &nbsp; Open Route
-                        </button>
-                    </div>}
+                        <div className="flex flex-col items-center">
+                            <p className="text-gray-700 font-medium">Active Orders</p>
+                            <p className="text-3xl font-bold text-blue-600">{orders.length}</p>
+                        </div>
 
+                        <div className="flex flex-col items-center">
+                            <p className="text-gray-700 font-medium">Pending Orders</p>
+                            <p className="text-3xl font-bold text-red-500">{pendingOrders}</p>
+                        </div>
+
+                        <div className="flex gap-6 justify-center">
+                            <div className="flex flex-col items-center">
+                                <p className="text-gray-700 font-medium">Unread Orders</p>
+                                <p className="text-3xl font-bold text-orange-500">{pendingOrders - prevRead.current}</p>
+                            </div>
+                            <div className="mt-auto pb-2">
+                                <button
+                                    className="mt-3 p-2 bg-green-600 text-white rounded-full shadow-md hover:bg-green-700 transition-all flex items-center justify-center"
+                                    onClick={() => (prevRead.current = pendingOrders)}
+                                    title="Mark as Read"
+                                >
+                                    <Check size={20} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+
 
                 <OrderGrid
                     title={""}

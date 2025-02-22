@@ -13,8 +13,6 @@ export async function GET(req: NextRequest) {
 
         const type = params.get('type');
 
-        console.log(type)
-
         if (type == "all") {
             return NextResponse.json({ products, membership })
         }
