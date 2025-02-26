@@ -31,7 +31,7 @@ function Navbar() {
       <div className="flex justify-between px-6 md:px-12 lg:px-32 py-4 items-center">
         <div>
           <Link href="/" className="text-xl font-bold">
-            <Image src="/assets/logo.png" alt="Logo" width={48} height={12} className="h-12 w-12" />
+            <Image src="/assets/newlogo.png" alt="Logo" width={48} height={12} className="h-12 w-12" />
           </Link>
         </div>
 
