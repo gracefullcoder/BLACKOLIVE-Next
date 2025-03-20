@@ -62,7 +62,8 @@ export default function ActiveMembership({ onlyAssigned }: any) {
       setLoading(true);
       const status = ["delivered", "cancelled"];
       const time = timeFilter === "all" ? null : timeFilter;
-      const data = await getFilteredMemberships(time, status, true, true, true);
+      let data = await getFilteredMemberships(time, status, true, true, true);
+      data = data.filter((membership:any) => membership.deliveryDates.length != membership.category.days);
       console.log("in", data)
       if (onlyAssigned || isActive) {
         console.log("insidne active memebership")
