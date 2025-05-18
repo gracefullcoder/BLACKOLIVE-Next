@@ -30,7 +30,7 @@ function ProductCard({ _id, image, title, speciality, price, finalPrice, details
           <p className="line-through text-gray-400">Rs. {price}.00</p>
           <p className="text-lg font-bold text-green-600">Rs. {finalPrice}.00</p>
           <p className="text-lg text-red-600 ml-auto">
-            {Math.ceil(((finalPrice - price) / price) * 100)} %
+            {Math.ceil(((price - finalPrice) / price) * 100)} %
           </p>
         </div>
         <p className="text-slate-600 max-w-[304px] mt-1">{details.slice(0, Math.min(100, details.length))}...</p>
