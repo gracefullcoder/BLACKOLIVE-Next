@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { createMembership } from '@/src/actions/Order';
 import { featureDetails } from '@/src/actions/Features';
 import ExcludedProduct from './ExcludedProduct';
+import { Message } from '@/src/utility/SendMessage';
 
 function ProductDetails({ product }: { product: productType }) {
     const session = useSession();
@@ -259,7 +260,7 @@ function ProductDetails({ product }: { product: productType }) {
                             }
                         </div>
 
-                        {product.isAvailable ? <>
+                        {false && product.isAvailable ? <>
                             {
                                 product.bonus &&
                                 <>
@@ -336,10 +337,12 @@ function ProductDetails({ product }: { product: productType }) {
                                 </div>}
                         </> :
 
-                            <div className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-red-600 hover:bg-red-700 text-white cursor-pointer`}>
-                                Out Of Stock
-                            </div>}
+                            <div className={`w-fit p-2 px-4 mt-4 text-center text-2xl rounded-3xl mx-auto 
+                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer`}
+                                      onClick={() => Message(`I want to Buy \nItem : ${product.title} \nQuanity : ${quantity}`)}>
+                                Click to Order on Whatsapp! 
+                            </div>
+                        }
 
 
                         <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 mt-4 border-t border-black">
