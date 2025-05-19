@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { uploadFile } from "@/src/utility/ImageKit";
 import axios from "axios";
-import { getSpecificProduct } from "@/src/actions/Product";
+import { getProducts, getSpecificProduct } from "@/src/actions/Product";
+import { handleToast } from "@/src/utility/basic";
 
 const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMembership: boolean }) => {
     const [loading, setLoading] = useState(false);
@@ -26,17 +27,22 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
             image: "",
             fileId: "",
             speciality: "",
-            price: "",
-            finalPrice: "",
+            price: 0,
+            finalPrice: 0,
             isAvailable: true,
             days: 0,
             timings: [],
             bonus: 0,
+            products: [],
+            discountPercent: 0,
             responses: []
         }
     );
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<any>('');
+    const [products, setProducts] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState("");
+
 
     const handleImageChange = (e: any) => {
         const file = e.target.files?.[0];
@@ -51,26 +57,15 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
     };
     const router = useRouter();
 
-    useEffect(() => {
-        // Fetch product details
-        const fetchProduct = async () => {
-            try {
-                const response = await getSpecificProduct(productId)
-                console.log(response)
-                setFormData(response);
-                setImagePreview(response.image);
-            } catch (error) {
-                console.error("Error fetching product details:", error);
-            }
-        };
-
-        fetchProduct();
-    }, [productId]);
 
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
         if (name == "timings") {
             setFormData((prev) => ({ ...prev, [name]: value.split(",") }));
+        }
+        else if (name == "discountPercent") {
+            const { price, finalPrice } = calculatePrices(products, formData.products, value);
+            setFormData((prev: any) => ({ ...prev, price, finalPrice, [name]: value }));
         }
         else setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -105,6 +100,63 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
             setLoading(false);
         }
     };
+
+    const calculatePrices = (products: any, memerbshipProducts: any, discountPercent: any) => {
+        const memebershipProducts = products.filter((p: any) => (memerbshipProducts.includes(p?._id)));
+        const price = memebershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0);
+        const finalPrice = Math.round(memebershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100));
+        return { price, finalPrice };
+    }
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+
+            try {
+                const fetchedData = await getProducts("salads");
+                console.log("apple");
+                handleToast(fetchedData);
+                if (fetchedData.success) {
+                    setProducts(fetchedData.products);
+                    // setFormData((prev) => ({...prev,price}))
+                }
+                const response = await getSpecificProduct(productId)
+                console.log("apple", response)
+                const { price, finalPrice } = calculatePrices(fetchedData.products, response?.products, response?.discountPercent);
+                setFormData({ ...response, price, finalPrice });
+                setImagePreview(response.image);
+            } catch (error) {
+                console.error("Error fetching product details:", error);
+            }
+
+        }
+
+        fetchProducts();
+    }, [productId])
+
+    console.log(products)
+
+    const handleAddProduct = () => {
+        if (!selectedProduct) return;
+
+        const product: any = products.find((p: any) => p._id == selectedProduct);
+
+        setFormData((prev: any) => ({
+            ...prev,
+            price: prev.price + product?.finalPrice,
+            finalPrice: prev.finalPrice + product.finalPrice * ((100 - (formData?.discountPercent || 0)) / 100),
+            products: [...prev.products, selectedProduct]
+        }));
+    };
+
+    const handleRemoveProduct = (pId: any) => {
+        const membershipProducts = formData?.products?.filter((p: any) => p !== pId);
+        const { price, finalPrice } = calculatePrices(products, membershipProducts, formData.discountPercent);
+        setFormData((prev: any) => ({
+            ...prev,
+            products: membershipProducts,
+            price, finalPrice
+        }));
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
@@ -182,79 +234,154 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Price
-                                </label>
-                                <input
-                                    type="number"
-                                    name="price"
-                                    value={formData.price}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    required
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700">
-                                    Final Price
-                                </label>
-                                <input
-                                    type="number"
-                                    name="finalPrice"
-                                    value={formData.finalPrice}
-                                    onChange={handleInputChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    required
-                                />
-                            </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                                Timings
+                            </label>
+                            <input
+                                type="text"
+                                name="timings"
+                                value={formData?.timings?.toString()}
+                                onChange={handleInputChange}
+                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            />
                         </div>
+                        {
+                            isMembership && <>
 
-                        {isMembership &&
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Bonus
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="bonus"
-                                        value={formData.bonus}
-                                        onChange={handleInputChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        required
-                                    />
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Bonus
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="bonus"
+                                            value={formData.bonus}
+                                            onChange={handleInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Days
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="days"
+                                            value={formData.days}
+                                            onChange={handleInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Discount
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="discountPercent"
+                                            value={formData.discountPercent}
+                                            onChange={handleInputChange}
+                                            className="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            required
+                                        />
+
+                                    </div>
+
                                 </div>
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Days
+                                        Add Products
                                     </label>
-                                    <input
-                                        type="number"
-                                        name="days"
-                                        value={formData.days || 0}
-                                        onChange={handleInputChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        required
-                                    />
+
+                                    <div className='flex justify-between gap-4'>
+                                        <select name="products"
+                                            className="mt-1 p-2 block w-1/2 border-gray-300 rounded-md shadow-sm"
+                                            onChange={(e) => setSelectedProduct(e.target.value)}
+                                        >
+                                            <option value="">Select</option>
+                                            {products.map((product: any) => (
+                                                <option value={product._id} key={product._id}>
+                                                    {product.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div
+                                            className="mt-1 block w-1/2 border text-center cursor-pointer border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            onClick={handleAddProduct}
+                                        >
+                                            Add in Mebership
+                                        </div>
+                                    </div>
+
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Price
+                                        </label>
+                                        <div
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                            {formData.price}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Final Price
+                                        </label>
+                                        <div
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        >
+                                            {formData.finalPrice}
+                                        </div>
+                                    </div>
+                                </div>
+
+
 
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Timings
+                                        Selected Products
                                     </label>
-                                    <input
-                                        type="text"
-                                        name="timings"
-                                        value={formData?.timings?.toString()}
-                                        onChange={handleInputChange}
-                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    />
+
+
+
+                                    {formData?.products?.length === 0 ? (
+                                        <p>No product added</p>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {formData?.products?.map((product: any, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="flex items-center gap-2 border border-gray-300 px-3 py-1 rounded-md bg-gray-100"
+                                                >
+                                                    <span>
+                                                        {(products.find((p: any) => p._id === product) as any)?.title}
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        className="text-red-500 hover:text-red-700"
+                                                        onClick={() => handleRemoveProduct(product)}
+                                                    >
+                                                        ✕
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
                                 </div>
-                            </div>}
+                            </>
+                        }
 
                         <div className="flex items-center">
                             <input

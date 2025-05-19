@@ -72,6 +72,13 @@ export default function ProductManagementPage() {
       router.push(`/admin/products/edit/?Mid=${productId}`)
   };
 
+  const calculatePrices = (memProductIds: any, discountPercent: any) => {
+    const membershipProducts = allProducts.products.filter((p: any) => (memProductIds.includes(p?._id)));
+    const price = membershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0);
+    const finalPrice = Math.round(membershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100));
+    return { price, finalPrice };
+  }
+
   if (loading) <PreLoader />
 
 
@@ -184,8 +191,10 @@ export default function ProductManagementPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {allProducts.membership.map((product: any) => (
-                <tr key={product._id}>
+              {allProducts.membership.map((product: any) => {
+                let { price, finalPrice } = calculatePrices(product.products,product.discountPercent);
+
+                return (<tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {product.title}
@@ -196,7 +205,7 @@ export default function ProductManagementPage() {
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {product.finalPrice.toFixed(2)} /-
+                    {finalPrice?.toFixed(2)} /-
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -237,8 +246,8 @@ export default function ProductManagementPage() {
                       View Details
                     </button>
                   </td>
-                </tr>
-              ))}
+                </tr>)
+              })}
             </tbody>
           </table>
         </div>
