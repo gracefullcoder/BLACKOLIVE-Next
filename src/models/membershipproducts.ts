@@ -17,12 +17,6 @@ const memProductSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
-    price: {
-        type: Number
-    },
-    finalPrice: {
-        type: Number
-    },
     timings: [{
         type: String
     }],
@@ -31,6 +25,16 @@ const memProductSchema = new mongoose.Schema({
     },
     bonus: {
         type: Number
+    },
+    products: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product"
+        }
+    ],
+    discountPercent: {
+        type: Number,
+        default: 0
     },
     responses: [
         {

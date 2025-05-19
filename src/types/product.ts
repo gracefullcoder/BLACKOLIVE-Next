@@ -6,10 +6,12 @@ export type productType = {
     price: number,
     finalPrice: number
     details: string,
+    products?: string[],
+    discountPercent?: number,
     timings?: number[],
     days?: number
     bonus?: number,
-    isAvailable?:boolean
+    isAvailable?: boolean
 }
 
 export type orderType = productType & { startDate: string }

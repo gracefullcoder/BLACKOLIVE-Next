@@ -9,11 +9,40 @@ const membershipSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "MembershipProduct"
     },
+    products: [
+        {
+            product: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Product"
+            },
+            customizations: [
+                {
+                    label: {
+                        type: String
+                    },
+                    priceDiscounted: {
+                        type: Number
+                    }
+                }
+            ],
+            additonals: [
+                {
+                    addType: {
+                        type: mongoose.Schema.Types.ObjectId,
+                        ref: "Additonals"
+                    },
+                    priceCharged: {
+                        type: Number
+                    }
+                }
+            ]
+        }
+    ],
     startDate: {
         type: Date
     },
     time: {
-       type: String
+        type: String
     },
     address: {
         number: String,
