@@ -1,3 +1,5 @@
+import { toast } from "react-toastify";
+
 export const handleResponse = (response: any, toDoFnx: () => any) => {
     if (!response.status || response.status >= 400) toDoFnx()
 }
@@ -9,7 +11,7 @@ export function openInGoogleMaps(address: string) {
     window.open(googleMapsUrl, '_blank');
 }
 
-export const formatTime = (time:any) => {
+export const formatTime = (time: any) => {
     if (!time) return "";
     const [hour] = time.split(':');
     const hourNum = parseInt(hour);
@@ -31,3 +33,18 @@ export const openRouteInMaps = (orders: any[]) => {
 
     window.open(googleMapsUrl, "_blank");
 };
+
+export const handleApiError = (res: any, error: any, message: string) => {
+    return res.json({ success: false, message: error?.message || message })
+}
+
+export const handleToast = (data: { success: boolean, message: string, [key: string]: any }, duration: number = 1000, info: boolean = false) => {
+    if (info) {
+        toast.info(data.message, { autoClose: duration });
+    }
+    else if (data.success) {
+        toast.success(data.message, { autoClose: duration });
+    } else {
+        toast.error(data.message, { autoClose: duration });
+    }
+}

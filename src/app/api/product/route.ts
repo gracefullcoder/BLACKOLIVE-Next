@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
         console.log("requested");
         await connectToDatabase()
         const products = await Product.find();
-        const membership = await MembershipProduct.find();
+        const membership = await MembershipProduct.find().populate({ model: Product, path: "products" });
         const params = req.nextUrl.searchParams;
 
         const type = params.get('type');

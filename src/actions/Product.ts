@@ -32,19 +32,19 @@ export async function getProducts(type: string) {
         console.log(products, membership)
 
         if (type == "all") {
-            return JSON.parse(JSON.stringify({ products, membership }))
+            return JSON.parse(JSON.stringify({ success: true, message: "All Products Fetched", products, membership }))
         }
         else if (type == "salads") {
-            return JSON.parse(JSON.stringify({ products }))
+            return JSON.parse(JSON.stringify({ success: true, message: "All Salads Fetched", products }))
 
         } else if (type == "membership") {
-            return JSON.parse(JSON.stringify({ membership }))
+            return JSON.parse(JSON.stringify({ success: true, message: "All Membership Fetched", membership }))
         } else {
             return JSON.parse(JSON.stringify({ message: "Not a valid request" }))
         }
-    } catch (error) {
+    } catch (error: any) {
         console.log(error)
-        return { error: "Failed to fetch data", status: 500 };
+        return { success: true, message: error?.message || "Failed to fetch data", error: "Failed to fetch data", status: 500 };
     }
 }
 

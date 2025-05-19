@@ -9,6 +9,7 @@ import { getServerSession } from "next-auth";
 import AuthConfig from "../lib/auth";
 import { membershipEmailTemplate, orderEmailTemplate, resendMail, sendMail } from "../utility/mail";
 import { toast } from "react-toastify";
+import Additionals from "../models/additionals";
 
 export const createOrder = async (
     userId: string,
@@ -200,7 +201,7 @@ export async function getMembershipOrder(id: string, userId: string) {
         const details = await User.findById(userId).select("membershipDetails");
 
         if (details.membershipDetails.includes(id)) {
-            const data = await MembershipOrder.findById(id).populate({ path: 'category', model: MembershipProduct });
+            const data = await MembershipOrder.findById(id).populate({ path: 'category', model: MembershipProduct,populate:{path:"additionals",model:Additionals} });
             console.log(data)
             return JSON.parse(JSON.stringify(data));
         }

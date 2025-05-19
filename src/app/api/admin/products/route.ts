@@ -18,6 +18,7 @@ export async function POST(req: Request) {
         await connectToDatabase();
         const data = await req.json();
         let product;
+        console.log(data);
 
         if (data.isMembership) {
             product = await MembershipProduct.create({
@@ -26,12 +27,14 @@ export async function POST(req: Request) {
                 image: data.image,
                 fileId: data.fileId,
                 speciality: data.speciality,
-                price: data.price,
-                finalPrice: data.finalPrice,
                 isAvailable: data.isAvailable ?? true,
                 bonus: data.bonus,
                 days: data.days,
-                timings: data.timings.split(',')
+                timings: data.timings.split(','),
+                products: data.products,
+                discountPercent: Number(data.discountPercent),
+                // customizations: [data.customizations],
+                // additionals: [data.additionals]  
             });
             revalidatePath("/membership")
         } else {
@@ -98,7 +101,8 @@ export async function PATCH(req: Request) {
                 isAvailable: data.isAvailable ?? true,
                 bonus: data.bonus,
                 days: data.days,
-                timings: data.timings
+                timings: data.timings,
+                products: data.products
             });
             revalidatePath("/membership");
         } else {

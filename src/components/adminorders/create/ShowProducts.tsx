@@ -1,8 +1,9 @@
 "use client"
 import { useEffect } from "react"
 import { getProducts } from "@/src/actions/Product"
+import { handleToast } from "@/src/utility/basic"
 
-const ShowProducts = ({ products, setProducts, setOrderDetails, isMembership }: any) => {
+const ShowProducts = ({ orderDetails, products, setProducts, setOrderDetails, isMembership }: any) => {
     useEffect(() => {
         const getDetails = async () => {
             if (isMembership) {
@@ -21,12 +22,18 @@ const ShowProducts = ({ products, setProducts, setOrderDetails, isMembership }: 
 
     const addProduct = (product: any) => {
         console.log("in")
-        setOrderDetails(((prev: any) => {
-            return {
-                ...prev,
-                orders: [...prev.orders, { product: product._id, quantity: 1, title: product.title }]
-            }
-        }))
+        console.log(orderDetails.orders.filter((p: any) => p.product == product._id))
+        if (orderDetails.orders.filter((p: any) => p.product == product._id).length == 0) {
+            setOrderDetails(((prev: any) => {
+                return {
+                    ...prev,
+                    orders: [...prev.orders, { product: product._id, quantity: 1, title: product.title }]
+                }
+            }))
+        } else {
+            handleToast({ success: false, message: "already added" });
+        }
+
     }
 
     return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

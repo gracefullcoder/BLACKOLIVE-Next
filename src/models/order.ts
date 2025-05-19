@@ -12,10 +12,13 @@ const orderSchema = new mongoose.Schema({
                 type: Schema.Types.ObjectId,
                 ref: "Product"
             },
+            priceCharged:{
+                type:Number
+            },
             quantity: {
                 type: Number
             },
-            reponse: {
+            response: {
                 type: Schema.Types.ObjectId,
                 ref: "Feedback"
             },

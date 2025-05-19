@@ -26,6 +26,21 @@ const productSchema = new mongoose.Schema({
     finalPrice: {
         type: Number
     },
+    customizations: [{
+        label: {
+            type: String
+        },
+        discount: {
+            type: Number
+        },
+        description: {
+            type: String
+        }
+    }],
+    additonals: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Additionals"
+    }],
     responses: [
         {
             type: mongoose.Schema.Types.ObjectId,
