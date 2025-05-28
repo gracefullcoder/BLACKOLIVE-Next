@@ -66,7 +66,7 @@ export default function Page() {
                     <h3 className="font-semibold text-lg mb-4 text-gray-700">Membership Summary</h3>
 
 
-                    <ShowProducts products={memberships} setProducts={setMemberships} setOrderDetails={setMembershipsDetails} isMembership={true} />
+                    <ShowProducts orderDetails={membershipDetails} products={memberships} setProducts={setMemberships} setOrderDetails={setMembershipsDetails} isMembership={true} />
 
                     <div className="mt-6">
                         <h3 className="font-semibold text-lg mb-4">Orders</h3>
@@ -80,12 +80,21 @@ export default function Page() {
                                         Product: {order.title}
                                     </div>
 
-                                    <button
-                                        onClick={() => removeProduct(order.product)}
-                                        className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-all"
-                                    >
-                                        Remove
-                                    </button>
+                                    <div>
+                                        <button
+                                            onClick={() => removeProduct(order.product)}
+                                            className="bg-blue-500 mr-4 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-all"
+                                        >
+                                            Modify
+                                        </button>
+
+                                        <button
+                                            onClick={() => removeProduct(order.product)}
+                                            className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-all"
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
