@@ -11,7 +11,7 @@ import { createMembership } from '@/src/actions/Order';
 import { featureDetails } from '@/src/actions/Features';
 import ExcludedProduct from './ExcludedProduct';
 
-function ProductDetails({ product }: { product: productType }) {
+function ProductDetails({ product, isMembership }: { product: productType, isMembership: boolean }) {
     const session = useSession();
     const { items, setItems } = useCartContext();
     const existingCartItem = items.find((item: any) => item?.product?._id === product._id);
@@ -194,6 +194,12 @@ function ProductDetails({ product }: { product: productType }) {
         return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${period}`;
     };
 
+    const calculatePrices = (products: any, discountPercent: any) => {
+        const price = products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0);
+        const finalPrice = Math.round(products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100));
+        return { price, finalPrice };
+    }
+
 
     return (
         <section >
@@ -206,8 +212,8 @@ function ProductDetails({ product }: { product: productType }) {
                         <h1 className="text-3xl md:text-5xl font-bold tracking-wide mt-4">{product.title}</h1>
 
                         <div className="flex md:flex-row items-center gap-2 md:gap-4 mt-4 max-lg:justify-center">
-                            <p className="text-sm md:text-base line-through text-slate-400">Rs. {product.price}.00</p>
-                            <p className="text-lg md:text-xl">Rs. {product.finalPrice}.00</p>
+                            <p className="text-sm md:text-base line-through text-slate-400">Rs. {isMembership ? (calculatePrices(product?.products, product?.discountPercent)).price : product.price}.00</p>
+                            <p className="text-lg md:text-xl">Rs. {isMembership ? (calculatePrices(product?.products, product?.discountPercent))?.finalPrice : product.finalPrice}.00</p>
                         </div>
 
                         <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
@@ -261,7 +267,7 @@ function ProductDetails({ product }: { product: productType }) {
 
                         {product.isAvailable ? <>
                             {
-                                product.bonus &&
+                                isMembership &&
                                 <>
                                     {/* Address Selection */}
                                     {userAddresses.length > 0 ? (
@@ -294,7 +300,7 @@ function ProductDetails({ product }: { product: productType }) {
                                 </>
                             }
 
-                            {!product.bonus ? (!existingCartItem && (
+                            {!isMembership ? (!existingCartItem && (
                                 <div className='px-8'>
                                     <button
                                         disabled={isLoading}
