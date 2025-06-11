@@ -213,7 +213,7 @@ function ProductDetails({ product }: { product: productType }) {
 
                         <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
                         <p className="mt-8 text-sm md:text-base text-slate-600">
-                            Delivery Time: 9:00 AM, 12:00 PM, 3:00 PM, 6:00 PM
+                            Delivery Time: 12:00 PM, 3:00 PM, 6:00 PM
                         </p>
 
                         <div>
