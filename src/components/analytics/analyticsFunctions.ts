@@ -1,9 +1,12 @@
-import { formatTime } from "@/src/utility/basic";
-export const calculateProRatedRevenue = (membership: any) => {
-    if (membership.status !== 'cancelled') {
-        return membership.category.finalPrice + (membership.extraCharge ? parseInt(membership.extraCharge) : 0)
-    }
+import { formatTime } from "@/src/utility/timeUtil";
 
+export const calculateProRatedRevenue = (membership: any): any => {
+    if (membership.status !== 'cancelled') {
+        const weeks = membership?.days / membership?.products?.length;
+        const price: any = membership?.products?.reduce((sum: any, curr: any) => (sum + curr?.finalPrice), 0) * weeks;
+        const finalPrice: any = Math.round(membership?.products?.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - membership?.discountPercent) / 100)) * weeks;
+        return { price, finalPrice };
+    }
     const deliveredDays = membership.deliveryDates.length;
     const totalDays = membership.category.days;
     const proRatedRevenue = (membership.category.finalPrice * deliveredDays) / totalDays;
@@ -12,17 +15,17 @@ export const calculateProRatedRevenue = (membership: any) => {
 
 export const downloadMembershipExcel = (filteredMemberships: any) => {
     let csv = 'Membership ID,Full Name,Email,Contact,Address,Category,Status,Assigned To,Start Date,Delivery Time,Note,Delivered Days,Total Days,Price,Extra Price,Final Revenue\n';
-    let grandTotal = 0;
+    let grandTotal: any = 0;
 
     filteredMemberships.forEach((membership: any) => {
         const deliveredDays = membership.deliveryDates.length;
         const totalDays = membership.category.days;
-        const revenue = calculateProRatedRevenue(membership);
+        const { price, finalPrice }: any = calculateProRatedRevenue(membership);
         const address = `${membership.address.number} ${membership.address.address}, ${membership.address.landmark}, ${membership.address.pincode}`;
-        grandTotal += revenue;
+        grandTotal += finalPrice;
 
         csv += `${membership._id},` +
-            `${membership.user.name},` +
+            `${membership?.adminOrder ? `${membership.adminOrder.customerName} (${membership.user.name})}` : `${membership.user.name}`},` +
             `${membership.user.email},` +
             `${membership.contact},` +
             `"${address}",` +
@@ -34,9 +37,9 @@ export const downloadMembershipExcel = (filteredMemberships: any) => {
             `${membership.message || ""},` +
             `${deliveredDays},` +
             `${totalDays},` +
-            `${membership.category.finalPrice},` +
+            `${finalPrice - (membership.extraCharge || 0)},` +
             `${membership.extraCharge || "0"},` +
-            `${revenue.toFixed(2)}\n`;
+            `${finalPrice.toFixed(2)}\n`;
     });
 
     csv += `,,,,,,,,,,,,,,Grand Total,${grandTotal.toFixed(2)}\n`;
@@ -125,48 +128,48 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 const calculateContentHeight = (order: any, fontSize: number = 10) => {
     let height = 0;
-    
+
     // Header space (BLACK OLIVE + padding)
     height += 30 + 18;
-    
+
     // Date and time
     height += 10;
-    
+
     // First dotted line + padding
     height += 15;
-    
+
     // Customer details (name, phone)
     height += 30;
-    
+
     // Address
     const fullAddress = `${order.address.number}, ${order.address.address}`;
     const wrappedAddress = wrapText(fullAddress, 230, fontSize);
     height += wrappedAddress.length * 12;
-    
+
     // Landmark and pincode
     height += 24;
-    
+
     // Status
     height += 25;
-    
+
     // Table headers + padding
     height += 30;
-    
+
     // Calculate items height
     order.orders.forEach((item: any) => {
         const wrappedTitle = wrapText(item.product.title, 100, fontSize);
         height += wrappedTitle.length * 12 + 5;
     });
-    
+
     // Total section
     height += 40;
-    
+
     // Footer
     height += 35;
-    
+
     // Add padding for safety
     height += 30;
-    
+
     return height;
 };
 
@@ -295,7 +298,7 @@ export const generateOrderReceipt = async (order: any) => {
     drawText("Total", 20, y);
     drawText(subtotal.toString(), 230, y);
     y -= 10;
-    
+
     // Footer
     drawDottedLine(page, 20, 268, y);
     y -= 15;
@@ -317,10 +320,8 @@ export const generateOrderReceipt = async (order: any) => {
     URL.revokeObjectURL(url);
 };
 
-
-
-
 export const generateMembershipReceipt = (membership: any) => {
+    let { price, finalPrice } = calculateProRatedRevenue(membership);
     let receiptContent = `MEMBERSHIP RECEIPT\n`;
     receiptContent += `Membership ID: ${membership._id}\n`;
     receiptContent += `Start Date: ${new Date(membership.startDate).toLocaleDateString()}\n`;
@@ -331,9 +332,9 @@ export const generateMembershipReceipt = (membership: any) => {
 
     receiptContent += `Membership Details:\n`;
     receiptContent += `${membership.category.title}\n`;
-    receiptContent += `Base Price: ₹${membership.category.finalPrice}\n`;
-    receiptContent += `Extra Charges: ₹${membership.extraCharge || 0}\n`;
-    receiptContent += `Total Amount: ₹${membership.category.finalPrice + (membership.extraCharge ? parseInt(membership.extraCharge) : 0)}\n\n`;
+    receiptContent += `Base Price: ₹${finalPrice - (membership?.extraCharge || 0)}\n`;
+    receiptContent += `Extra Charges: ₹${membership?.extraCharge || 0}\n`;
+    receiptContent += `Total Amount: ₹${finalPrice}\n\n`;
     receiptContent += `Delivery Time: ${membership.time}\n`;
     receiptContent += `Payment Status: ${membership?.isPaid ? 'PAID' : 'COD'}\n`;
     receiptContent += `Membership Status: ${membership.status}\n`;
