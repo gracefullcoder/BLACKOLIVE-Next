@@ -10,7 +10,7 @@ import { handleToast } from "@/src/utility/basic";
 const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMembership: boolean }) => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ text: "", type: "" });
-    const [formData, setFormData] = useState(!isMembership ? {
+    const [formData, setFormData] = useState<any>(!isMembership ? {
         title: "",
         details: "",
         image: "",
@@ -38,6 +38,7 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
             responses: []
         }
     );
+
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [imagePreview, setImagePreview] = useState<any>('');
     const [products, setProducts] = useState([]);
@@ -61,13 +62,20 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
         if (name == "timings") {
-            setFormData((prev) => ({ ...prev, [name]: value.split(",") }));
+            setFormData((prev: any) => ({ ...prev, [name]: value.split(",") }));
+        }
+        else if (name == "days") {
+            let { price, finalPrice } = calculatePrices(formData.products, formData.discountPercent, value)
+            setFormData((prev: any) => {
+                return { ...prev, [name]: value, price, finalPrice }
+            })
         }
         else if (name == "discountPercent") {
-            const { price, finalPrice } = calculatePrices(products, formData.products, value);
+            const { price, finalPrice } = calculatePrices(formData?.products, formData.discountPercent);
+            console.log(price, finalPrice)
             setFormData((prev: any) => ({ ...prev, price, finalPrice, [name]: value }));
         }
-        else setFormData((prev) => ({ ...prev, [name]: value }));
+        else setFormData((prev: any) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = async (e: any) => {
@@ -82,14 +90,24 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                 imageData = await uploadFile(imageFile);
             }
 
-            console.log(imageData)
+            let data;
 
-            await axios.patch(`/api/admin/products`, {
-                ...formData,
-                image: imageData.url,
-                id: productId,
-                isMembership
-            });
+            if (isMembership) {
+                data = {
+                    ...formData, products: formData?.products?.map((p: any) => p._id), image: imageData.url,
+                    id: productId,
+                    isMembership
+                };
+            } else {
+                data = {
+                    ...formData,
+                    image: imageData.url,
+                    id: productId,
+                    isMembership
+                }
+            }
+
+            await axios.patch(`/api/admin/products`, data);
 
             setMessage({ text: "Product updated successfully!", type: "success" });
             router.push("/admin/products");
@@ -101,29 +119,27 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
         }
     };
 
-    const calculatePrices = (products: any, memerbshipProducts: any, discountPercent: any) => {
-        const memebershipProducts = products.filter((p: any) => (memerbshipProducts.includes(p?._id)));
-        const price = memebershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0);
-        const finalPrice = Math.round(memebershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100));
+    const calculatePrices = (memebershipProducts: any, discountPercent: any, days = formData?.days) => {
+        const weeks = (days == 0 || memebershipProducts?.length == 0) ? 0 : ((days) / (memebershipProducts?.length));
+        const price = memebershipProducts.reduce((sum: any, curr: any) => (sum + curr?.finalPrice), 0) * weeks;
+        const finalPrice = Math.round(memebershipProducts.reduce((sum: any, curr: any) => (sum + curr?.finalPrice), 0) * ((100 - discountPercent) / 100)) * weeks;
         return { price, finalPrice };
     }
 
     useEffect(() => {
         const fetchProducts = async () => {
-
             try {
-                const fetchedData = await getProducts("salads");
-                console.log("apple");
-                handleToast(fetchedData);
-                if (fetchedData.success) {
-                    setProducts(fetchedData.products);
-                    // setFormData((prev) => ({...prev,price}))
-                }
-                const response = await getSpecificProduct(productId)
+                const response: any = await getSpecificProduct(productId);
                 console.log("apple", response)
-                const { price, finalPrice } = calculatePrices(fetchedData.products, response?.products, response?.discountPercent);
-                setFormData({ ...response, price, finalPrice });
-                setImagePreview(response.image);
+                if (isMembership) {
+                    const { price, finalPrice } = calculatePrices(response?.product?.products, response?.product?.discountPercent, response?.product?.days);
+                    setFormData({ ...response.product, price, finalPrice });
+                    const allProducts = await getProducts("salads");
+                    setProducts(allProducts.products);
+                } else {
+                    setFormData({ ...response?.product });
+                }
+                setImagePreview(response?.image);
             } catch (error) {
                 console.error("Error fetching product details:", error);
             }
@@ -139,18 +155,20 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
         if (!selectedProduct) return;
 
         const product: any = products.find((p: any) => p._id == selectedProduct);
+        const { price, finalPrice } = calculatePrices([...formData.products, product], formData.discountPercent);
 
         setFormData((prev: any) => ({
             ...prev,
-            price: prev.price + product?.finalPrice,
-            finalPrice: prev.finalPrice + product.finalPrice * ((100 - (formData?.discountPercent || 0)) / 100),
-            products: [...prev.products, selectedProduct]
+            price,
+            finalPrice,
+            products: [...prev.products, product]
         }));
     };
 
     const handleRemoveProduct = (pId: any) => {
         const membershipProducts = formData?.products?.filter((p: any) => p !== pId);
-        const { price, finalPrice } = calculatePrices(products, membershipProducts, formData.discountPercent);
+        console.log(membershipProducts);
+        const { price, finalPrice } = calculatePrices(membershipProducts, formData.discountPercent);
         setFormData((prev: any) => ({
             ...prev,
             products: membershipProducts,
@@ -359,13 +377,19 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                                         <p>No product added</p>
                                     ) : (
                                         <div className="flex flex-wrap gap-2 mt-2">
-                                            {formData?.products?.map((product: any, index) => (
+                                            {formData?.products?.map((product: any, index: number) => (
                                                 <div
                                                     key={index}
                                                     className="flex items-center gap-2 border border-gray-300 px-3 py-1 rounded-md bg-gray-100"
                                                 >
                                                     <span>
-                                                        {(products.find((p: any) => p._id === product) as any)?.title}
+                                                        {product?.title}
+                                                    </span>
+                                                    <span>
+                                                        {product?.price}
+                                                    </span>
+                                                    <span>
+                                                        {product?.finalPrice}
                                                     </span>
                                                     <button
                                                         type="button"
@@ -389,7 +413,7 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                                 id="isAvailable"
                                 name="isAvailable"
                                 checked={formData.isAvailable}
-                                onChange={(e) => setFormData(prev => ({ ...prev, isAvailable: e.target.checked }))}
+                                onChange={(e) => setFormData((prev: any) => ({ ...prev, isAvailable: e.target.checked }))}
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
                             <label htmlFor="isAvailable" className="ml-2 block text-sm text-gray-700">
