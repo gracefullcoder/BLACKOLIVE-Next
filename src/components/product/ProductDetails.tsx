@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from 'react';
 import { IncQty, DecQty } from '@/src/utility/CartFunction';
-import { productType } from '@/src/types/product';
 import { useSession } from 'next-auth/react';
 import { useCartContext } from '@/src/context/CartContext';
 import { addToCart, decreaseQuantity, increaseQuantity } from '@/src/actions/Cart';
@@ -10,8 +9,10 @@ import { useRouter } from 'next/navigation';
 import { createMembership } from '@/src/actions/Order';
 import { featureDetails } from '@/src/actions/Features';
 import ExcludedProduct from './ExcludedProduct';
+import CustomizeButton from './CustomizeButton';
+import { formatTime } from '@/src/utility/timeUtil';
 
-function ProductDetails({ product, isMembership }: { product: productType, isMembership: boolean }) {
+function ProductDetails({ product, isMembership }: { product: any, isMembership: boolean }) {
     const session = useSession();
     const { items, setItems } = useCartContext();
     const existingCartItem = items.find((item: any) => item?.product?._id === product._id);
@@ -19,7 +20,23 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
     const [pincode, setPincode] = useState<any>(null);
     const [pincodes, setPincodes] = useState([])
     const [isDeliverable, setIsDeliverable] = useState<any>(null)
-    const porductDetail = useRef<any>(null);
+    const porductDetail = useRef<any>(null);    
+    const [timings,setTimings] = useState([]);
+
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+    const initializeWeeklyPlan = () => {
+        const plan: any = {};
+        if (product?.products?.length != 0) {
+            daysOfWeek.forEach((day: any, index: any) => {
+                plan[day] = product?.products[index % product?.products?.length];
+            });
+        }
+        return plan;
+    };
+
+    const [weeklyPlan, setWeeklyPlan] = useState(isMembership ? initializeWeeklyPlan() : {});
+    const [priceDetails, setPriceDetails] = useState({ price: 0, finalPrice: 0 });
 
     useEffect(() => {
         if (porductDetail.current) {
@@ -37,11 +54,19 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
     useEffect(() => {
         const getPincodes = async () => {
             const feature = await featureDetails();
+            console.log(feature)
+            const formattedTimings = feature.deliveryTimings.map((t:any) => formatTime(t?.deliveryTime));
+            setTimings(formattedTimings);
             setPincodes(feature.pincodes)
         }
 
         getPincodes()
     }, [])
+
+    useEffect(() => {
+        let { price, finalPrice } = calculatePrices(Object.values(weeklyPlan), product?.discountPercent, product?.days);
+        setPriceDetails({ price, finalPrice });
+    }, [weeklyPlan])
 
     const handleDecrease = async () => {
         if (existingCartItem && quantity > 1) {
@@ -89,8 +114,6 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
         }
     };
 
-
-    //for membership
     const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any, message: string }>({ time: product?.timings ? product?.timings[0] : 0, startDate: new Date(), message: "" });
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<number>(-1);
@@ -145,6 +168,9 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
         setIsLoading(true);
         try {
 
+            const productsData = daysOfWeek.map((day) => ({ product: weeklyPlan[day]?._id, price: weeklyPlan[day]?.price, finalPrice: weeklyPlan[day].finalPrice }));
+
+            console.log(productsData)
             const response = await createMembership(
                 session?.data?.user?._id,
                 product._id,
@@ -152,7 +178,10 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
                 userContact,
                 membershipDetails.time,
                 membershipDetails.startDate,
-                membershipDetails.message
+                membershipDetails.message,
+                product.days,
+                productsData,
+                product.discountPercent
             );
 
             if (response.success) {
@@ -164,9 +193,8 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
             if (response?.mailRes?.success) {
                 toast.success("Order Mail Sent")
             }
-
-
         } catch (error) {
+            console.log(error)
             toast.error("Failed to create order");
         } finally {
             setIsLoading(false);
@@ -174,32 +202,18 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
     };
 
     const isPincodeAvailable = () => {
-        const res = pincodes.some((pin) => pincode == pin);
+        const res = pincodes.some((pin: any) => pin?.pincode == pincode);
         setIsDeliverable(res)
     }
 
     const handleDetailsChange = (e: any) => { setMembershipDetails(prev => { return { ...prev, [e.target.name]: e.target.value } }) }
 
-    const formattedTime = (time: any): string => {
-        let [hrs, min] = time.split(":").map(Number); // Convert to numbers
-
-        let period = "AM";
-        if (hrs >= 12) {
-            period = "PM";
-            if (hrs > 12) hrs -= 12;
-        } else if (hrs === 0) {
-            hrs = 12;
-        }
-
-        return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${period}`;
-    };
-
-    const calculatePrices = (products: any, discountPercent: any) => {
-        const price = products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0);
-        const finalPrice = Math.round(products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100));
+    const calculatePrices = (products: any, discountPercent: any, days: any) => {
+        const weeks = days / products?.length;
+        const price = products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * weeks;
+        const finalPrice = Math.round(products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100)) * weeks;
         return { price, finalPrice };
     }
-
 
     return (
         <section >
@@ -212,13 +226,16 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
                         <h1 className="text-3xl md:text-5xl font-bold tracking-wide mt-4">{product.title}</h1>
 
                         <div className="flex md:flex-row items-center gap-2 md:gap-4 mt-4 max-lg:justify-center">
-                            <p className="text-sm md:text-base line-through text-slate-400">Rs. {isMembership ? (calculatePrices(product?.products, product?.discountPercent)).price : product.price}.00</p>
-                            <p className="text-lg md:text-xl">Rs. {isMembership ? (calculatePrices(product?.products, product?.discountPercent))?.finalPrice : product.finalPrice}.00</p>
+                            <p className="text-sm md:text-base line-through text-slate-400">Rs. {isMembership ? priceDetails?.price : product.price}.00</p>
+                            <p className="text-lg md:text-xl">Rs. {isMembership ? priceDetails?.finalPrice : product.finalPrice}.00</p>
                         </div>
 
                         <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
                         <p className="mt-8 text-sm md:text-base text-slate-600">
-                            Delivery Time: 9:00 AM, 12:00 PM, 3:00 PM, 6:00 PM
+                            Delivery Time: {isMembership ? product.timings.map((t: any) => {
+                                return `${formatTime(t)} `
+                            }) :
+                            timings.map((t) => `${t} `)}
                         </p>
 
                         <div>
@@ -237,10 +254,13 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
                                             <select className='border p-2 rounded-3xl'
                                                 name="time" onChange={(e) => handleDetailsChange(e)} >
                                                 {
-                                                    product?.timings?.map((t, i) => <option key={i} value={t}>{formattedTime(t)}</option>)
+                                                    product?.timings?.map((t: any, i: number) => <option key={i} value={t}>{formatTime(t)}</option>)
                                                 }
                                             </select>
                                         </div>
+
+                                        <CustomizeButton product={product} weeklyPlan={weeklyPlan} setWeeklyPlan={setWeeklyPlan} daysOfWeek={daysOfWeek} />
+
                                     </div> :
 
                                     <div>
@@ -321,14 +341,7 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
                                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
                                             placeholder='Need Changes ?' />
                                     </div>
-                                    {/* <button
-                                        className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer
-                                    `}
-                                        onClick={handleMembership}
-                                    >
-                                        Buy Membership
-                                    </button> */}
+
                                     <button
                                         disabled={isLoading}
                                         className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
@@ -348,6 +361,7 @@ function ProductDetails({ product, isMembership }: { product: productType, isMem
                             </div>}
 
 
+                        {/* Available in area */}
                         <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 mt-4 border-t border-black">
                             <p className="text-sm font-medium text-gray-700 mb-3">
                                 Check if Deliverable in Your Area

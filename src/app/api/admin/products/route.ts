@@ -102,7 +102,8 @@ export async function PATCH(req: Request) {
                 bonus: data.bonus,
                 days: data.days,
                 timings: data.timings,
-                products: data.products
+                products: data.products,
+                discountPercent:data.discountPercent
             });
             revalidatePath("/membership");
         } else {
