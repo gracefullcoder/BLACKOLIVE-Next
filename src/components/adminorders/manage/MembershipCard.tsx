@@ -78,6 +78,7 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
                 setOrders((prev: any) => (prev.map((order: any) =>
                     order._id === orderId ? { ...order, extraCharge } : order
                 )));
+                console.log(res);
                 toast.success(res.message)
             }
             setError('');
@@ -94,12 +95,19 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
 
             <div className="py-2 border-t flex flex-col gap-1">
                 <p>Membership Type : {order.category.title}</p>
+                <div className='flex gap-1'>
+                    <span>Today Salad : </span>
+                <span className={`px-2 py-1 rounded text-sm ${order.status == "delivered" ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                    {order?.currentProduct?.title}
+                </span>
+                </div>
                 <p>Start Date : {order.startDate.toString().slice(0, 10)}</p>
                 <p>Total Days Delivered : <span className='font-bold'>{order?.deliveryDates?.length || 0}</span></p>
 
                 <div className='flex justify-between items-center'>
                     <p>
-                        Price : {!order.extraCharge ? `${order.category.finalPrice} /-` : `${order.category.finalPrice} + ${order.extraCharge} = ${parseInt(order.category.finalPrice) + parseInt(order.extraCharge)} /-`}
+                        Price : {!order.extraCharge ? `${order.finalPrice} /-` : `${order?.finalPrice} + ${order?.extraCharge} = ${parseInt(order.finalPrice) + parseInt(order.extraCharge)} /-`}
                     </p>
                     <div className='flex items-center gap-2'>
                         Paid: <input type="checkbox" className='h-4 w-4' checked={order?.isPaid || false} onChange={handlePaymentStatus} />

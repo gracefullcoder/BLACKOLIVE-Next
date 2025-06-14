@@ -23,7 +23,7 @@ function SelectDeliveryUser({ users, orderId, isMembership, setOrders, setError 
             console.log("updatedorder status", updatedOrder)
             if (updatedOrder?.success) {
                 setOrders((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? updatedOrder.product : order
+                    order._id === orderId ? {...order,assignedTo:updatedOrder?.product?.assignedTo,status:updatedOrder?.product?.status} : order
                 )));
                 toast.success(updatedOrder.message);
             } else {

@@ -8,11 +8,11 @@ import PreLoader from "../../PreLoader";
 
 export default function ActiveMembership({ onlyAssigned }: any) {
   const session = useSession();
-
   const [orders, setOrders] = useState<any>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState("all");
-  const [orderItems, setOrderItems] = useState(new Map());
+  const [membershipItems, setMembershipItems] = useState(new Map());
+  const [productItems, setProductsItems] = useState(new Map());
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
@@ -35,27 +35,61 @@ export default function ActiveMembership({ onlyAssigned }: any) {
 
   const mapProducts = (data: any) => {
     const productMapping = new Map();
+    const membershipMapping = new Map();
 
-    data.forEach((orderDet: any) => {
+    let mappedOrders = data.map((membership: any) => {
+      const deliveredDays = membership.deliveryDates.length;
+      const currentProduct = membership.products[deliveredDays % membership.products.length].product;
+      const { price, finalPrice } = calculatePrices(membership.products, membership.discountPercent, membership.days);
 
-      let productId = orderDet.category._id;
+      let membershipId = membership.category._id;
+      if (membershipMapping.has(membershipId)) {
+        const prodDet = membershipMapping.get(membershipId);
+        membershipMapping.set(membershipId, {
+          ...prodDet,
+          quantity: (prodDet?.quantity || 0) + 1,
+        });
+      } else {
+        membershipMapping.set(membershipId, {
+          quantity: 1,
+          name: membership.category.title
+        });
+      }
+
+      let productId = currentProduct._id;
+
       if (productMapping.has(productId)) {
         const prodDet = productMapping.get(productId);
         productMapping.set(productId, {
           ...prodDet,
-          quantity: prodDet.quantity + 1,
+          quantity: (prodDet?.quantity || 0) + 1,
         });
       } else {
         productMapping.set(productId, {
           quantity: 1,
-          name: orderDet.category.title
+          name: currentProduct.title
         });
       }
 
+      return {
+        ...membership,
+        currentProduct,
+        price,
+        finalPrice
+      };
     });
 
-    setOrderItems(productMapping);
+    setMembershipItems(membershipMapping);
+    setProductsItems(productMapping);
+    setOrders(mappedOrders);
   };
+
+  const calculatePrices = (products: any, discountPercent: any, days: any) => {
+    const weeks = days / products.length;
+    const price = products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0)*weeks;
+    const finalPrice = Math.round(products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100))*weeks;
+    return { price, finalPrice };
+  }
 
   const fetchFilteredOrders = async () => {
     try {
@@ -63,16 +97,22 @@ export default function ActiveMembership({ onlyAssigned }: any) {
       const status = ["delivered", "cancelled"];
       const time = timeFilter === "all" ? null : timeFilter;
       let data = await getFilteredMemberships(time, status, true, true, true);
-      data = data.filter((membership:any) => membership.deliveryDates.length != membership.category.days);
+
+      data = data
+        .filter((membership: any) => {
+          const deliveredDays = membership.deliveryDates.length;
+          return deliveredDays !== membership.category.days;
+        })
+
       console.log("in", data)
       if (onlyAssigned || isActive) {
         console.log("insidne active memebership")
         const myMemberships = data.filter((order: any) => order.assignedTo?._id == session.data?.user?._id)
         mapProducts(myMemberships);
-        setOrders(myMemberships);
+        // setOrders(myMemberships);
       } else {
         mapProducts(data);
-        setOrders(data);
+        // setOrders(data);
       }
     } catch (err) {
       console.error("Failed to fetch filtered orders", err);
@@ -82,7 +122,6 @@ export default function ActiveMembership({ onlyAssigned }: any) {
   };
 
   if (loading) <PreLoader />
-
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
@@ -134,6 +173,31 @@ export default function ActiveMembership({ onlyAssigned }: any) {
       <div className="mb-6">
         <h2 className="text-lg font-semibold mb-2">Orders Summary</h2>
 
+        {/* Membership Type */}
+        <table className="table-auto w-full border-collapse border border-gray-300">
+          <thead>
+            <tr>
+              <th className="border border-gray-300 px-4 py-2">Product Name</th>
+              <th className="border border-gray-300 px-4 py-2">Quantity</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...membershipItems.keys()].map((key) => (
+              <tr key={key}>
+                <td className="border border-gray-300 px-4 py-2">
+                  {membershipItems.get(key)?.name}
+                </td>
+                <td className="border border-gray-300 px-4 py-2">
+                  {membershipItems.get(key)?.quantity}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {/* Products */}
+        <h2 className="text-lg font-semibold my-2">Membership Products</h2>
+
 
         <table className="table-auto w-full border-collapse border border-gray-300">
           <thead>
@@ -143,18 +207,21 @@ export default function ActiveMembership({ onlyAssigned }: any) {
             </tr>
           </thead>
           <tbody>
-            {[...orderItems.keys()].map((key) => (
+            {[...productItems.keys()].map((key) => (
               <tr key={key}>
                 <td className="border border-gray-300 px-4 py-2">
-                  {orderItems.get(key)?.name}
+                  {productItems.get(key)?.name}
                 </td>
                 <td className="border border-gray-300 px-4 py-2">
-                  {orderItems.get(key)?.quantity}
+                  {productItems.get(key)?.quantity}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+
+
+
 
         {/* Messaged Orders */}
         <div className="my-6">
