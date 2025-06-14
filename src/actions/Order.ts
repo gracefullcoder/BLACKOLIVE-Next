@@ -13,7 +13,7 @@ import Additionals from "../models/additionals";
 
 export const createOrder = async (
     userId: string,
-    orderItems: Array<{ product: string, quantity: number }>,
+    orderItems: Array<{ product: string, quantity: number, priceCharged: number }>,
     addressId: number,
     contact: number,
     time: string,
@@ -114,8 +114,12 @@ export const createMembership = async (
     time: number,
     startDate: Date,
     message: string,
+    days: number,
+    products: any,
+    discountPercent: number,
     extraCharge?: number,
-    isPaid?: boolean
+    isPaid?: boolean,
+    adminOrder?: any | null
 ) => {
     try {
         const user = await User.findById(userId);
@@ -142,12 +146,15 @@ export const createMembership = async (
             address: selectedAddress,
             contact: contact || user.contact,
             time,
+            products,
+            days,
+            discountPercent,
             overallRating: 0,
             startDate,
-            // deliveryGraph,
             isPaid,
             extraCharge,
-            message
+            message,
+            adminOrder: adminOrder ? adminOrder : null
         });
 
         await User.findByIdAndUpdate(userId, {
@@ -201,7 +208,7 @@ export async function getMembershipOrder(id: string, userId: string) {
         const details = await User.findById(userId).select("membershipDetails");
 
         if (details.membershipDetails.includes(id)) {
-            const data = await MembershipOrder.findById(id).populate({ path: 'category', model: MembershipProduct,populate:{path:"additionals",model:Additionals} });
+            const data = await MembershipOrder.findById(id).populate({ path: 'category', model: MembershipProduct, populate: { path: "additionals", model: Additionals } });
             console.log(data)
             return JSON.parse(JSON.stringify(data));
         }
@@ -462,10 +469,10 @@ export async function addExtraCharge(orderId: any, productId: any, extraCharge: 
             await order.save();
 
             const updatedOrder = await order.populate({ path: 'orders.product', model: Product });
-            return { success: true, messsage: "Added extra charge" };
+            return { success: true, message: "Added extra charge" };
         } else {
             const updatedOrder = await MembershipOrder.findByIdAndUpdate(orderId, { extraCharge }, { new: true })
-            return { success: true, messsage: "Added extra charge" };
+            return { success: true, message: "Added extra charge" };
         }
     } catch (error) {
         console.error("Error updating quantity:", error);
@@ -596,7 +603,7 @@ export async function getFilteredMemberships(timeRange: any, status: any, invers
 
 
         const mermberships = await MembershipOrder.find(query).populate({ path: "assignedTo", model: User, select: "name" })
-            .populate({ path: "category", model: MembershipProduct }).populate({ path: 'user', model: User, select: "name email contact" })
+            .populate({ path: "category", model: MembershipProduct }).populate({ path: 'user', model: User, select: "name email contact" }).populate({ path: 'products.product', model: Product })
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(mermberships));

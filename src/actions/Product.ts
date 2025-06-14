@@ -11,7 +11,7 @@ export const getSpecificProduct = async (id: any) => {
         let isMembership = false;
 
         if (product == null) {
-            product = await MembershipProduct.findById(id).populate({model:Product,path:"products"});
+            product = await MembershipProduct.findById(id).populate({ model: Product, path: "products" });
             isMembership = true
         }
 
@@ -30,7 +30,9 @@ export async function getProducts(type: string) {
         console.log("requested products");
         await connectToDatabase()
         const products = await Product.find();
-        const membership = await MembershipProduct.find();
+        let membership;
+
+        if (type == "all" || type == "membership") membership = await MembershipProduct.find().populate({ path: "products", model: Product });
 
         console.log(products, membership)
 

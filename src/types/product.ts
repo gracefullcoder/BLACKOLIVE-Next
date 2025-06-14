@@ -3,13 +3,13 @@ export type productType = {
     image: any,
     title: string,
     speciality: string,
-    price?: number,
-    finalPrice?: number
+    price: number,
+    finalPrice: number
     details: string,
     products?: string[],
     discountPercent?: number,
     timings?: number[],
-    days?: number
+    days: number
     bonus?: number,
     isAvailable?: boolean
 }
