@@ -111,6 +111,17 @@ function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
                         setContact={setContact}
                     />
 
+                    <div className='my-4'>
+                        <h4 className='my-1'>Customer Name</h4>
+                        <input
+                            type="text"
+                            onChange={(e) => setOrderDetails((prev: any) => { return { ...prev, adminOrder: { customerName: e.target.value } } })}
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter Customer"
+                            value={orderDetails.adminOrder.customerName}
+                        />
+                    </div>
+
 
                     <AddressList
                         user={user}

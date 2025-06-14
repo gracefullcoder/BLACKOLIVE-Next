@@ -16,9 +16,11 @@ export const UserBasicDetails = ({ order }: any) => {
 
             <div className='mb-1 pb-2  border-b'>
                 <h1 className='font-semibold'>User Details</h1>
-                <p>Id: {order.user._id}</p>
+                {/* <p>Id: {order.user._id}</p> */}
                 <p>Name : {order?.user?.name}</p>
                 <p>email: {order?.user?.email}</p>
+                {order?.adminOrder && <p>Customer Name: {order?.adminOrder?.customerName}</p>}
+
             </div>
 
             <div className="mb-2">
@@ -70,7 +72,7 @@ export const OrderButtons = ({ order, setOrders, session, setError, isMembership
             console.log("updatedorder status", updatedOrder)
             if (updatedOrder?.success) {
                 setOrders((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? updatedOrder.product : order
+                    order._id === orderId ? { ...order, assignedTo: updatedOrder?.product?.assignedTo, status: updatedOrder?.product?.status } : order
                 )));
                 toast.success(updatedOrder.message);
             } else {
@@ -117,7 +119,7 @@ export const OrderButtons = ({ order, setOrders, session, setError, isMembership
                 </div>
                     :
                     <button onClick={() => handleStatusUpdate(order._id, "assign")}
-                        className='mt-4 px-4 py-2 rounded w-full bg-green-100 text-green-800 hover:bg-green-200'>
+                        className='my-4 px-4 py-2 rounded w-full bg-green-100 text-green-800 hover:bg-green-200'>
                         Assign Yourself
                     </button>
             }
