@@ -17,6 +17,12 @@ function page() {
                         <div className="text-lg font-medium text-gray-700">Active Membership</div>
                     </Link>
                     <Link
+                        href="/admin/membership/all"
+                        className="p-6 bg-white shadow-lg rounded-lg hover:bg-gray-50 transition"
+                    >
+                        <div className="text-lg font-medium text-gray-700">Past Memberships</div>
+                    </Link>
+                    <Link
                         href="/admin/membership/analytics"
                         className="p-6 bg-white shadow-lg rounded-lg hover:bg-gray-50 transition"
                     >

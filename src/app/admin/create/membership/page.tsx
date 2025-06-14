@@ -1,18 +1,21 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { UserData } from "@/src/types/user";
 import ShowProducts from "@/src/components/adminorders/create/ShowProducts";
 import AdminOrder from "@/src/components/adminorders/create/AdminOrder";
 import { toast } from "react-toastify";
 import { createMembership } from "@/src/actions/Order";
-
+import CustomizeButton from "@/src/components/product/CustomizeButton";
 
 export default function Page() {
 
     const [user, setUser] = useState<UserData | null>(null);
-    const [memberships, setMemberships] = useState([])
+    const [memberships, setMemberships] = useState<any>([])
     const [membershipDetails, setMembershipsDetails] = useState<any>({
         user: "",
+        adminOrder: {
+            customerName: ""
+        },
         orders: [],
         address: null,
         contact: null,
@@ -22,6 +25,21 @@ export default function Page() {
         extraCharge: "",
         message: ""
     })
+
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+    const [weeklyPlan, setWeeklyPlan] = useState({});
+
+    const [priceDetails, setPriceDetails] = useState({ price: 0, finalPrice: 0 });
+
+    console.log(weeklyPlan);
+
+    useEffect(() => {
+        if (membershipDetails?.orders?.length) {
+            const { price, finalPrice } = calculatePrices(Object.values(weeklyPlan), membershipDetails.orders[0].discountPercent, membershipDetails?.orders[0]?.days);
+            setPriceDetails({ price: price, finalPrice });
+        }
+    }, [weeklyPlan, membershipDetails?.orders[0]?.discountPercent])
 
     const handleNewMembership = async () => {
         if (membershipDetails.address === null) {
@@ -44,7 +62,26 @@ export default function Page() {
             return;
         }
 
-        const response = await createMembership(user?._id || "", membershipDetails.orders[0].product, membershipDetails.address, membershipDetails.contact, membershipDetails.time, membershipDetails.date, membershipDetails.message, parseInt('0' + membershipDetails.extraCharge), membershipDetails.isPaid)
+        const formatProductDetails = Object.values(weeklyPlan).map((p: any) => {
+            return { product: p._id, price: p.price, finalPrice: p.finalPrice }
+        })
+        console.log("fgdfhdjghj kela", membershipDetails.orders[0])
+
+        const response = await createMembership(
+            user?._id || "",
+            membershipDetails.orders[0]._id,
+            membershipDetails.address,
+            membershipDetails.contact,
+            membershipDetails.time,
+            membershipDetails.date,
+            membershipDetails.message,
+            membershipDetails.orders[0].days,
+            formatProductDetails,
+            membershipDetails.discountPercent,
+            parseInt('0' + membershipDetails.extraCharge),
+            membershipDetails.isPaid,
+            membershipDetails.adminOrder
+        )
 
         if (response.success) {
             toast.success(response.message);
@@ -53,6 +90,13 @@ export default function Page() {
 
     const removeProduct = (pId: any) => {
         setMembershipsDetails((prev: any) => ({ ...prev, orders: prev.orders.filter((order: any) => order.product != pId) }))
+    }
+
+    const calculatePrices = (products: any, discountPercent: any, days: any) => {
+        const weeks = days / products?.length;
+        const price = products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * weeks;
+        const finalPrice = Math.round(products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100)) * weeks;
+        return { price, finalPrice };
     }
 
     return (
@@ -66,7 +110,7 @@ export default function Page() {
                     <h3 className="font-semibold text-lg mb-4 text-gray-700">Membership Summary</h3>
 
 
-                    <ShowProducts orderDetails={membershipDetails} products={memberships} setProducts={setMemberships} setOrderDetails={setMembershipsDetails} isMembership={true} />
+                    <ShowProducts orderDetails={membershipDetails} setWeeklyPlan={setWeeklyPlan} products={memberships} setProducts={setMemberships} setOrderDetails={setMembershipsDetails} isMembership={true} daysOfWeek={daysOfWeek} />
 
                     <div className="mt-6">
                         <h3 className="font-semibold text-lg mb-4">Orders</h3>
@@ -78,15 +122,11 @@ export default function Page() {
                                 >
                                     <div className="font-medium text-gray-800">
                                         Product: {order.title}
+                                        <p className="">Price : {priceDetails.finalPrice}</p>
                                     </div>
 
-                                    <div>
-                                        <button
-                                            onClick={() => removeProduct(order.product)}
-                                            className="bg-blue-500 mr-4 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-all"
-                                        >
-                                            Modify
-                                        </button>
+                                    <div className="flex gap-2">
+                                        <CustomizeButton product={order} weeklyPlan={weeklyPlan} setWeeklyPlan={setWeeklyPlan} daysOfWeek={daysOfWeek} />
 
                                         <button
                                             onClick={() => removeProduct(order.product)}
@@ -101,16 +141,33 @@ export default function Page() {
 
                         <div className="flex items-center gap-2 my-4">
 
-                            <p className="">Extra Charge</p>
-                            <input
-                                type="text"
-                                name="extraCharges"
-                                className="border rounded w-20 p-1 mr-2"
-                                placeholder="Add extra"
-                                onChange={(e: any) => setMembershipsDetails((prev: any) => ({ ...prev, extraCharge: e.target.value }))}
-                                value={membershipDetails?.extraCharge || ""}
-                                required
-                            />
+                            <div>
+                                <p className="">Extra Charge</p>
+                                <input
+                                    type="text"
+                                    name="extraCharges"
+                                    className="border rounded w-20 p-1 mr-2"
+                                    placeholder="Add extra"
+                                    onChange={(e: any) => setMembershipsDetails((prev: any) => ({ ...prev, extraCharge: e.target.value }))}
+                                    value={membershipDetails?.extraCharge || ""}
+                                    required
+                                />
+                            </div>
+                            {
+                                (membershipDetails.orders.length != 0) &&
+                                <div>
+                                    <p className="">Discount Percent(%)</p>
+                                    <input
+                                        type="number"
+                                        name="extraCharges"
+                                        className="border rounded w-20 p-1 mr-2"
+                                        placeholder="Add extra"
+                                        onChange={(e: any) => setMembershipsDetails((prev: any) => ({ ...prev, orders: [{ ...prev.orders[0], discountPercent: e.target.value }] }))}
+                                        value={membershipDetails?.orders[0]?.discountPercent || ""}
+                                        required
+                                    />
+                                </div>
+                            }
                         </div>
                     </div>
 

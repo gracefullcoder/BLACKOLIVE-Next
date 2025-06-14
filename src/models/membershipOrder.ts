@@ -5,15 +5,27 @@ const membershipSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
+    adminOrder: {
+        customerName: {
+            type: String
+        }
+    },
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "MembershipProduct"
     },
     products: [
         {
+            _id: false,
             product: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "Product"
+            },
+            price: {
+                type: Number
+            },
+            finalPrice: {
+                type: Number
             },
             customizations: [
                 {
@@ -38,6 +50,12 @@ const membershipSchema = new mongoose.Schema({
             ]
         }
     ],
+    days: {
+        type: Number
+    },
+    discountPercent: {
+        type: Number
+    },
     startDate: {
         type: Date
     },
