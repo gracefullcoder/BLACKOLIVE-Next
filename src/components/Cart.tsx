@@ -21,7 +21,7 @@ const Cart = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<number>(-1);
   const [orderMessage, setOrderMessage] = useState("");
-  const [pincodes, setPincodes] = useState([]);
+  const [pincodes, setPincodes] = useState<any>([]);
   const [timings, setTimings] = useState<any>([]);
 
   // New state for contact and address management
@@ -151,7 +151,7 @@ const Cart = () => {
     }
 
     const pincode = userAddresses[selectedAddress].pincode;
-    if (!pincodes.some((pin) => pin == pincode)) {
+    if (!pincodes.some((pin: any) => pin?.pincode == pincode)) {
       toast.error("Not deliverable in your area!");
       return false;
     }
@@ -202,7 +202,8 @@ const Cart = () => {
     try {
       const orderItems = items.filter(item => item.product.isAvailable).map(item => ({
         product: item?.product?._id,
-        quantity: item.quantity
+        quantity: item.quantity,
+        priceCharged: item?.product?.finalPrice
       }));
 
       const response = await createOrder(
@@ -229,7 +230,7 @@ const Cart = () => {
       }
 
 
-      if(response?.mailRes?.success){
+      if (response?.mailRes?.success) {
         toast.success("Order Mail Sent")
       }
     } catch (error) {

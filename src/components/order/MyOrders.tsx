@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, Clock, MapPin, Star, Package, CreditCard } from 'lucide-react';
-import { formatTime } from '@/src/utility/basic';
+import { formatTime } from '@/src/utility/timeUtil';
 import { generateOrderReceipt } from '../analytics/analyticsFunctions';
 
 const MyOrders = ({ orders,user }: any) => {

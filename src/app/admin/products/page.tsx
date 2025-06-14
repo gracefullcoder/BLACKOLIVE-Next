@@ -72,10 +72,10 @@ export default function ProductManagementPage() {
       router.push(`/admin/products/edit/?Mid=${productId}`)
   };
 
-  const calculatePrices = (memProductIds: any, discountPercent: any) => {
-    const membershipProducts = allProducts.products.filter((p: any) => (memProductIds.includes(p?._id)));
-    const price = membershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0);
-    const finalPrice = Math.round(membershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100));
+  const calculatePrices = (products: any, discountPercent: any, days: number) => {
+    const weeks = days / products?.length;
+    const price = products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * weeks;
+    const finalPrice = Math.round(products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100)) * weeks;
     return { price, finalPrice };
   }
 
@@ -192,7 +192,7 @@ export default function ProductManagementPage() {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {allProducts.membership.map((product: any) => {
-                let { price, finalPrice } = calculatePrices(product.products,product.discountPercent);
+                let { price, finalPrice } = calculatePrices(product.products, product.discountPercent,product.days);
 
                 return (<tr key={product._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
