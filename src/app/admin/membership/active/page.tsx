@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import ActiveMembership from "@/src/components/adminorders/manage/ActiveMembership";
+import MemebershipDashBoard from "@/src/components/adminorders/manage/MembershipDashBoard";
 
 export default function page() {
-   return (<ActiveMembership onlyAssigned={false}/>)
+   return (<MemebershipDashBoard onlyAssigned={false} onlyActive={true}/>)
 }

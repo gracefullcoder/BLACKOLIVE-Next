@@ -97,10 +97,10 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
                 <p>Membership Type : {order.category.title}</p>
                 <div className='flex gap-1'>
                     <span>Today Salad : </span>
-                <span className={`px-2 py-1 rounded text-sm ${order.status == "delivered" ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                    {order?.currentProduct?.title}
-                </span>
+                    <span className={`px-2 py-1 rounded text-sm ${order.status == "delivered" ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                        {order?.currentProduct?.title}
+                    </span>
                 </div>
                 <p>Start Date : {order.startDate.toString().slice(0, 10)}</p>
                 <p>Total Days Delivered : <span className='font-bold'>{order?.deliveryDates?.length || 0}</span></p>
@@ -171,8 +171,12 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
             </div>
 
             <ShowMessage message={order.message} />
-            <OrderButtons session={session} order={order} setOrders={setOrders} setError={setError} isMembership={true} />
-            {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={true} setOrders={setOrders} setError={setError} />}
+            {(order?.deliveryDates?.length != order?.days) &&
+                <>
+                    <OrderButtons session={session} order={order} setOrders={setOrders} setError={setError} isMembership={true} />
+                    {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={true} setOrders={setOrders} setError={setError} />}
+                </>
+            }
         </div >
     )
 }

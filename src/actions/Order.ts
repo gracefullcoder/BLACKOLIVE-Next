@@ -602,8 +602,11 @@ export async function getFilteredMemberships(timeRange: any, status: any, invers
         }
 
 
-        const mermberships = await MembershipOrder.find(query).populate({ path: "assignedTo", model: User, select: "name" })
-            .populate({ path: "category", model: MembershipProduct }).populate({ path: 'user', model: User, select: "name email contact" }).populate({ path: 'products.product', model: Product })
+        const mermberships = await MembershipOrder.find(query)
+            .populate({ path: "assignedTo", model: User, select: "name" })
+            .populate({ path: "category", model: MembershipProduct })
+            .populate({ path: 'user', model: User, select: "name email contact" })
+            .populate({ path: 'products.product', model: Product })
             .sort({ createdAt: -1 });
 
         return JSON.parse(JSON.stringify(mermberships));
@@ -618,7 +621,9 @@ export async function getAllMembership() {
     try {
         await connectToDatabase();
         const membership = await MembershipOrder.find({})
-            .populate('category').populate({ path: 'user', model: User, select: "name email contact" }).populate({ path: "assignedTo", model: User, select: "name" })
+            .populate('category').populate({ path: 'user', model: User, select: "name email contact" })
+            .populate({ path: "assignedTo", model: User, select: "name" })
+            .populate({ path: 'products.product', model: Product })
             .sort({ createdAt: -1 });
         return JSON.parse(JSON.stringify(membership));
     } catch (error) {
