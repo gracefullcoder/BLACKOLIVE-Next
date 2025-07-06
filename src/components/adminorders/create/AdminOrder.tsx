@@ -6,6 +6,7 @@ import AddressList from "@/src/components/adminorders/create/AddressList";
 import axios from "axios";
 import { getUserByMail, getUserByContact } from "@/src/actions/User";
 import { toast } from 'react-toastify';
+import { handleToast } from '@/src/utility/basic';
 
 function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
 
@@ -24,13 +25,9 @@ function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
     const handleUser = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const result = await getUserByMail(email);
-            if (result?.success) {
-                setUser(result.user);
-                toast.success("User fetched successfully!");
-            } else {
-                toast.error("User not found!");
-            }
+            const result: any = await getUserByMail(email);
+            if (result?.success) setUser(result.user);
+            handleToast(result);
         } catch (error) {
             console.error(error);
             toast.error("Error fetching user by email.");
@@ -40,17 +37,14 @@ function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
     const handleUserPhno = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const result = await getUserByContact(contact);
+            const result: any = await getUserByContact(contact);
             if (result?.success) {
                 setUser(result.user);
                 if (result.user.contact) {
                     setOrderDetails((prev: any) => ({ ...prev, contact: result.user.contact }))
-
                 }
-                toast.success("User fetched successfully!");
-            } else {
-                toast.error("User not found!");
             }
+            handleToast(result);
         } catch (error) {
             console.error(error);
             toast.error("Error fetching user by contact.");
