@@ -6,10 +6,14 @@ import AdminOrder from "@/src/components/adminorders/create/AdminOrder";
 import { toast } from "react-toastify";
 import { createMembership } from "@/src/actions/Order";
 import CustomizeButton from "@/src/components/product/CustomizeButton";
+import { featureDetails } from "@/src/actions/Features";
+import { displayRazorpay } from "@/src/lib/razorpay";
+import { MembershipCreationType } from "@/src/types/orderType";
+import { formatTime } from "@/src/utility/timeUtil";
 
 export default function Page() {
 
-    const [user, setUser] = useState<UserData | null>(null);
+    const [user, setUser] = useState<any>(null);
     const [memberships, setMemberships] = useState<any>([])
     const [membershipDetails, setMembershipsDetails] = useState<any>({
         user: "",
@@ -20,11 +24,13 @@ export default function Page() {
         address: null,
         contact: null,
         time: null,
-        date: null,
+        startDate: null,
         isPaid: false,
         extraCharge: "",
         message: ""
     })
+    const [pincodes, setPincodes] = useState<any[]>([]);
+    const [paymentMethod, setPaymentMethod] = useState("COD");
 
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -35,11 +41,43 @@ export default function Page() {
     console.log(weeklyPlan);
 
     useEffect(() => {
+        const fetchPincodes = async () => {
+            const features = await featureDetails();
+            setPincodes(features.pincodes || []);
+        };
+        fetchPincodes();
+    }, []);
+
+    const getPincode = () => {
+        if (user && membershipDetails.address !== null && user.addresses && user.addresses.length > 0) {
+            const selectedAddr = user.addresses[membershipDetails.address];
+            if (selectedAddr && selectedAddr.pincode) {
+                const found = pincodes.find((pin: any) => pin.pincode == selectedAddr.pincode);
+                return found ? found : null;
+            }
+        }
+
+        return null;
+    }
+
+    useEffect(() => {
         if (membershipDetails?.orders?.length) {
             const { price, finalPrice } = calculatePrices(Object.values(weeklyPlan), membershipDetails.orders[0].discountPercent, membershipDetails?.orders[0]?.days);
             setPriceDetails({ price: price, finalPrice });
         }
     }, [weeklyPlan, membershipDetails?.orders[0]?.discountPercent])
+
+    const membershipCreation = async (orderDetails: MembershipCreationType, mailData: any, paymentData?: any) => {
+        let response;
+
+        if (paymentData) {
+            response = await createMembership(orderDetails, mailData, paymentData);
+        } else {
+            response = await createMembership(orderDetails, mailData);
+        }
+
+        return response;
+    }
 
     const handleNewMembership = async () => {
         if (membershipDetails.address === null) {
@@ -47,11 +85,16 @@ export default function Page() {
             return;
         }
 
+        if (getPincode() == null) {
+            toast.error("Not Deliverable in that area please add first");
+            return;
+        }
+
         if (membershipDetails.orders.length == 0) {
             toast.error("Please select a Membership.");
             return;
         }
-        console.log(membershipDetails.time)
+
         if (!parseInt(membershipDetails.time)) {
             toast.error("Please select any Time for the order.");
             return;
@@ -65,26 +108,65 @@ export default function Page() {
         const formatProductDetails = Object.values(weeklyPlan).map((p: any) => {
             return { product: p._id, price: p.price, finalPrice: p.finalPrice }
         })
-        console.log("fgdfhdjghj kela", membershipDetails.orders[0])
 
-        const response = await createMembership(
-            user?._id || "",
-            membershipDetails.orders[0]._id,
-            membershipDetails.address,
-            membershipDetails.contact,
-            membershipDetails.time,
-            membershipDetails.date,
-            membershipDetails.message,
-            membershipDetails.orders[0].days,
-            formatProductDetails,
-            membershipDetails.discountPercent,
-            parseInt('0' + membershipDetails.extraCharge),
-            membershipDetails.isPaid,
-            membershipDetails.adminOrder
-        )
+        const membershipData: MembershipCreationType = {
+            user: user?._id || "",
+            category: membershipDetails.orders[0]._id,
+            address: user?.addresses[membershipDetails?.address],
+            contact: membershipDetails.contact,
+            time: membershipDetails.time,
+            startDate: new Date(membershipDetails.date),
+            message: membershipDetails.message,
+            days: membershipDetails.orders[0].days,
+            products: formatProductDetails,
+            discountPercent: membershipDetails.discountPercent,
+            extraCharge: parseInt('0' + membershipDetails.extraCharge),
+            isPaid: membershipDetails.isPaid,
+            adminOrder: membershipDetails.adminOrder
+        };
 
-        if (response.success) {
-            toast.success(response.message);
+        const additionalDetails = {
+            userDetails: user,
+            productDetails: {
+                title: membershipDetails.orders[0].title,
+                description: membershipDetails.orders[0].description,
+                image: "https://ik.imagekit.io/vaibhav11/BLACKOLIVE/tr:w-40,h-40/newlogo.png?updatedAt=1750700640825",
+            }
+        };
+
+        if (paymentMethod === "UPI") {
+            displayRazorpay({
+                orderDetails: membershipData,
+                totalAmount: priceDetails.finalPrice,
+                additionalDetails,
+                updateFnx: membershipCreation
+            });
+        } else {
+            const mailData = { finalPrice: priceDetails.finalPrice, title: membershipDetails.orders[0]?.title }
+
+            const response = await membershipCreation(membershipData, mailData);
+
+            if (response.success) {
+                toast.success(response.message);
+                setMembershipsDetails({
+                    user: "",
+                    adminOrder: {
+                        customerName: ""
+                    },
+                    orders: [],
+                    address: null,
+                    contact: null,
+                    time: null,
+                    date: null,
+                    isPaid: false,
+                    extraCharge: "",
+                    message: ""
+                });
+                setUser(null);
+                setWeeklyPlan({});
+            } else {
+                toast.error(response.message || "Failed to create membership");
+            }
         }
     };
 
@@ -103,7 +185,6 @@ export default function Page() {
         <div className="container mx-auto p-6 space-y-6">
 
             <AdminOrder user={user} setUser={setUser} orderDetails={membershipDetails} setOrderDetails={setMembershipsDetails} />
-
 
             {user?.email &&
                 <div className="bg-white p-6 rounded-lg shadow-lg mt-6">
@@ -175,22 +256,71 @@ export default function Page() {
                         <div className="flex items-center gap-4">
                             <div>
                                 <label className="block text-gray-600 mb-2">Time:</label>
-                                <select
-                                    name="time"
-                                    onChange={(e) => setMembershipsDetails((prev: any) => ({ ...prev, time: e.target.value }))}
-                                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
-                                >
-                                    <option value="0">Select</option>
-                                    <option value="09:00">09 AM</option>
-                                    <option value="12:00">12 PM</option>
-                                    <option value="15:00">03 PM</option>
-                                    <option value="18:00">06 PM</option>
-                                </select>
+                                {membershipDetails.orders.length != 0 &&
+                                    <select
+                                        name="time"
+                                        onChange={(e) => setMembershipsDetails((prev: any) => ({ ...prev, time: e.target.value }))}
+                                        className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
+                                    >
+                                        <option value="0">Select</option>
+                                        {
+                                            membershipDetails.orders[0]?.timings?.map((t: any, i: number) => <option key={i} value={t}>{formatTime(t)}</option>)
+                                        }
+                                    </select>
+                                }
                             </div>
                             <div>
                                 <label className="block text-gray-600 mb-2">Start Date:</label>
                                 <input type="date" className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
                                     onChange={(e) => setMembershipsDetails((prev: any) => ({ ...prev, date: e.target.value }))} />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Payment Method Selection */}
+                    <div className="mb-4 mt-6">
+                        <label className="block text-gray-600 mb-2 text-sm">Payment Method:</label>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPaymentMethod("UPI")}
+                                className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "UPI" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
+                            >
+                                UPI / Prepaid
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setPaymentMethod("COD")}
+                                className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "COD" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
+                            >
+                                Cash on Delivery
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Membership Total Summary */}
+                    <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                        <h4 className="font-semibold text-lg mb-3">Membership Total</h4>
+                        <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                                <span>Original Price:</span>
+                                <span>₹{priceDetails.price.toFixed(2)}</span>
+                            </div>
+                            {membershipDetails.orders[0]?.discountPercent > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span>Discount ({membershipDetails.orders[0]?.discountPercent}%):</span>
+                                    <span>-₹{(priceDetails.price - priceDetails.finalPrice).toFixed(2)}</span>
+                                </div>
+                            )}
+                            {membershipDetails.extraCharge > 0 && (
+                                <div className="flex justify-between text-sm">
+                                    <span>Extra Charge:</span>
+                                    <span>₹{parseInt('0' + membershipDetails.extraCharge).toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between font-semibold text-base border-t pt-2">
+                                <span>Total:</span>
+                                <span>₹{(priceDetails.finalPrice + parseInt('0' + membershipDetails.extraCharge)).toFixed(2)}</span>
                             </div>
                         </div>
                     </div>

@@ -1,10 +1,6 @@
-import ActiveMembership from '@/src/components/adminorders/manage/ActiveMembership'
-import React from 'react'
+import React from "react";
+import MemebershipDashBoard from "@/src/components/adminorders/manage/MembershipDashBoard";
 
-function page() {
-  return (
-    <ActiveMembership onlyAssigned={true} />
-  )
+export default function page() {
+   return (<MemebershipDashBoard onlyActive={true} onlyAssigned={true}/>)
 }
-
-export default page

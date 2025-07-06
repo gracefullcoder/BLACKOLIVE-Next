@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 import { AssignedDetails, OrderButtons, ShowMessage, UserBasicDetails } from './OrderBasicDetails';
 import SelectDeliveryUser from './SelectDeliveryUser';
 
-function MembershipCard({ order, setOrders, setError, session, users }: any) {
+function MembershipCard({ order, setOrders, setError, session, users,setMemberships }: any) {
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -17,30 +17,14 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
         });
     };
 
-    const handleStatusUpdate = async (orderId: any, newStatus: any) => {
-        try {
-            const updatedOrder = await updateMembershipStatus(orderId, newStatus);
-            if (updatedOrder?.success) {
-                setOrders((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? updatedOrder.product : order
-                )));
-                toast.success(updatedOrder.message);
-            } else {
-                toast(updatedOrder?.message)
-            }
-
-        } catch (err) {
-            setError('Failed to update order status');
-            console.error(err);
-        }
-    };
-
     const handlePaymentStatus = async () => {
         try {
             const res = await updatePaymentStatus(order._id, !order?.isPaid, true);
 
             if (res.success) {
                 setOrders((prev: any) => (prev.map((prevOrder: any) => (prevOrder._id === order._id ? { ...prevOrder, isPaid: !prevOrder.isPaid } : prevOrder))));
+                setMemberships((prev: any) => (prev.map((prevOrder: any) => (prevOrder._id === order._id ? { ...prevOrder, isPaid: !prevOrder.isPaid } : prevOrder))));
+
                 toast.success(res?.message)
             } else {
                 toast.error(res?.message)
@@ -68,7 +52,6 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
         }
     };
 
-
     const handleExtraCharges = async (e: any, orderId: any, productId: any, extraCharge: any) => {
         e.preventDefault();
         try {
@@ -76,6 +59,9 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
             const res = await addExtraCharge(orderId, productId, extraCharge);
             if (res.success) {
                 setOrders((prev: any) => (prev.map((order: any) =>
+                    order._id === orderId ? { ...order, extraCharge } : order
+                )));
+                setMemberships((prev: any) => (prev.map((order: any) =>
                     order._id === orderId ? { ...order, extraCharge } : order
                 )));
                 console.log(res);
@@ -92,6 +78,12 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
         <div key={order._id} className={`border rounded-lg p-4 shadow`}>
 
             <UserBasicDetails order={order} />
+
+            {order?.paymentId && (
+                <p className='pt-1 border-t border-t-black border-solid'>
+                    PaymentId : {order.paymentId}
+                </p>
+            )}
 
             <div className="py-2 border-t flex flex-col gap-1">
                 <p>Membership Type : {order.category.title}</p>
@@ -113,6 +105,7 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
                         Paid: <input type="checkbox" className='h-4 w-4' checked={order?.isPaid || false} onChange={handlePaymentStatus} />
                     </div>
                 </div>
+
                 <div className='flex justify-between items-center'>
                     <p>
                         Extra Charges : {order?.extraCharge || "No"}
@@ -173,8 +166,8 @@ function MembershipCard({ order, setOrders, setError, session, users }: any) {
             <ShowMessage message={order.message} />
             {(order?.deliveryDates?.length != order?.days) &&
                 <>
-                    <OrderButtons session={session} order={order} setOrders={setOrders} setError={setError} isMembership={true} />
-                    {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={true} setOrders={setOrders} setError={setError} />}
+                    <OrderButtons session={session} order={order} setOrders={setOrders} setMemberships={setMemberships} setError={setError} isMembership={true} />
+                    {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={true} setOrders={setOrders} setMembership={setMemberships} setError={setError} />}
                 </>
             }
         </div >

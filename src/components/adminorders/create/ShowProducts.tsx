@@ -25,7 +25,7 @@ const ShowProducts = ({ orderDetails, products, setProducts, setOrderDetails, is
 
     const addProduct = (product: any) => {
         console.log("in")
-        console.log(orderDetails.orders.filter((p: any) => p.product == product._id))
+        console.log(orderDetails)
         if (orderDetails.orders.filter((p: any) => p.product == product._id).length == 0) {
 
             if (isMembership) {
@@ -41,7 +41,7 @@ const ShowProducts = ({ orderDetails, products, setProducts, setOrderDetails, is
                 setOrderDetails(((prev: any) => {
                     return {
                         ...prev,
-                        orders: [...prev.orders, { product: product._id, quantity: 1, title: product.title }]
+                        orders: [...prev.orders, { product: product._id, quantity: 1, title: product.title, priceCharged: product.finalPrice, extraCharge: 0 }]
                     }
                 }))
             }

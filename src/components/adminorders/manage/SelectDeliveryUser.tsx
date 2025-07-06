@@ -3,7 +3,7 @@ import { updateMembershipStatus, updateOrderStatus } from "@/src/actions/Order";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-function SelectDeliveryUser({ users, orderId, isMembership, setOrders, setError }: any) {
+function SelectDeliveryUser({ users, orderId, isMembership, setOrders,setMemberships, setError }: any) {
     const [search, setSearch] = useState("");
     const [filteredUsers, setFilteredUsers] = useState(users);
     const [selectedUser, setSelectedUser] = useState("");
@@ -23,6 +23,9 @@ function SelectDeliveryUser({ users, orderId, isMembership, setOrders, setError 
             console.log("updatedorder status", updatedOrder)
             if (updatedOrder?.success) {
                 setOrders((prev: any) => (prev.map((order: any) =>
+                    order._id === orderId ? {...order,assignedTo:updatedOrder?.product?.assignedTo,status:updatedOrder?.product?.status} : order
+                )));
+                setMemberships((prev: any) => (prev.map((order: any) =>
                     order._id === orderId ? {...order,assignedTo:updatedOrder?.product?.assignedTo,status:updatedOrder?.product?.status} : order
                 )));
                 toast.success(updatedOrder.message);

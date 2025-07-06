@@ -64,19 +64,82 @@ export const ShowMessage = ({ message }: any) => {
     )
 }
 
-export const OrderButtons = ({ order, setOrders, session, setError, isMembership }: any) => {
+export const OrderButtons = ({ order, setOrders, session, setError, isMembership,setMemberships }: any) => {
 
     const handleStatusUpdate = async (orderId: any, newStatus: any) => {
         try {
-            const updatedOrder = !isMembership ? await updateOrderStatus(orderId, newStatus) : await updateMembershipStatus(orderId, newStatus);
-            console.log("updatedorder status", updatedOrder)
-            if (updatedOrder?.success) {
-                setOrders((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? { ...order, assignedTo: updatedOrder?.product?.assignedTo, status: updatedOrder?.product?.status } : order
+            let updatedOrder: any;
+
+            if (isMembership) {
+                updatedOrder = await updateMembershipStatus(orderId, newStatus);
+
+                if (updatedOrder?.success) {
+                    toast.success(updatedOrder.message);
+                } else {
+                    toast.error(updatedOrder?.message)
+                    return;
+                }
+
+                setOrders((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
                 )));
+
+                setMemberships((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
+                )));
+
+            } else {
+                updatedOrder = await updateOrderStatus(orderId, newStatus);
+                
+                if (updatedOrder?.success) {
                 toast.success(updatedOrder.message);
             } else {
-                toast(updatedOrder?.message)
+                toast.error(updatedOrder?.message)
+                return;
+            }
+                setOrders((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
+                )));
+
+                setMemberships((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
+                )));
             }
 
         } catch (err) {
@@ -89,7 +152,7 @@ export const OrderButtons = ({ order, setOrders, session, setError, isMembership
         <>
             {
                 order.status != "pending" ? <div>
-                    {order.assignedTo._id == session?.data?.user?._id ?
+                    {order?.assignedTo?._id == session?.data?.user?._id ?
                         <div>
                             <button
                                 onClick={() => handleStatusUpdate(order._id, "unassign")}
