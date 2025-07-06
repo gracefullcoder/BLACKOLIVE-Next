@@ -14,7 +14,7 @@ export const calculateProRatedRevenue = (membership: any): any => {
 };
 
 export const downloadMembershipExcel = (filteredMemberships: any) => {
-    let csv = 'Membership ID,Full Name,Email,Contact,Address,Category,Status,Assigned To,Start Date,Delivery Time,Note,Delivered Days,Total Days,Price,Extra Price,Final Revenue\n';
+    let csv = 'Membership ID,Full Name,Email,Contact,Address,Category,Status,Payment Id,Assigned To,Start Date,Delivery Time,Note,Delivered Days,Total Days,Price,Extra Price,Final Revenue\n';
     let grandTotal: any = 0;
 
     filteredMemberships.forEach((membership: any) => {
@@ -31,6 +31,7 @@ export const downloadMembershipExcel = (filteredMemberships: any) => {
             `"${address}",` +
             `${membership.category.title},` +
             `${membership.status},` +
+            `${membership?.paymentId || "COD"},` +
             `${membership?.assignedTo?.name || "unassigned"},` +
             `${new Date(membership.startDate).toLocaleDateString()},` +
             `${formatTime(membership.time)},` +
@@ -42,7 +43,7 @@ export const downloadMembershipExcel = (filteredMemberships: any) => {
             `${finalPrice.toFixed(2)}\n`;
     });
 
-    csv += `,,,,,,,,,,,,,,Grand Total,${grandTotal.toFixed(2)}\n`;
+    csv += `,,,,,,,,,,,,,,,Grand Total,${grandTotal.toFixed(2)}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -54,25 +55,25 @@ export const downloadMembershipExcel = (filteredMemberships: any) => {
 };
 
 export const downloadExcel = (filteredOrders: any) => {
-    let csv = 'Order ID,Customer Name,Customer Email,Mobile Number,Address,Status,Date,Delivery Time,Assigned To,Products,Quantity,Price,Extra Price,Total\n';
+    let csv = 'Order ID,Customer Name,Customer Email,Mobile Number,Address,Status,Payment Id,Date,Delivery Time,Assigned To,Products,Quantity,Price,Extra Price,DeliveryCharge,Total\n';
 
 
     let grandTotal = 0;
     filteredOrders.forEach((order: any) => {
-        let orderTotal = 0;
+        let orderTotal = order?.deliveryCharge || 0;
         order.orders.forEach((item: any) => {
             const total = item.quantity * item.product.finalPrice + (item.extraCharge || 0);
             orderTotal += total;
             const address = `${order?.address?.address || ""} ${order?.address?.landmark || ""} ${order?.address?.pincode || 0}`.replaceAll(",", "|")
             console.log(address)
             const hrs = parseInt(order.time.slice(0, 2))
-            csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order?.assignedTo?.name || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${total}\n`;
+            csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${order?.paymentId || "COD"},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order?.assignedTo?.name || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${order.deliveryCharge || 0},${total}\n`;
         });
-        csv += `,,,,,,,,,,,,Order Total: ${orderTotal}\n`;
+        csv += `,,,,,,,,,,,,,,Order Total: ${orderTotal}\n`;
         grandTotal += orderTotal;
     });
 
-    csv += `,,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
+    csv += `,,,,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -253,12 +254,15 @@ export const generateOrderReceipt = async (order: any) => {
     });
     y -= wrappedAddress.length * 12;
 
-    drawText(`LandMark: ${order.address.landmark}`, 20, y);
+    drawText(`LandMark: ${order?.address?.landmark || "Not Provided"}`, 20, y);
     y -= 12;
     drawText(`Pincode: ${order.address.pincode}`, 20, y);
-    y -= 15;
+    y -= 12;
 
     drawText(`Status:${(order?.assignedTo?.name || ' ') + ' ' + order.status}`, 20, y);
+    y -= 12;
+
+    drawText(`Payment Method:${(order?.paymentId) ? `UPI / PrePaid` : 'COD'}`, 20, y);
     y -= 10;
 
     // Separator line
@@ -292,11 +296,21 @@ export const generateOrderReceipt = async (order: any) => {
         y -= (wrappedTitle.length * 12 + 5);
     });
 
+    const deliveryCharge = order?.deliveryCharge || 0;
+
     // Final separator and total
     page.drawLine({ start: { x: 20, y }, end: { x: 268, y }, thickness: 1, color: rgb(0, 0, 0) });
     y -= 15;
+    drawText("SubTotal", 20, y);
+    drawText(subtotal.toString() + "/-", 230, y);
+
+    y -= 15;
+    drawText("Delivery Charge", 20, y);
+    drawText((deliveryCharge).toString() + "/-", 230, y);
+
+    y -= 15;
     drawText("Total", 20, y);
-    drawText(subtotal.toString(), 230, y);
+    drawText((subtotal + deliveryCharge).toString() + "/-", 230, y);
     y -= 10;
 
     // Footer
@@ -332,11 +346,13 @@ export const generateMembershipReceipt = (membership: any) => {
 
     receiptContent += `Membership Details:\n`;
     receiptContent += `${membership.category.title}\n`;
-    receiptContent += `Base Price: ₹${finalPrice - (membership?.extraCharge || 0)}\n`;
+    receiptContent += `Base Price: ₹${price}\n`;
+    receiptContent += `Discount: -₹${(price-finalPrice)}(${membership.discountPercent}%)\n`;
     receiptContent += `Extra Charges: ₹${membership?.extraCharge || 0}\n`;
     receiptContent += `Total Amount: ₹${finalPrice}\n\n`;
     receiptContent += `Delivery Time: ${membership.time}\n`;
-    receiptContent += `Payment Status: ${membership?.isPaid ? 'PAID' : 'COD'}\n`;
+    receiptContent += `Payment Method: ${membership?.paymentId ? 'UPI/Prepaid' : 'COD'}\n`;
+    receiptContent += `Payment Status: ${membership?.isPaid ? 'PAID' : 'NOT PAID'}\n`;
     receiptContent += `Membership Status: ${membership.status}\n`;
 
     const blob = new Blob([receiptContent], { type: 'text/plain' });

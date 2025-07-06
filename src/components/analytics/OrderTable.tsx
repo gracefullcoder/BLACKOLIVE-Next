@@ -12,7 +12,7 @@ const OrderTable = ({ orders }: any) => {
             const itemTotal = item.product.finalPrice * item.quantity;
             const extraCharge = item.extraCharge || 0;
             return total + itemTotal + extraCharge;
-        }, 0);
+        }, 0) + (order?.deliveryCharge || 0);
     };
 
 

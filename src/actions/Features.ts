@@ -85,3 +85,12 @@ export async function updateTimingServer(timingDetails: any) {
     }
 }
 
+export const getPincodeDetails = async (pincode: number) => {
+    const feature = await Feature.findOne({ "pincodes.pincode": pincode }, { pincodes: 1 });
+
+    if (!feature) return null;
+
+    const matchedPincode = feature.pincodes.find((pin: any) => pin.pincode === pincode);
+    return matchedPincode || null;
+};
+
