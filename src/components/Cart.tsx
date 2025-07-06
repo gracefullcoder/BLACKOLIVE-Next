@@ -11,6 +11,9 @@ import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/C
 import { Message } from '@/src/utility/SendMessage';
 import { featureDetails } from '../actions/Features';
 import axios from 'axios';
+import { getOrderCost } from '../actions/Payment';
+import { displayRazorpay } from '../lib/razorpay';
+import { handleToast } from '../utility/basic';
 
 const Cart = () => {
   const router = useRouter();
@@ -40,6 +43,10 @@ const Cart = () => {
   const [hasContact, setHasContact] = useState(Boolean(session?.data?.user?.contact))
   const isProfileComplete = useMemo(() => hasContact && userAddresses?.length, [userAddresses?.length, hasContact])
 
+  // Payment method state
+  const [paymentMethod, setPaymentMethod] = useState("UPI");
+  const [deliveryCharge, setDeliveryCharge] = useState(0);
+
   useEffect(() => {
     let contactDetails = session?.data?.user?.contact
     let addressesDetails = session?.data?.user?.addresses;
@@ -53,7 +60,8 @@ const Cart = () => {
     }
 
     if (addressesDetails?.length) {
-      setUserAddresses(addressesDetails)
+      setUserAddresses(addressesDetails);
+      setSelectedAddress(0);
       setIsAddingAddress(false);
     } else {
       setIsAddingAddress(true);
@@ -140,6 +148,25 @@ const Cart = () => {
     }
   };
 
+  const validatePincode = () => {
+    if (isOpen && selectedAddress != -1) {
+      const pincode = userAddresses[selectedAddress].pincode;
+      const result = pincodes.find((pin: any) => pin?.pincode == pincode);
+      if (!result) {
+        toast.error("Not deliverable in your area!");
+        return false;
+      } else {
+        setDeliveryCharge(result.deliveryCharge);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  useEffect(() => {
+    validatePincode();
+  }, [isOpen,selectedAddress])
+
   const validateCheckout = () => {
     if (!time) {
       toast.error("Please select delivery time!");
@@ -150,11 +177,7 @@ const Cart = () => {
       return false;
     }
 
-    const pincode = userAddresses[selectedAddress].pincode;
-    if (!pincodes.some((pin: any) => pin?.pincode == pincode)) {
-      toast.error("Not deliverable in your area!");
-      return false;
-    }
+    if (!validatePincode()) return false;
 
     if (!hasContact) {
       toast.error("Please add contact information!");
@@ -168,7 +191,7 @@ const Cart = () => {
     return true;
   };
 
-  const totalAmount = items.reduce((sum, item) => item.product.isAvailable ? sum + (item?.product?.finalPrice * item.quantity) : sum, 0);
+  const totalAmount = items.reduce((sum, item) => item.product.isAvailable ? sum + (item?.product?.finalPrice * item.quantity) : sum, 0) + deliveryCharge;
 
   const toggleCart = () => {
     setIsOpen(!isOpen);
@@ -186,6 +209,33 @@ const Cart = () => {
     };
   }, [isOpen]);
 
+  const orderCreation = async (orderDetails: any, paymentData?: any) => {
+    try {
+      let response;
+      if (paymentData) {
+        response = await createOrder(orderDetails, paymentData);
+      } else {
+        response = await createOrder(orderDetails);
+        handleToast(response);
+      }
+
+      if (response.success) {
+        const message = items.map((item, idx) => {
+          return `PRODUCT ${idx + 1}: ${item.product.title}\n -Quantity: ${item.quantity}\n-Time : ${time}\n`;
+        })
+          .join("\n");
+
+        Message(message);
+        setItems([]);
+        setIsOpen(false);
+      }
+
+      return response;
+    } catch (error) {
+      toast.error("Internal Server Error");
+    }
+  }
+
   const handleCheckout = async () => {
     if (totalAmount == 0) {
       toast.error("Add Something in cart")
@@ -200,38 +250,35 @@ const Cart = () => {
 
     setIsLoading(true);
     try {
-      const orderItems = items.filter(item => item.product.isAvailable).map(item => ({
-        product: item?.product?._id,
-        quantity: item.quantity,
-        priceCharged: item?.product?.finalPrice
-      }));
+      const pincode = userAddresses[selectedAddress].pincode;
+      const { totalAmount, productDetails } = await getOrderCost({ productData: items, isMembership: false, pincode });
 
-      const response = await createOrder(
-        session?.data?.user?._id,
-        orderItems,
-        selectedAddress,
-        contactNumber,
-        time,
-        orderMessage
-      );
-
-      if (response.success) {
-        toast.success("Order placed successfully!");
-        const message = items.map((item, idx) => {
-          return `PRODUCT ${idx + 1}: ${item.product.title}\n -Quantity: ${item.quantity}\n-Time : ${time}\n`;
-        })
-          .join("\n");
-
-        Message(message);
-        setItems([]);
-        setIsOpen(false);
-      } else {
-        toast.error(response.message);
+      const orderDetails = {
+        userId: session?.data?.user?._id,
+        orderItems: productDetails,
+        addressId: selectedAddress,
+        contact: contactNumber,
+        time: time,
+        message: orderMessage,
+        isPaid: false,
+        totalAmount,
+        deliveryCharge
       }
 
+      const additionalDetails = {
+        userDetails: session?.data?.user,
+        productDetails: {
+          name: "Black Olive",
+          description: "Order Fresh Salads",
+          image: "https://ik.imagekit.io/vaibhav11/BLACKOLIVE/tr:w-40,h-40/newlogo.png?updatedAt=1750700640825",
+        }
+      };
 
-      if (response?.mailRes?.success) {
-        toast.success("Order Mail Sent")
+      if (paymentMethod == "UPI") {
+        orderDetails.isPaid = true;
+        displayRazorpay({ orderDetails, totalAmount, additionalDetails, updateFnx: orderCreation })
+      } else {
+        orderCreation(orderDetails)
       }
     } catch (error) {
       toast.error("Failed to create order");
@@ -348,12 +395,7 @@ const Cart = () => {
               <div>
                 <p className='font-semibold text-xl'>Delivery Details</p>
 
-                <div>
-                  <p className="mt-4">Add Message:</p>
-                  <input type="text" className="mt-2 border rounded-3xl w-full px-4 py-2" placeholder='Need Changes' onChange={(e) => setOrderMessage(e.target.value)} />
-                </div>
-
-                <div className="mb-4">
+                <div className="mb-2  ">
                   <p className="mt-4">Select Delivery Time:</p>
                   <select
                     className="mt-2 border rounded-3xl w-full px-4 py-2"
@@ -369,10 +411,65 @@ const Cart = () => {
                 </div>
 
                 {/* Address Selection */}
+
+                <div className="flex justify-between items-center">
+                  <p className="font-semibold">Delivery Address</p>
+                  <button
+                    onClick={() => setIsAddingAddress(!isAddingAddress)}
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    {isAddingAddress ? <X size={20} /> : <Plus size={20} />}
+                  </button>
+                </div>
+
                 {userAddresses.length > 0 ? (
-                  <div className="my-2 max-h-60 overflow-y-auto">
-                    <div className="flex justify-between items-center">
-                      <p className="font-semibold">Select Address </p>
+                  <div className="max-h-60 overflow-y-auto">
+                    <div className="mb-2">
+
+                      {isAddingAddress && (
+                        <form onSubmit={handleAddAddress} className="mt-2 space-y-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={newAddress.number}
+                              onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
+                              placeholder="House/Flat No."
+                              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                            <input
+                              type="text"
+                              value={newAddress.pincode}
+                              onChange={(e) => setNewAddress({ ...newAddress, pincode: parseInt(e.target.value) ? parseInt(e.target.value) : '' })}
+                              placeholder="Pincode"
+                              maxLength={6}
+                              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              required
+                            />
+                          </div>
+                          <textarea
+                            value={newAddress.address}
+                            onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
+                            placeholder="Full Address"
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            rows={2}
+                            required
+                          />
+                          <input
+                            type="text"
+                            value={newAddress.landmark}
+                            onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
+                            placeholder="Landmark (Optional)"
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                          <button
+                            type="submit"
+                            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
+                          >
+                            <Save size={16} /> Add Address
+                          </button>
+                        </form>
+                      )}
                     </div>
 
                     {userAddresses.map((addr: any, idx: number) => (
@@ -447,78 +544,59 @@ const Cart = () => {
                   </div>
                 }
 
-                {/* Address Management */}
+                <div>
+                  <p className="mt-4">Add Message:</p>
+                  <input type="text" className="mt-2 border rounded-3xl w-full px-4 py-2" placeholder='Need Changes' onChange={(e) => setOrderMessage(e.target.value)} />
+                </div>
+
+                {/* Payment Method Selection */}
                 <div className="mb-4">
-                  <div className="flex justify-between items-center">
-                    <p className="font-semibold">Delivery Address</p>
+                  <label className="block text-gray-600 mb-2 text-sm">Payment Method:</label>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => setIsAddingAddress(!isAddingAddress)}
-                      className="text-blue-600 hover:text-blue-700"
+                      type="button"
+                      onClick={() => setPaymentMethod("UPI")}
+                      className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "UPI" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
                     >
-                      {isAddingAddress ? <X size={20} /> : <Plus size={20} />}
+                      UPI / Prepaid
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("COD")}
+                      className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "COD" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
+                    >
+                      Cash on Delivery
                     </button>
                   </div>
+                </div>
+                {/* End Payment Method Selection */}
 
-                  {isAddingAddress && (
-                    <form onSubmit={handleAddAddress} className="mt-2 space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <input
-                          type="text"
-                          value={newAddress.number}
-                          onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
-                          placeholder="House/Flat No."
-                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
-                        <input
-                          type="text"
-                          value={newAddress.pincode}
-                          onChange={(e) => setNewAddress({ ...newAddress, pincode: parseInt(e.target.value) ? parseInt(e.target.value) : '' })}
-                          placeholder="Pincode"
-                          maxLength={6}
-                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        />
+                {/* Total and Checkout Button */}
+                <div className='mb-4'>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal:</span>
+                      <span>₹{(totalAmount - deliveryCharge).toFixed(2)}</span>
+                    </div>
+                    {deliveryCharge > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span>Delivery Charge:</span>
+                        <span>₹{deliveryCharge.toFixed(2)}</span>
                       </div>
-                      <textarea
-                        value={newAddress.address}
-                        onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
-                        placeholder="Full Address"
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows={2}
-                        required
-                      />
-                      <input
-                        type="text"
-                        value={newAddress.landmark}
-                        onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
-                        placeholder="Landmark (Optional)"
-                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
-                      >
-                        <Save size={16} /> Add Address
-                      </button>
-                    </form>
-                  )}
+                    )}
+                    <div className="flex justify-between font-semibold text-base border-t pt-2">
+                      <span>Total:</span>
+                      <span>₹{totalAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                  <button
+                    disabled={isLoading || !isProfileComplete}
+                    className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                    onClick={handleCheckout}
+                  >
+                    {isLoading ? 'Processing...' : !isProfileComplete ? 'Complete Profile to Checkout' : 'Checkout'}
+                  </button>
                 </div>
-              </div>
-
-              {/* Total and Checkout Button */}
-              <div className='mb-4'>
-                <div className="flex justify-between mb-4">
-                  <span className="font-semibold">Total:</span>
-                  <span className="font-semibold">₹{totalAmount.toFixed(2)}</span>
-                </div>
-                <button
-                  disabled={isLoading || !isProfileComplete}
-                  className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
-                  onClick={handleCheckout}
-                >
-                  {isLoading ? 'Processing...' : !isProfileComplete ? 'Complete Profile to Checkout' : 'Checkout'}
-                </button>
               </div>
             </div>
           )}

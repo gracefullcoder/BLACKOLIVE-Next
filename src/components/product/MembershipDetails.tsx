@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { postponeMembership, postponeMembershipByDate, useBonus } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
 import { formatTime } from '@/src/utility/timeUtil';
+import { calculatePrices } from '@/src/utility/MembershipUtils/MembershipUtility';
 
 const MembershipDetailsPage = ({ membership }: any) => {
     const router = useRouter();
@@ -84,6 +85,8 @@ const MembershipDetailsPage = ({ membership }: any) => {
             console.error(error);
         }
     };
+
+    const { price, finalPrice } = calculatePrices(membership?.products, membership?.discountPercent, membership?.days);
 
 
     return (
@@ -257,12 +260,12 @@ const MembershipDetailsPage = ({ membership }: any) => {
                             <div className="flex justify-between items-center">
                                 <h2 className="text-lg font-semibold text-gray-800">Total Amount</h2>
                                 <p className="text-2xl font-bold text-blue-600">
-                                    ₹{membership?.category?.finalPrice}
+                                    ₹{finalPrice}
                                 </p>
                             </div>
-                            {membership?.category?.price !== membership?.category?.finalPrice && (
+                            {price && (
                                 <p className="text-gray-500 text-sm text-right mt-1">
-                                    Original Price: <span className="line-through">₹{membership?.category?.price}</span>
+                                    Original Price: <span className="line-through">₹{price}</span>
                                 </p>
                             )}
                         </div>

@@ -11,6 +11,10 @@ import { featureDetails } from '@/src/actions/Features';
 import ExcludedProduct from './ExcludedProduct';
 import CustomizeButton from './CustomizeButton';
 import { formatTime } from '@/src/utility/timeUtil';
+import { displayRazorpay } from '@/src/lib/razorpay';
+import { getOrderCost } from '@/src/actions/Payment';
+import { handleToast } from '@/src/utility/basic';
+import { MembershipCreationType } from '@/src/types/orderType';
 
 function ProductDetails({ product, isMembership }: { product: any, isMembership: boolean }) {
     const session = useSession();
@@ -20,8 +24,9 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
     const [pincode, setPincode] = useState<any>(null);
     const [pincodes, setPincodes] = useState([])
     const [isDeliverable, setIsDeliverable] = useState<any>(null)
-    const porductDetail = useRef<any>(null);    
-    const [timings,setTimings] = useState([]);
+    const porductDetail = useRef<any>(null);
+    const [timings, setTimings] = useState([]);
+    const [paymentMethod, setPaymentMethod] = useState("UPI")
 
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -54,8 +59,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
     useEffect(() => {
         const getPincodes = async () => {
             const feature = await featureDetails();
-            console.log(feature)
-            const formattedTimings = feature.deliveryTimings.map((t:any) => formatTime(t?.deliveryTime));
+            const formattedTimings = feature.deliveryTimings.map((t: any) => formatTime(t?.deliveryTime));
             setTimings(formattedTimings);
             setPincodes(feature.pincodes)
         }
@@ -113,8 +117,8 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
             setIsLoading(false)
         }
     };
-
-    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any, message: string }>({ time: product?.timings ? product?.timings[0] : 0, startDate: new Date(), message: "" });
+    const initMemDetails = { time: product?.timings ? product?.timings[0] : "", startDate: "", message: "" };
+    const [membershipDetails, setMembershipDetails] = useState<{ time: string, startDate: any, message: string }>(initMemDetails);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<number>(-1);
 
@@ -150,6 +154,11 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
             toast.error("Please select delivery address!");
             return false;
         }
+
+        if (getPincode() == null) {
+            toast.error("Not deliverable in your area");
+            return false;
+        }
         if (!hasContact) {
             toast.error("Please add contact information!");
             return false;
@@ -157,42 +166,68 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
         return true;
     };
 
+    const membershipCreation = async (orderDetails: MembershipCreationType,mailData:any, paymentData?: any) => {
+        let response;
+
+        if (paymentData) {
+            response = await createMembership(orderDetails,mailData, paymentData);
+        } else {
+            response = await createMembership(orderDetails,mailData);
+        }
+
+        if (response.success) setMembershipDetails(initMemDetails)
+
+        return response;
+    }
+
     const handleMembership = async () => {
-        if (!validateCheckout()) return;
 
         if (!isProfileComplete) {
             router.push('/user');
             return;
         }
 
+        if (!validateCheckout()) return;
+
         setIsLoading(true);
         try {
+            const productIds = daysOfWeek.map((day) => (weeklyPlan[day]?._id));
+            const membershipData = { productIds, membershipId: product?._id }
+            const orderData: any = await getOrderCost({ productData: membershipData, isMembership: true });
 
-            const productsData = daysOfWeek.map((day) => ({ product: weeklyPlan[day]?._id, price: weeklyPlan[day]?.price, finalPrice: weeklyPlan[day].finalPrice }));
+            if (!orderData.success) {
+                handleToast(orderData);
+                return;
+            }
 
-            console.log(productsData)
-            const response = await createMembership(
-                session?.data?.user?._id,
-                product._id,
-                selectedAddress,
-                userContact,
-                membershipDetails.time,
-                membershipDetails.startDate,
-                membershipDetails.message,
-                product.days,
-                productsData,
-                product.discountPercent
-            );
+            const { totalAmount, productDetails } = orderData;
 
-            if (response.success) {
-                toast.success("Order placed successfully!");
+            const orderDetails: MembershipCreationType = {
+                user: session?.data?.user?._id,
+                category: product._id,
+                address: userAddresses[selectedAddress],
+                contact: userContact,
+                time: membershipDetails.time,
+                startDate: membershipDetails.startDate,
+                message: membershipDetails.message,
+                days: product.days,
+                products: productDetails,
+                discountPercent: product.discountPercent,
+                adminOrder: null,
+                isPaid: false
+            }
+
+            if (paymentMethod == "UPI") {
+                const additionalDetails = { userDetails: session?.data?.user, productDetails: product };
+                orderDetails.isPaid = true;
+                displayRazorpay({ totalAmount, orderDetails, additionalDetails, updateFnx: membershipCreation });
             } else {
-                toast.error(response.message);
+                const mailData = { finalPrice: totalAmount, title: product?.title }
+                let res:any = await membershipCreation(orderDetails,mailData);
+                handleToast(res);
+                handleToast({success:res?.mailRes,message:"Membership Mail sent!"});
             }
 
-            if (response?.mailRes?.success) {
-                toast.success("Order Mail Sent")
-            }
         } catch (error) {
             console.log(error)
             toast.error("Failed to create order");
@@ -204,6 +239,18 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
     const isPincodeAvailable = () => {
         const res = pincodes.some((pin: any) => pin?.pincode == pincode);
         setIsDeliverable(res)
+    }
+
+    const getPincode = () => {
+        if (userAddresses && hasAddress && selectedAddress > -1) {
+            const selectedAddr = userAddresses[selectedAddress];
+            if (selectedAddr && selectedAddr.pincode) {
+                const found = pincodes.find((pin: any) => pin.pincode == selectedAddr.pincode);
+                return found ? found : null;
+            }
+        }
+
+        return null;
     }
 
     const handleDetailsChange = (e: any) => { setMembershipDetails(prev => { return { ...prev, [e.target.name]: e.target.value } }) }
@@ -235,7 +282,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                             Delivery Time: {isMembership ? product.timings.map((t: any) => {
                                 return `${formatTime(t)} `
                             }) :
-                            timings.map((t) => `${t} `)}
+                                timings.map((t) => `${t} `)}
                         </p>
 
                         <div>
@@ -247,6 +294,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                                             <input type="date" className='border p-2 rounded-3xl'
                                                 name='startDate' onChange={(e) => handleDetailsChange(e)}
                                                 min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
+                                                value={membershipDetails.startDate}
                                             />
                                         </div>
                                         <div>
@@ -336,10 +384,47 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                                 <div>
                                     <div className="my-4">
                                         <label className="block text-gray-600 mb-2">Message:</label>
-
-                                        <input type="text" onChange={(e: any) => setMembershipDetails((prev: any) => ({ ...prev, message: e.target.value }))}
+                                        <input
+                                            type="text"
+                                            onChange={(e) =>
+                                                setMembershipDetails((prev) => ({
+                                                    ...prev,
+                                                    message: e.target.value,
+                                                }))
+                                            }
                                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
-                                            placeholder='Need Changes ?' />
+                                            value={membershipDetails?.message}
+                                            placeholder="Need Changes?"
+                                        />
+                                    </div>
+
+                                    {/* //s */}
+                                    <div className="my-4">
+                                        <label className="block text-gray-600 mb-2">Payment Method:</label>
+                                        <div className="flex gap-4">
+                                            <div
+                                                onClick={() =>
+                                                    setPaymentMethod("UPI")
+                                                }
+                                                className={`flex-1 border rounded-md p-4 text-center cursor-pointer transition-colors ${paymentMethod === "UPI"
+                                                    ? "border-green-600 bg-green-50"
+                                                    : "border-gray-300"
+                                                    }`}
+                                            >
+                                                <span className="font-medium">UPI / Prepaid</span>
+                                            </div>
+                                            <div
+                                                onClick={() =>
+                                                    setPaymentMethod("COD")
+                                                }
+                                                className={`flex-1 border rounded-md p-4 text-center cursor-pointer transition-colors ${paymentMethod === "COD"
+                                                    ? "border-green-600 bg-green-50"
+                                                    : "border-gray-300"
+                                                    }`}
+                                            >
+                                                <span className="font-medium">Cash on Delivery</span>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <button
@@ -347,12 +432,10 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                                         className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
                                         onClick={handleMembership}
                                     >
-                                        {isLoading ? 'Processing...' : 'Buy Membership'}
+                                        {isLoading ? "Processing..." : "Buy Membership"}
                                     </button>
-
-
-
-                                </div>}
+                                </div>
+                            }
                         </> :
 
                             <div className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 

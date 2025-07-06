@@ -84,6 +84,9 @@ const membershipSchema = new mongoose.Schema({
     isPaid: {
         type: Boolean
     },
+    paymentId: {
+        type: String
+    },
     status: {
         type: String,
         default: "pending"
@@ -103,6 +106,12 @@ const membershipSchema = new mongoose.Schema({
     postponedDates: [
         {
             type: Date
+        }
+    ],
+    postponedItems: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "MembershipProduct"
         }
     ],
     bonusUsed: {
