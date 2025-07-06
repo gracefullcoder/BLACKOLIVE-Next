@@ -333,7 +333,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                             }
                         </div>
 
-                        {false && product.isAvailable ? <>
+                        {product.isAvailable ? <>
                             {
                                 isMembership &&
                                 <>
@@ -438,12 +438,10 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                             }
                         </> :
 
-                            <div className={`w-fit p-2 px-4 mt-4 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer`}
-                                      onClick={() => Message(`I want to Buy \nItem : ${product.title} \nQuanity : ${quantity}`)}>
-                                Click to Order on Whatsapp! 
-                            </div>
-                        }
+                            <div className={`w-full p-2 mt-4 text-center text-2xl rounded-3xl mx-auto 
+                                      bg-red-600 hover:bg-red-700 text-white cursor-pointer`}>
+                                Out Of Stock
+                            </div>}
 
 
                         {/* Available in area */}
