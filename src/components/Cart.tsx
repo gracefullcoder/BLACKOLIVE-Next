@@ -352,7 +352,7 @@ const Cart = () => {
                     />
                     <div className="flex-1">
                       <h3 className="font-medium">{item?.product?.title}</h3>
-                      <p className="text-green-600">Rs. {item?.product?.finalPrice.toFixed(2)}</p>
+                      <p className="text-green-600">Rs. {item?.product?.finalPrice?.toFixed(2)}</p>
 
                       {item.product.isAvailable ?
                         <div className="flex items-center gap-2 mt-2">
