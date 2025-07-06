@@ -7,6 +7,7 @@ export async function GET(req: NextRequest) {
     try {
         await connectToDatabase();
         const feature = await Feature.findOne();
+        console.log(feature);
         return NextResponse.json({ success: true, pincodes: feature?.pincodes || [] });
     } catch (error: any) {
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -18,11 +19,11 @@ export async function POST(req: NextRequest) {
     try {
         await connectToDatabase();
         const body = await req.json();
-        const { pincode } = body;
+        const { pincode, deliveryCharge } = body;
 
         const feature = await Feature.findOneAndUpdate(
             {},
-            { $push: { pincodes: pincode } },
+            { $push: { pincodes: { pincode, deliveryCharge } } },
             { new: true, upsert: true } // Create the document if it doesn't exist
         );
 

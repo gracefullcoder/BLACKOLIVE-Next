@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from 'react';
 import { IncQty, DecQty } from '@/src/utility/CartFunction';
-import { productType } from '@/src/types/product';
 import { useSession } from 'next-auth/react';
 import { useCartContext } from '@/src/context/CartContext';
 import { addToCart, decreaseQuantity, increaseQuantity } from '@/src/actions/Cart';
@@ -10,9 +9,14 @@ import { useRouter } from 'next/navigation';
 import { createMembership } from '@/src/actions/Order';
 import { featureDetails } from '@/src/actions/Features';
 import ExcludedProduct from './ExcludedProduct';
-import { Message } from '@/src/utility/SendMessage';
+import CustomizeButton from './CustomizeButton';
+import { formatTime } from '@/src/utility/timeUtil';
+import { displayRazorpay } from '@/src/lib/razorpay';
+import { getOrderCost } from '@/src/actions/Payment';
+import { handleToast } from '@/src/utility/basic';
+import { MembershipCreationType } from '@/src/types/orderType';
 
-function ProductDetails({ product }: { product: productType }) {
+function ProductDetails({ product, isMembership }: { product: any, isMembership: boolean }) {
     const session = useSession();
     const { items, setItems } = useCartContext();
     const existingCartItem = items.find((item: any) => item?.product?._id === product._id);
@@ -21,6 +25,23 @@ function ProductDetails({ product }: { product: productType }) {
     const [pincodes, setPincodes] = useState([])
     const [isDeliverable, setIsDeliverable] = useState<any>(null)
     const porductDetail = useRef<any>(null);
+    const [timings, setTimings] = useState([]);
+    const [paymentMethod, setPaymentMethod] = useState("UPI")
+
+    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+    const initializeWeeklyPlan = () => {
+        const plan: any = {};
+        if (product?.products?.length != 0) {
+            daysOfWeek.forEach((day: any, index: any) => {
+                plan[day] = product?.products[index % product?.products?.length];
+            });
+        }
+        return plan;
+    };
+
+    const [weeklyPlan, setWeeklyPlan] = useState(isMembership ? initializeWeeklyPlan() : {});
+    const [priceDetails, setPriceDetails] = useState({ price: 0, finalPrice: 0 });
 
     useEffect(() => {
         if (porductDetail.current) {
@@ -38,11 +59,18 @@ function ProductDetails({ product }: { product: productType }) {
     useEffect(() => {
         const getPincodes = async () => {
             const feature = await featureDetails();
+            const formattedTimings = feature.deliveryTimings.map((t: any) => formatTime(t?.deliveryTime));
+            setTimings(formattedTimings);
             setPincodes(feature.pincodes)
         }
 
         getPincodes()
     }, [])
+
+    useEffect(() => {
+        let { price, finalPrice } = calculatePrices(Object.values(weeklyPlan), product?.discountPercent, product?.days);
+        setPriceDetails({ price, finalPrice });
+    }, [weeklyPlan])
 
     const handleDecrease = async () => {
         if (existingCartItem && quantity > 1) {
@@ -89,10 +117,8 @@ function ProductDetails({ product }: { product: productType }) {
             setIsLoading(false)
         }
     };
-
-
-    //for membership
-    const [membershipDetails, setMembershipDetails] = useState<{ time: number, startDate: any, message: string }>({ time: product?.timings ? product?.timings[0] : 0, startDate: new Date(), message: "" });
+    const initMemDetails = { time: product?.timings ? product?.timings[0] : "", startDate: "", message: "" };
+    const [membershipDetails, setMembershipDetails] = useState<{ time: string, startDate: any, message: string }>(initMemDetails);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<number>(-1);
 
@@ -128,6 +154,11 @@ function ProductDetails({ product }: { product: productType }) {
             toast.error("Please select delivery address!");
             return false;
         }
+
+        if (getPincode() == null) {
+            toast.error("Not deliverable in your area");
+            return false;
+        }
         if (!hasContact) {
             toast.error("Please add contact information!");
             return false;
@@ -135,39 +166,70 @@ function ProductDetails({ product }: { product: productType }) {
         return true;
     };
 
+    const membershipCreation = async (orderDetails: MembershipCreationType,mailData:any, paymentData?: any) => {
+        let response;
+
+        if (paymentData) {
+            response = await createMembership(orderDetails,mailData, paymentData);
+        } else {
+            response = await createMembership(orderDetails,mailData);
+        }
+
+        if (response.success) setMembershipDetails(initMemDetails)
+
+        return response;
+    }
+
     const handleMembership = async () => {
-        if (!validateCheckout()) return;
 
         if (!isProfileComplete) {
             router.push('/user');
             return;
         }
 
+        if (!validateCheckout()) return;
+
         setIsLoading(true);
         try {
+            const productIds = daysOfWeek.map((day) => (weeklyPlan[day]?._id));
+            const membershipData = { productIds, membershipId: product?._id }
+            const orderData: any = await getOrderCost({ productData: membershipData, isMembership: true });
 
-            const response = await createMembership(
-                session?.data?.user?._id,
-                product._id,
-                selectedAddress,
-                userContact,
-                membershipDetails.time,
-                membershipDetails.startDate,
-                membershipDetails.message
-            );
+            if (!orderData.success) {
+                handleToast(orderData);
+                return;
+            }
 
-            if (response.success) {
-                toast.success("Order placed successfully!");
+            const { totalAmount, productDetails } = orderData;
+
+            const orderDetails: MembershipCreationType = {
+                user: session?.data?.user?._id,
+                category: product._id,
+                address: userAddresses[selectedAddress],
+                contact: userContact,
+                time: membershipDetails.time,
+                startDate: membershipDetails.startDate,
+                message: membershipDetails.message,
+                days: product.days,
+                products: productDetails,
+                discountPercent: product.discountPercent,
+                adminOrder: null,
+                isPaid: false
+            }
+
+            if (paymentMethod == "UPI") {
+                const additionalDetails = { userDetails: session?.data?.user, productDetails: product };
+                orderDetails.isPaid = true;
+                displayRazorpay({ totalAmount, orderDetails, additionalDetails, updateFnx: membershipCreation });
             } else {
-                toast.error(response.message);
+                const mailData = { finalPrice: totalAmount, title: product?.title }
+                let res:any = await membershipCreation(orderDetails,mailData);
+                handleToast(res);
+                handleToast({success:res?.mailRes,message:"Membership Mail sent!"});
             }
-
-            if (response?.mailRes?.success) {
-                toast.success("Order Mail Sent")
-            }
-
 
         } catch (error) {
+            console.log(error)
             toast.error("Failed to create order");
         } finally {
             setIsLoading(false);
@@ -175,26 +237,30 @@ function ProductDetails({ product }: { product: productType }) {
     };
 
     const isPincodeAvailable = () => {
-        const res = pincodes.some((pin) => pincode == pin);
+        const res = pincodes.some((pin: any) => pin?.pincode == pincode);
         setIsDeliverable(res)
+    }
+
+    const getPincode = () => {
+        if (userAddresses && hasAddress && selectedAddress > -1) {
+            const selectedAddr = userAddresses[selectedAddress];
+            if (selectedAddr && selectedAddr.pincode) {
+                const found = pincodes.find((pin: any) => pin.pincode == selectedAddr.pincode);
+                return found ? found : null;
+            }
+        }
+
+        return null;
     }
 
     const handleDetailsChange = (e: any) => { setMembershipDetails(prev => { return { ...prev, [e.target.name]: e.target.value } }) }
 
-    const formattedTime = (time: any): string => {
-        let [hrs, min] = time.split(":").map(Number); // Convert to numbers
-
-        let period = "AM";
-        if (hrs >= 12) {
-            period = "PM";
-            if (hrs > 12) hrs -= 12;
-        } else if (hrs === 0) {
-            hrs = 12;
-        }
-
-        return `${hrs.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')} ${period}`;
-    };
-
+    const calculatePrices = (products: any, discountPercent: any, days: any) => {
+        const weeks = days / products?.length;
+        const price = products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * weeks;
+        const finalPrice = Math.round(products.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100)) * weeks;
+        return { price, finalPrice };
+    }
 
     return (
         <section >
@@ -207,13 +273,16 @@ function ProductDetails({ product }: { product: productType }) {
                         <h1 className="text-3xl md:text-5xl font-bold tracking-wide mt-4">{product.title}</h1>
 
                         <div className="flex md:flex-row items-center gap-2 md:gap-4 mt-4 max-lg:justify-center">
-                            <p className="text-sm md:text-base line-through text-slate-400">Rs. {product.price}.00</p>
-                            <p className="text-lg md:text-xl">Rs. {product.finalPrice}.00</p>
+                            <p className="text-sm md:text-base line-through text-slate-400">Rs. {isMembership ? priceDetails?.price : product.price}.00</p>
+                            <p className="text-lg md:text-xl">Rs. {isMembership ? priceDetails?.finalPrice : product.finalPrice}.00</p>
                         </div>
 
                         <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
                         <p className="mt-8 text-sm md:text-base text-slate-600">
-                            Delivery Time: 12:00 PM, 3:00 PM, 6:00 PM
+                            Delivery Time: {isMembership ? product.timings.map((t: any) => {
+                                return `${formatTime(t)} `
+                            }) :
+                                timings.map((t) => `${t} `)}
                         </p>
 
                         <div>
@@ -225,6 +294,7 @@ function ProductDetails({ product }: { product: productType }) {
                                             <input type="date" className='border p-2 rounded-3xl'
                                                 name='startDate' onChange={(e) => handleDetailsChange(e)}
                                                 min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
+                                                value={membershipDetails.startDate}
                                             />
                                         </div>
                                         <div>
@@ -232,10 +302,13 @@ function ProductDetails({ product }: { product: productType }) {
                                             <select className='border p-2 rounded-3xl'
                                                 name="time" onChange={(e) => handleDetailsChange(e)} >
                                                 {
-                                                    product?.timings?.map((t, i) => <option key={i} value={t}>{formattedTime(t)}</option>)
+                                                    product?.timings?.map((t: any, i: number) => <option key={i} value={t}>{formatTime(t)}</option>)
                                                 }
                                             </select>
                                         </div>
+
+                                        <CustomizeButton product={product} weeklyPlan={weeklyPlan} setWeeklyPlan={setWeeklyPlan} daysOfWeek={daysOfWeek} />
+
                                     </div> :
 
                                     <div>
@@ -262,7 +335,7 @@ function ProductDetails({ product }: { product: productType }) {
 
                         {false && product.isAvailable ? <>
                             {
-                                product.bonus &&
+                                isMembership &&
                                 <>
                                     {/* Address Selection */}
                                     {userAddresses.length > 0 ? (
@@ -295,7 +368,7 @@ function ProductDetails({ product }: { product: productType }) {
                                 </>
                             }
 
-                            {!product.bonus ? (!existingCartItem && (
+                            {!isMembership ? (!existingCartItem && (
                                 <div className='px-8'>
                                     <button
                                         disabled={isLoading}
@@ -311,30 +384,58 @@ function ProductDetails({ product }: { product: productType }) {
                                 <div>
                                     <div className="my-4">
                                         <label className="block text-gray-600 mb-2">Message:</label>
-
-                                        <input type="text" onChange={(e: any) => setMembershipDetails((prev: any) => ({ ...prev, message: e.target.value }))}
+                                        <input
+                                            type="text"
+                                            onChange={(e) =>
+                                                setMembershipDetails((prev) => ({
+                                                    ...prev,
+                                                    message: e.target.value,
+                                                }))
+                                            }
                                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-green-300"
-                                            placeholder='Need Changes ?' />
+                                            value={membershipDetails?.message}
+                                            placeholder="Need Changes?"
+                                        />
                                     </div>
-                                    {/* <button
-                                        className={`w-full p-2 text-center text-2xl rounded-3xl mx-auto 
-                                      bg-green-600 hover:bg-green-700 text-white cursor-pointer
-                                    `}
-                                        onClick={handleMembership}
-                                    >
-                                        Buy Membership
-                                    </button> */}
+
+                                    {/* //s */}
+                                    <div className="my-4">
+                                        <label className="block text-gray-600 mb-2">Payment Method:</label>
+                                        <div className="flex gap-4">
+                                            <div
+                                                onClick={() =>
+                                                    setPaymentMethod("UPI")
+                                                }
+                                                className={`flex-1 border rounded-md p-4 text-center cursor-pointer transition-colors ${paymentMethod === "UPI"
+                                                    ? "border-green-600 bg-green-50"
+                                                    : "border-gray-300"
+                                                    }`}
+                                            >
+                                                <span className="font-medium">UPI / Prepaid</span>
+                                            </div>
+                                            <div
+                                                onClick={() =>
+                                                    setPaymentMethod("COD")
+                                                }
+                                                className={`flex-1 border rounded-md p-4 text-center cursor-pointer transition-colors ${paymentMethod === "COD"
+                                                    ? "border-green-600 bg-green-50"
+                                                    : "border-gray-300"
+                                                    }`}
+                                            >
+                                                <span className="font-medium">Cash on Delivery</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <button
                                         disabled={isLoading}
                                         className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
                                         onClick={handleMembership}
                                     >
-                                        {isLoading ? 'Processing...' : 'Buy Membership'}
+                                        {isLoading ? "Processing..." : "Buy Membership"}
                                     </button>
-
-
-
-                                </div>}
+                                </div>
+                            }
                         </> :
 
                             <div className={`w-fit p-2 px-4 mt-4 text-center text-2xl rounded-3xl mx-auto 
@@ -345,6 +446,7 @@ function ProductDetails({ product }: { product: productType }) {
                         }
 
 
+                        {/* Available in area */}
                         <div className="flex flex-col items-center justify-center w-full max-w-md mx-auto p-4 mt-4 border-t border-black">
                             <p className="text-sm font-medium text-gray-700 mb-3">
                                 Check if Deliverable in Your Area

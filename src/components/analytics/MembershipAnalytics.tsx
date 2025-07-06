@@ -45,15 +45,16 @@ export default function MembershipAnalytics({ memberships }: any) {
 
     const calculateAnalytics = (filtered: any) => {
         const categoryCounts: any = {};
-        let totalRevenue = 0;
+        let totalRevenue: any = 0;
 
-        filtered.forEach((membership: any) => {
+        filtered.forEach((membership: any,idx:any) => {
             if (isActiveMembership(membership)) {
                 const category: any = membership.category.title;
                 categoryCounts[category] = (categoryCounts[category] || 0) + 1;
             }
 
-            totalRevenue += calculateProRatedRevenue(membership);
+            const { price, finalPrice }: any = calculateProRatedRevenue(membership);
+            totalRevenue += finalPrice;
         });
 
         const activeCount = filtered.filter(isActiveMembership).length;
@@ -69,8 +70,6 @@ export default function MembershipAnalytics({ memberships }: any) {
             topCategories,
         });
     };
-
-
 
     useEffect(() => {
         setFilteredMemberships(memberships);

@@ -9,7 +9,7 @@ export type productType = {
     products?: string[],
     discountPercent?: number,
     timings?: number[],
-    days?: number
+    days: number
     bonus?: number,
     isAvailable?: boolean
 }

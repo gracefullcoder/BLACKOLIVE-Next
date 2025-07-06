@@ -4,7 +4,8 @@ import { Calendar, Clock, MapPin, Package, CreditCard, ChevronLeft } from 'lucid
 import { useRouter } from 'next/navigation';
 import { postponeMembership, postponeMembershipByDate, useBonus } from '@/src/actions/Order';
 import { toast } from 'react-toastify';
-import { formatTime } from '@/src/utility/basic';
+import { formatTime } from '@/src/utility/timeUtil';
+import { calculatePrices } from '@/src/utility/MembershipUtils/MembershipUtility';
 
 const MembershipDetailsPage = ({ membership }: any) => {
     const router = useRouter();
@@ -55,18 +56,18 @@ const MembershipDetailsPage = ({ membership }: any) => {
             toast.error("Select Date");
             return;
         }
-    
+
         const confirmPostpone = window.confirm(
             `Are you sure you want to postpone to ${selectedDate}?`
         );
-    
+
         if (!confirmPostpone) return;
 
         const date = new Date(selectedDate);
         date.setUTCHours(0, 0, 0, 0);
 
-        if(membership.postponedDates.some((prev:any) => prev == date.toISOString())) {toast.error("Already Postponed Date") ; return;}
-        
+        if (membership.postponedDates.some((prev: any) => prev == date.toISOString())) { toast.error("Already Postponed Date"); return; }
+
         try {
             const res = await postponeMembershipByDate(membership._id, selectedDate);
             if (res.success) {
@@ -74,7 +75,7 @@ const MembershipDetailsPage = ({ membership }: any) => {
                 membership.postponedDates = membership.postponedDates
                     ? [...membership.postponedDates, date]
                     : [date];
-    
+
                 setSelectedDate(null);
             } else {
                 toast.error(res.message);
@@ -84,7 +85,9 @@ const MembershipDetailsPage = ({ membership }: any) => {
             console.error(error);
         }
     };
-    
+
+    const { price, finalPrice } = calculatePrices(membership?.products, membership?.discountPercent, membership?.days);
+
 
     return (
         <div className="min-h-screen bg-gray-50 py-8">
@@ -196,8 +199,8 @@ const MembershipDetailsPage = ({ membership }: any) => {
                                     <div className='mt-8 gap-4 flex items-center border-t pt-4 flex-wrap'>
                                         <h3 className='font-medium text-gray-800 text-xl'>Postpone Specific Date</h3>
                                         <div className='flex gap-4'>
-                                        <input type="date" className='border border-black p-2 rounded-md' onChange={(e: any) => { setSelectedDate(e.target.value) }} min={new Date(Date.now() + 86400000).toISOString().split("T")[0]} />
-                                        <button className='border bg-red-300 p-2 rounded' onClick={handlePostpone}>Postpone</button>
+                                            <input type="date" className='border border-black p-2 rounded-md' onChange={(e: any) => { setSelectedDate(e.target.value) }} min={new Date(Date.now() + 86400000).toISOString().split("T")[0]} />
+                                            <button className='border bg-red-300 p-2 rounded' onClick={handlePostpone}>Postpone</button>
                                         </div>
                                     </div>
                                     {/* } */}
@@ -257,12 +260,12 @@ const MembershipDetailsPage = ({ membership }: any) => {
                             <div className="flex justify-between items-center">
                                 <h2 className="text-lg font-semibold text-gray-800">Total Amount</h2>
                                 <p className="text-2xl font-bold text-blue-600">
-                                    ₹{membership?.category?.finalPrice}
+                                    ₹{finalPrice}
                                 </p>
                             </div>
-                            {membership?.category?.price !== membership?.category?.finalPrice && (
+                            {price && (
                                 <p className="text-gray-500 text-sm text-right mt-1">
-                                    Original Price: <span className="line-through">₹{membership?.category?.price}</span>
+                                    Original Price: <span className="line-through">₹{price}</span>
                                 </p>
                             )}
                         </div>

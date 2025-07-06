@@ -8,7 +8,9 @@ const MembershipTable = ({ memberships }: any) => {
     const [isSelectOpen, setIsSelectOpen] = useState(false);
 
     const calculateTotal = (membership: any) => {
-        return membership.category.finalPrice + (membership.extraCharge ? parseInt(membership.extraCharge) : 0);
+        const weeks = membership?.days / membership?.products?.length;
+        const finalPrice: any = Math.round(membership?.products?.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - membership?.discountPercent) / 100)) * weeks + (membership.extraCharge ? parseInt(membership.extraCharge) : 0);
+        return finalPrice;
     };
 
     const handleStatusFilter = (status: any) => {
@@ -35,20 +37,20 @@ const MembershipTable = ({ memberships }: any) => {
                 <h2 className="text-xl font-semibold">Membership Details</h2>
                 <div className="relative">
                     <div className='flex gap-2 flex-wrap max-sm:justify-center'>
-                    <button
-                        onClick={() => setIsSelectOpen(!isSelectOpen)}
-                        className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                        {statusFilter === 'all' ? 'All Memberships' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-                    </button>
+                        <button
+                            onClick={() => setIsSelectOpen(!isSelectOpen)}
+                            className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            {statusFilter === 'all' ? 'All Memberships' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                        </button>
 
-                    <button
-                        onClick={() => downloadMembershipExcel(filteredMemberships)}
-                        className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2"
-                    >
-                        <Download className="w-4 h-4" />
-                        Export Excel
-                    </button>
+                        <button
+                            onClick={() => downloadMembershipExcel(filteredMemberships)}
+                            className="bg-green-500 text-white px-4 py-2 rounded flex items-center gap-2"
+                        >
+                            <Download className="w-4 h-4" />
+                            Export Excel
+                        </button>
                     </div>
 
                     {isSelectOpen && (

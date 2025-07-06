@@ -73,6 +73,13 @@ function orderCard({ order, setOrders, setError, session, users }: any) {
         <div key={order._id} className="border rounded-lg p-4 bg-white shadow" id={order._id}>
 
             <UserBasicDetails order={order} />
+
+            {order?.paymentId && (
+                <p className='pt-1 border-t border-t-black border-solid'>
+                    PaymentId : {order.paymentId}
+                </p>
+            )}
+
             <div className="border-t pt-4">
                 <h3 className="font-semibold mb-2">Products</h3>
                 {order.orders.map((item: any) => (
@@ -129,6 +136,8 @@ function orderCard({ order, setOrders, setError, session, users }: any) {
                 <div className='flex justify-between items-center'>
                     <p>
                         Total Price: {order.orders.reduce((sum: any, item: any) => (item.product.finalPrice * item.quantity + (item?.extraCharge || 0) + sum), 0)}
+                        <br />
+                        Delivery Charge: {order?.deliveryCharge || 0}
                     </p>
                     <div className='flex items-center gap-2'>
                         Paid: <input type="checkbox" className='h-4 w-4' checked={order?.isPaid || false} onChange={handlePaymentStatus} />

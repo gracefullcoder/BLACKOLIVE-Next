@@ -14,8 +14,9 @@
   background: transparent;
 }
 
-:hover::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.2);
+  border-radius: 2rem;
 }
 
 .custom-toast-container {

@@ -6,14 +6,19 @@ const orderSchema = new mongoose.Schema({
         type: Schema.ObjectId,
         ref: "User"
     },
+    adminOrder: {
+        customerName: {
+            type: String
+        }
+    },
     orders: [
         {
             product: {
                 type: Schema.Types.ObjectId,
                 ref: "Product"
             },
-            priceCharged:{
-                type:Number
+            priceCharged: {
+                type: Number
             },
             quantity: {
                 type: Number
@@ -39,6 +44,9 @@ const orderSchema = new mongoose.Schema({
     isPaid: {
         type: Boolean
     },
+    paymentId: {
+        type: String
+    },
     contact: {
         type: Number,
         length: 10
@@ -61,6 +69,9 @@ const orderSchema = new mongoose.Schema({
     },
     deliveryDate: {
         type: Date
+    },
+    deliveryCharge: {
+        type: Number
     },
     message: {
         type: String

@@ -37,7 +37,11 @@ function Footer() {
         <p>
           © 2024 BLACK OLIVE, Website Developed by
         </p>
-        <p> Vaibhav Gupta</p>
+        <p className='font-bold'>
+          <a href="https://github.com/gracefullcoder" target='blank'>
+            Vaibhav Gupta
+          </a>
+        </p>
       </div>
     </footer>
   );

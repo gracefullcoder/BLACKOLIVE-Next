@@ -8,16 +8,19 @@ export const getSpecificProduct = async (id: any) => {
         await connectToDatabase()
         console.log("specfic product", id, "is")
         let product = await Product.findById(id);
+        let isMembership = false;
 
         if (product == null) {
-            product = await MembershipProduct.findById(id);
+            product = await MembershipProduct.findById(id).populate({ model: Product, path: "products" });
+            isMembership = true
         }
+
         console.log(product)
 
-        return JSON.parse(JSON.stringify(product));
+        return { product: JSON.parse(JSON.stringify(product)), isMembership };
     } catch (error) {
         console.log(error);
-        return { error: "Failed to fetch data", status: 500 };
+        return { error: "Failed to fetch data", isMembership: false, status: 500 };
     }
 }
 
@@ -27,7 +30,9 @@ export async function getProducts(type: string) {
         console.log("requested products");
         await connectToDatabase()
         const products = await Product.find();
-        const membership = await MembershipProduct.find();
+        let membership;
+
+        if (type == "all" || type == "membership") membership = await MembershipProduct.find().populate({ path: "products", model: Product });
 
         console.log(products, membership)
 

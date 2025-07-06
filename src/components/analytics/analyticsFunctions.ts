@@ -1,9 +1,12 @@
-import { formatTime } from "@/src/utility/basic";
-export const calculateProRatedRevenue = (membership: any) => {
-    if (membership.status !== 'cancelled') {
-        return membership.category.finalPrice + (membership.extraCharge ? parseInt(membership.extraCharge) : 0)
-    }
+import { formatTime } from "@/src/utility/timeUtil";
 
+export const calculateProRatedRevenue = (membership: any): any => {
+    if (membership.status !== 'cancelled') {
+        const weeks = membership?.days / membership?.products?.length;
+        const price: any = membership?.products?.reduce((sum: any, curr: any) => (sum + curr?.finalPrice), 0) * weeks;
+        const finalPrice: any = Math.round(membership?.products?.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - membership?.discountPercent) / 100)) * weeks;
+        return { price, finalPrice };
+    }
     const deliveredDays = membership.deliveryDates.length;
     const totalDays = membership.category.days;
     const proRatedRevenue = (membership.category.finalPrice * deliveredDays) / totalDays;
@@ -11,35 +14,36 @@ export const calculateProRatedRevenue = (membership: any) => {
 };
 
 export const downloadMembershipExcel = (filteredMemberships: any) => {
-    let csv = 'Membership ID,Full Name,Email,Contact,Address,Category,Status,Assigned To,Start Date,Delivery Time,Note,Delivered Days,Total Days,Price,Extra Price,Final Revenue\n';
-    let grandTotal = 0;
+    let csv = 'Membership ID,Full Name,Email,Contact,Address,Category,Status,Payment Id,Assigned To,Start Date,Delivery Time,Note,Delivered Days,Total Days,Price,Extra Price,Final Revenue\n';
+    let grandTotal: any = 0;
 
     filteredMemberships.forEach((membership: any) => {
         const deliveredDays = membership.deliveryDates.length;
         const totalDays = membership.category.days;
-        const revenue = calculateProRatedRevenue(membership);
+        const { price, finalPrice }: any = calculateProRatedRevenue(membership);
         const address = `${membership.address.number} ${membership.address.address}, ${membership.address.landmark}, ${membership.address.pincode}`;
-        grandTotal += revenue;
+        grandTotal += finalPrice;
 
         csv += `${membership._id},` +
-            `${membership.user.name},` +
+            `${membership?.adminOrder ? `${membership.adminOrder.customerName} (${membership.user.name})}` : `${membership.user.name}`},` +
             `${membership.user.email},` +
             `${membership.contact},` +
             `"${address}",` +
             `${membership.category.title},` +
             `${membership.status},` +
+            `${membership?.paymentId || "COD"},` +
             `${membership?.assignedTo?.name || "unassigned"},` +
             `${new Date(membership.startDate).toLocaleDateString()},` +
             `${formatTime(membership.time)},` +
             `${membership.message || ""},` +
             `${deliveredDays},` +
             `${totalDays},` +
-            `${membership.category.finalPrice},` +
+            `${finalPrice - (membership.extraCharge || 0)},` +
             `${membership.extraCharge || "0"},` +
-            `${revenue.toFixed(2)}\n`;
+            `${finalPrice.toFixed(2)}\n`;
     });
 
-    csv += `,,,,,,,,,,,,,,Grand Total,${grandTotal.toFixed(2)}\n`;
+    csv += `,,,,,,,,,,,,,,,Grand Total,${grandTotal.toFixed(2)}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -51,25 +55,25 @@ export const downloadMembershipExcel = (filteredMemberships: any) => {
 };
 
 export const downloadExcel = (filteredOrders: any) => {
-    let csv = 'Order ID,Customer Name,Customer Email,Mobile Number,Address,Status,Date,Delivery Time,Assigned To,Products,Quantity,Price,Extra Price,Total\n';
+    let csv = 'Order ID,Customer Name,Customer Email,Mobile Number,Address,Status,Payment Id,Date,Delivery Time,Assigned To,Products,Quantity,Price,Extra Price,DeliveryCharge,Total\n';
 
 
     let grandTotal = 0;
     filteredOrders.forEach((order: any) => {
-        let orderTotal = 0;
+        let orderTotal = order?.deliveryCharge || 0;
         order.orders.forEach((item: any) => {
             const total = item.quantity * item.product.finalPrice + (item.extraCharge || 0);
             orderTotal += total;
             const address = `${order?.address?.address || ""} ${order?.address?.landmark || ""} ${order?.address?.pincode || 0}`.replaceAll(",", "|")
             console.log(address)
             const hrs = parseInt(order.time.slice(0, 2))
-            csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order?.assignedTo?.name || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${total}\n`;
+            csv += `${order._id},${order.user.name},${order.user.email},${order.contact},${address},${order.status},${order?.paymentId || "COD"},${new Date(order.createdAt).toLocaleDateString()},${formatTime(order.time)},${order?.assignedTo?.name || "unassigned"},"${item.product.title}",${item.quantity},${item.product.finalPrice},${item.extraCharge || 0},${order.deliveryCharge || 0},${total}\n`;
         });
-        csv += `,,,,,,,,,,,,Order Total: ${orderTotal}\n`;
+        csv += `,,,,,,,,,,,,,,Order Total: ${orderTotal}\n`;
         grandTotal += orderTotal;
     });
 
-    csv += `,,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
+    csv += `,,,,,,,,,,,,,,Grand Total: ${grandTotal}\n`;
 
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -125,48 +129,48 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 const calculateContentHeight = (order: any, fontSize: number = 10) => {
     let height = 0;
-    
+
     // Header space (BLACK OLIVE + padding)
     height += 30 + 18;
-    
+
     // Date and time
     height += 10;
-    
+
     // First dotted line + padding
     height += 15;
-    
+
     // Customer details (name, phone)
     height += 30;
-    
+
     // Address
     const fullAddress = `${order.address.number}, ${order.address.address}`;
     const wrappedAddress = wrapText(fullAddress, 230, fontSize);
     height += wrappedAddress.length * 12;
-    
+
     // Landmark and pincode
     height += 24;
-    
+
     // Status
     height += 25;
-    
+
     // Table headers + padding
     height += 30;
-    
+
     // Calculate items height
     order.orders.forEach((item: any) => {
         const wrappedTitle = wrapText(item.product.title, 100, fontSize);
         height += wrappedTitle.length * 12 + 5;
     });
-    
+
     // Total section
     height += 40;
-    
+
     // Footer
     height += 35;
-    
+
     // Add padding for safety
     height += 30;
-    
+
     return height;
 };
 
@@ -250,12 +254,15 @@ export const generateOrderReceipt = async (order: any) => {
     });
     y -= wrappedAddress.length * 12;
 
-    drawText(`LandMark: ${order.address.landmark}`, 20, y);
+    drawText(`LandMark: ${order?.address?.landmark || "Not Provided"}`, 20, y);
     y -= 12;
     drawText(`Pincode: ${order.address.pincode}`, 20, y);
-    y -= 15;
+    y -= 12;
 
     drawText(`Status:${(order?.assignedTo?.name || ' ') + ' ' + order.status}`, 20, y);
+    y -= 12;
+
+    drawText(`Payment Method:${(order?.paymentId) ? `UPI / PrePaid` : 'COD'}`, 20, y);
     y -= 10;
 
     // Separator line
@@ -289,13 +296,23 @@ export const generateOrderReceipt = async (order: any) => {
         y -= (wrappedTitle.length * 12 + 5);
     });
 
+    const deliveryCharge = order?.deliveryCharge || 0;
+
     // Final separator and total
     page.drawLine({ start: { x: 20, y }, end: { x: 268, y }, thickness: 1, color: rgb(0, 0, 0) });
     y -= 15;
+    drawText("SubTotal", 20, y);
+    drawText(subtotal.toString() + "/-", 230, y);
+
+    y -= 15;
+    drawText("Delivery Charge", 20, y);
+    drawText((deliveryCharge).toString() + "/-", 230, y);
+
+    y -= 15;
     drawText("Total", 20, y);
-    drawText(subtotal.toString(), 230, y);
+    drawText((subtotal + deliveryCharge).toString() + "/-", 230, y);
     y -= 10;
-    
+
     // Footer
     drawDottedLine(page, 20, 268, y);
     y -= 15;
@@ -317,10 +334,8 @@ export const generateOrderReceipt = async (order: any) => {
     URL.revokeObjectURL(url);
 };
 
-
-
-
 export const generateMembershipReceipt = (membership: any) => {
+    let { price, finalPrice } = calculateProRatedRevenue(membership);
     let receiptContent = `MEMBERSHIP RECEIPT\n`;
     receiptContent += `Membership ID: ${membership._id}\n`;
     receiptContent += `Start Date: ${new Date(membership.startDate).toLocaleDateString()}\n`;
@@ -331,11 +346,13 @@ export const generateMembershipReceipt = (membership: any) => {
 
     receiptContent += `Membership Details:\n`;
     receiptContent += `${membership.category.title}\n`;
-    receiptContent += `Base Price: ₹${membership.category.finalPrice}\n`;
-    receiptContent += `Extra Charges: ₹${membership.extraCharge || 0}\n`;
-    receiptContent += `Total Amount: ₹${membership.category.finalPrice + (membership.extraCharge ? parseInt(membership.extraCharge) : 0)}\n\n`;
+    receiptContent += `Base Price: ₹${price}\n`;
+    receiptContent += `Discount: -₹${(price-finalPrice)}(${membership.discountPercent}%)\n`;
+    receiptContent += `Extra Charges: ₹${membership?.extraCharge || 0}\n`;
+    receiptContent += `Total Amount: ₹${finalPrice}\n\n`;
     receiptContent += `Delivery Time: ${membership.time}\n`;
-    receiptContent += `Payment Status: ${membership?.isPaid ? 'PAID' : 'COD'}\n`;
+    receiptContent += `Payment Method: ${membership?.paymentId ? 'UPI/Prepaid' : 'COD'}\n`;
+    receiptContent += `Payment Status: ${membership?.isPaid ? 'PAID' : 'NOT PAID'}\n`;
     receiptContent += `Membership Status: ${membership.status}\n`;
 
     const blob = new Blob([receiptContent], { type: 'text/plain' });

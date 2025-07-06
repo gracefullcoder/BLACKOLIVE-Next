@@ -9,10 +9,10 @@ export const getUserByMail = async (email: string) => {
 
         console.log(userData)
         if (!userData) {
-            return { success: true, user: false }
+            return { success: true, user: false, message: "User Not Found" };
         }
 
-        return { success: true, user: JSON.parse(JSON.stringify(userData)) };
+        return { success: true, user: JSON.parse(JSON.stringify(userData)),message: "User Fetched Successfully" };
     } catch (error: any) {
         console.log(error);
         return { success: false, message: error.message || "Failed to get User Details" }
@@ -26,10 +26,10 @@ export const getUserByContact = async (contact: number | string) => {
 
         console.log(userData)
         if (!userData) {
-            return { success: true, user: false }
+            return { success: true, user: false, message: "User Not Found" };
         }
 
-        return { success: true, user: JSON.parse(JSON.stringify(userData)) };
+        return { success: true, user: JSON.parse(JSON.stringify(userData)) ,message: "User Fetched Successfully"};
     } catch (error: any) {
         console.log(error);
         return { success: false, message: error.message || "Failed to get User Details" }

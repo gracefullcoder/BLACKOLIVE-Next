@@ -16,9 +16,11 @@ export const UserBasicDetails = ({ order }: any) => {
 
             <div className='mb-1 pb-2  border-b'>
                 <h1 className='font-semibold'>User Details</h1>
-                <p>Id: {order.user._id}</p>
+                {/* <p>Id: {order.user._id}</p> */}
                 <p>Name : {order?.user?.name}</p>
                 <p>email: {order?.user?.email}</p>
+                {order?.adminOrder && <p>Customer Name: {order?.adminOrder?.customerName}</p>}
+
             </div>
 
             <div className="mb-2">
@@ -62,19 +64,82 @@ export const ShowMessage = ({ message }: any) => {
     )
 }
 
-export const OrderButtons = ({ order, setOrders, session, setError, isMembership }: any) => {
+export const OrderButtons = ({ order, setOrders, session, setError, isMembership,setMemberships }: any) => {
 
     const handleStatusUpdate = async (orderId: any, newStatus: any) => {
         try {
-            const updatedOrder = !isMembership ? await updateOrderStatus(orderId, newStatus) : await updateMembershipStatus(orderId, newStatus);
-            console.log("updatedorder status", updatedOrder)
-            if (updatedOrder?.success) {
-                setOrders((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? updatedOrder.product : order
+            let updatedOrder: any;
+
+            if (isMembership) {
+                updatedOrder = await updateMembershipStatus(orderId, newStatus);
+
+                if (updatedOrder?.success) {
+                    toast.success(updatedOrder.message);
+                } else {
+                    toast.error(updatedOrder?.message)
+                    return;
+                }
+
+                setOrders((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
                 )));
+
+                setMemberships((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
+                )));
+
+            } else {
+                updatedOrder = await updateOrderStatus(orderId, newStatus);
+                
+                if (updatedOrder?.success) {
                 toast.success(updatedOrder.message);
             } else {
-                toast(updatedOrder?.message)
+                toast.error(updatedOrder?.message)
+                return;
+            }
+                setOrders((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
+                )));
+
+                setMemberships((prev: any) => (prev.map((order: any) => {
+                    if (order._id === orderId) {
+                        return {
+                            ...order,
+                            assignedTo: updatedOrder?.product?.assignedTo || null,
+                            status: updatedOrder?.product?.status || "Not Sure"
+                        }
+                    } else {
+                        return order
+                    }
+                }
+                )));
             }
 
         } catch (err) {
@@ -87,7 +152,7 @@ export const OrderButtons = ({ order, setOrders, session, setError, isMembership
         <>
             {
                 order.status != "pending" ? <div>
-                    {order.assignedTo._id == session?.data?.user?._id ?
+                    {order?.assignedTo?._id == session?.data?.user?._id ?
                         <div>
                             <button
                                 onClick={() => handleStatusUpdate(order._id, "unassign")}
@@ -117,7 +182,7 @@ export const OrderButtons = ({ order, setOrders, session, setError, isMembership
                 </div>
                     :
                     <button onClick={() => handleStatusUpdate(order._id, "assign")}
-                        className='mt-4 px-4 py-2 rounded w-full bg-green-100 text-green-800 hover:bg-green-200'>
+                        className='my-4 px-4 py-2 rounded w-full bg-green-100 text-green-800 hover:bg-green-200'>
                         Assign Yourself
                     </button>
             }

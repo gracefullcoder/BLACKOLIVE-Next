@@ -8,7 +8,7 @@ async function renderProduct({ searchParams }: { searchParams: any }) {
     const product = await getSpecificProduct(id);
 
     return (
-        <ProductDetails product={product} />
+        <ProductDetails product={product.product} isMembership={product.isMembership} />
     )
 }
 

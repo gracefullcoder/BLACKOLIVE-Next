@@ -6,6 +6,7 @@ import AddressList from "@/src/components/adminorders/create/AddressList";
 import axios from "axios";
 import { getUserByMail, getUserByContact } from "@/src/actions/User";
 import { toast } from 'react-toastify';
+import { handleToast } from '@/src/utility/basic';
 
 function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
 
@@ -24,13 +25,9 @@ function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
     const handleUser = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const result = await getUserByMail(email);
-            if (result?.success) {
-                setUser(result.user);
-                toast.success("User fetched successfully!");
-            } else {
-                toast.error("User not found!");
-            }
+            const result: any = await getUserByMail(email);
+            if (result?.success) setUser(result.user);
+            handleToast(result);
         } catch (error) {
             console.error(error);
             toast.error("Error fetching user by email.");
@@ -40,17 +37,14 @@ function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
     const handleUserPhno = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const result = await getUserByContact(contact);
+            const result: any = await getUserByContact(contact);
             if (result?.success) {
                 setUser(result.user);
                 if (result.user.contact) {
                     setOrderDetails((prev: any) => ({ ...prev, contact: result.user.contact }))
-
                 }
-                toast.success("User fetched successfully!");
-            } else {
-                toast.error("User not found!");
             }
+            handleToast(result);
         } catch (error) {
             console.error(error);
             toast.error("Error fetching user by contact.");
@@ -110,6 +104,17 @@ function AdminOrder({ user, setUser, orderDetails, setOrderDetails }: any) {
                         handleContactSubmit={handleContactSubmit}
                         setContact={setContact}
                     />
+
+                    <div className='my-4'>
+                        <h4 className='my-1'>Customer Name</h4>
+                        <input
+                            type="text"
+                            onChange={(e) => setOrderDetails((prev: any) => { return { ...prev, adminOrder: { customerName: e.target.value } } })}
+                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter Customer"
+                            value={orderDetails.adminOrder.customerName}
+                        />
+                    </div>
 
 
                     <AddressList

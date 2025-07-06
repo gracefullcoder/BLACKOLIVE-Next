@@ -55,15 +55,15 @@ export const resendMail = async (emailData: any) => {
 }
 
 export const orderEmailTemplate = (orderDetails: any) => {
-    const { userName, orderId, address, contact, time, orderItems, totalPrice } = orderDetails;
+    const { userName, orderId, address, contact, time, orderItems, totalAmount } = orderDetails;
 
     const itemsHTML = orderItems
         .map(
-            (item: { product: string; quantity: number; price: number }) => `
+            (item: { title: string; quantity: number; priceCharged: number }) => `
         <tr>
-          <td>${item.product}</td>
+          <td>${item.title}</td>
           <td>${item.quantity}</td>
-          <td>₹${item.price}</td>
+          <td>₹${item.priceCharged}</td>
         </tr>`
         )
         .join("");
@@ -135,7 +135,7 @@ export const orderEmailTemplate = (orderDetails: any) => {
                 ${itemsHTML}
             </table>
 
-            <p><strong>Total Amount:</strong> ₹${totalPrice}</p>
+            <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
             <p>If you have any questions, feel free to contact our support team.</p>
             <p>Best regards,<br>
             <strong>Your Black Olive</strong></p>

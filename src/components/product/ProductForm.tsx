@@ -30,18 +30,24 @@ const ProductForm = () => {
     const [imagePreview, setImagePreview] = useState<any>('');
     const [selectedProduct, setSelectedProduct] = useState("");
 
-    const calculatePrices = (products: any, memProductIds: any, discountPercent: any) => {
-        const memebershipProducts = products.filter((p: any) => (memProductIds.includes(p?._id)));
-        const price = memebershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0);
-        const finalPrice = Math.round(memebershipProducts.reduce((sum: any, curr: any) => (sum + curr.finalPrice), 0) * ((100 - discountPercent) / 100));
+    const calculatePrices = (memebershipProducts: any, discountPercent: any, days = formData.days) => {
+        const weeks = (days == 0 || memebershipProducts?.length == 0) ? 0 : ((days) / (memebershipProducts?.length));
+        const price = memebershipProducts.reduce((sum: any, curr: any) => (sum + curr?.finalPrice), 0) * weeks;
+        const finalPrice = Math.round(memebershipProducts.reduce((sum: any, curr: any) => (sum + curr?.finalPrice), 0) * ((100 - discountPercent) / 100)) * weeks;
         return { price, finalPrice };
     }
 
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
         if (name == "discountPercent") {
-            const { price, finalPrice } = calculatePrices(products, formData.products, value);
+            const { price, finalPrice } = calculatePrices(formData.products, value);
             setFormData((prev: any) => ({ ...prev, price, finalPrice, [name]: value }));
+        }
+        else if (name == "days") {
+            let { price, finalPrice } = calculatePrices(formData.products, formData.discountPercent, value)
+            setFormData((prev: any) => {
+                return { ...prev, [name]: value, price, finalPrice }
+            })
         }
         else setFormData((prev) => ({ ...prev, [name]: value }));
     };
@@ -62,8 +68,9 @@ const ProductForm = () => {
             reader.readAsDataURL(file);
         }
     };
-    
+
     console.log(formData)
+
     const handleSubmit = async (e: any) => {
         e.preventDefault();
         setLoading(true);
@@ -130,23 +137,24 @@ const ProductForm = () => {
 
     console.log(products)
 
-
     const handleAddProduct = () => {
         if (!selectedProduct) return;
 
         const product: any = products.find((p: any) => p._id == selectedProduct);
+        const { price, finalPrice } = calculatePrices([...formData.products, product], formData.discountPercent);
 
         setFormData((prev: any) => ({
             ...prev,
-            price: prev.price + product?.finalPrice,
-            finalPrice: Math.round(prev.finalPrice + product.finalPrice * ((100 - (formData?.discountPercent || 0)) / 100)),
-            products: [...prev.products, selectedProduct]
+            price,
+            finalPrice,
+            products: [...prev.products, product]
         }));
     };
 
     const handleRemoveProduct = (pId: any) => {
         const membershipProducts = formData?.products?.filter((p: any) => p !== pId);
-        const { price, finalPrice } = calculatePrices(products, membershipProducts, formData.discountPercent);
+        console.log(membershipProducts);
+        const { price, finalPrice } = calculatePrices(membershipProducts, formData.discountPercent);
         setFormData((prev: any) => ({
             ...prev,
             products: membershipProducts,
@@ -384,7 +392,13 @@ const ProductForm = () => {
                                                     className="flex items-center gap-2 border border-gray-300 px-3 py-1 rounded-md bg-gray-100"
                                                 >
                                                     <span>
-                                                        {(products.find((p: any) => p._id === product) as any)?.title}
+                                                        {product?.title}
+                                                    </span>
+                                                    <span>
+                                                        {product?.price}
+                                                    </span>
+                                                    <span>
+                                                        {product?.finalPrice}
                                                     </span>
                                                     <button
                                                         type="button"

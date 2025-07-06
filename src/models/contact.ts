@@ -3,6 +3,10 @@ import mongoose from "mongoose";
 const { Schema } = mongoose;
 
 const contactSchema = new Schema({
+    user: {
+        type: Schema.ObjectId,
+        ref: "User"
+    },
     name: {
         type: String
     },
@@ -10,7 +14,7 @@ const contactSchema = new Schema({
         type: String
     },
     contact: {
-        type: Number
+        type: String
     },
     message: {
         type: String
