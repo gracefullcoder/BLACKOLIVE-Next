@@ -10,15 +10,27 @@ import AuthConfig from "../lib/auth";
 import { membershipEmailTemplate, orderEmailTemplate, resendMail, sendMail } from "../utility/mail";
 import { toast } from "react-toastify";
 import Additionals from "../models/additionals";
+import { getTodayItem } from "../utility/MembershipUtils/MembershipUtility";
+import { validateSignature } from "./Payment";
+import { MembershipCreationType, OrderCreationType } from "../types/orderType";
+
+
 
 export const createOrder = async (
-    userId: string,
-    orderItems: Array<{ product: string, quantity: number, priceCharged: number }>,
-    addressId: number,
-    contact: number,
-    time: string,
-    message: string,
-    isPaid?: boolean
+    {
+        userId,
+        orderItems,
+        addressId,
+        contact,
+        time,
+        message,
+        isPaid,
+        totalAmount,
+        deliveryCharge,
+        paymentId,
+        adminOrder
+    }: OrderCreationType,
+    paymentData?: any
 ) => {
     try {
         const user = await User.findById(userId);
@@ -27,28 +39,33 @@ export const createOrder = async (
             return { success: false, message: "User not found" };
         }
 
-
-        const productIds = orderItems.map((item: any) => item.product);
-        const products = await Product.find({ _id: { $in: productIds } });
-
-        console.log(products)
-
-        const unavailableProducts: string[] = [];
-        const orderedProducts: any = [];
-
-        products.forEach((product, idx) => {
-            if (!product.isAvailable) {
-                unavailableProducts.push(product.title)
-            }
-            orderedProducts.push({ product: product.title, price: product.finalPrice, quantity: orderItems[idx].quantity });
-        })
-
-        if (unavailableProducts.length != 0) {
-            return {
-                success: false,
-                message: `${unavailableProducts.toString()}`.concat(" Unavailable")
-            };
+        if (paymentData) {
+            let isValid = await validateSignature(paymentData);
+            if (!isValid) return { success: false, message: "Created Mismatch in request you will be blocked!" };
+            console.log("razorpay verified paymnet ", isValid);
         }
+
+        // const productIds = orderItems.map((item: any) => item.product);
+        // const products = await Product.find({ _id: { $in: productIds } });
+
+        // console.log(products)
+
+        // const unavailableProducts: string[] = [];
+        // const orderedProducts: any = [];
+
+        // products.forEach((product, idx) => {
+        //     if (!product.isAvailable) {
+        //         unavailableProducts.push(product.title)
+        //     }
+        //     orderedProducts.push({ product: product.title, price: product.finalPrice, quantity: orderItems[idx].quantity });
+        // })
+
+        // if (unavailableProducts.length != 0) {
+        //     return {
+        //         success: false,
+        //         message: `${unavailableProducts.toString()}`.concat(" Unavailable")
+        //     };
+        // }
 
         const selectedAddress = user.addresses[addressId];
         if (!selectedAddress) {
@@ -63,7 +80,10 @@ export const createOrder = async (
             time,
             overallRating: 0,
             message,
-            isPaid: typeof (isPaid) == "boolean" ? isPaid : false
+            isPaid: typeof (isPaid) == "boolean" ? isPaid : false,
+            paymentId,
+            deliveryCharge,
+            adminOrder
         });
 
         await User.findByIdAndUpdate(userId, {
@@ -71,7 +91,7 @@ export const createOrder = async (
             $set: { cart: [] }
         });
 
-        const orderDetails = { userName: user.name, orderId: order._id, address: selectedAddress, contact, time, orderItems: orderedProducts, totalPrice: orderedProducts.reduce((acc: any, item: any) => acc + item.finalPrice * item.quantity, 0) };
+        const orderDetails = { userName: user.name, orderId: order._id, address: selectedAddress, contact, time, orderItems, totalAmount };
         const mailRes = await resendMail({ email: user.email, subject: "Order Confirmation", html: orderEmailTemplate(orderDetails) });
 
         return { success: true, mailRes, message: "Order created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
@@ -106,67 +126,54 @@ export const verifyUserDetails = async (userId: string) => {
 };
 
 
-export const createMembership = async (
-    userId: string,
-    orderItem: string,
-    addressId: number,
-    contact: number,
-    time: number,
-    startDate: Date,
-    message: string,
-    days: number,
-    products: any,
-    discountPercent: number,
-    extraCharge?: number,
-    isPaid?: boolean,
-    adminOrder?: any | null
-) => {
+export const createMembership = async (membershipData: MembershipCreationType, mailData?: any, paymentData?: any,) => {
     try {
-        const user = await User.findById(userId);
+
+        if (paymentData) {
+            let isValid = await validateSignature(paymentData);
+            if (!isValid) return { success: false, message: "Created Mismatch in request you will be blocked!" };
+            console.log("razorpay verified paymnet ", isValid);
+        }
+
+        const user = await User.findById(membershipData.user);
         if (!user) {
             return { success: false, message: "User not found" };
         }
 
-        const selectedAddress = user.addresses[addressId];
-        if (!selectedAddress) {
-            return { success: false, message: "Address not found" };
+        // Validate address structure
+        if (!membershipData.address || !membershipData.address.number || !membershipData.address.address || !membershipData.address.pincode) {
+            return { success: false, message: "Invalid address structure" };
         }
 
-        const memebershipDetails = await MembershipProduct.findById(orderItem);
+        // const memebershipDetails = await MembershipProduct.findById(membershipData.category);
 
         // const graphLength = memebershipDetails.days + memebershipDetails.bonus
         // const deliveryGraph = new Array(graphLength).fill(1);
 
         // for (let i = memebershipDetails.days; i < graphLength; i++) deliveryGraph[i] = 0
 
-        console.log(time)
-        const order = await MembershipOrder.create({
-            category: orderItem,
-            user: userId,
-            address: selectedAddress,
-            contact: contact || user.contact,
-            time,
-            products,
-            days,
-            discountPercent,
-            overallRating: 0,
-            startDate,
-            isPaid,
-            extraCharge,
-            message,
-            adminOrder: adminOrder ? adminOrder : null
+        const order = await MembershipOrder.create(membershipData);
+
+        await User.findByIdAndUpdate(membershipData.user, {
+            $push: { membershipDetails: order._id }
         });
 
-        await User.findByIdAndUpdate(userId, {
-            $push: { membershipDetails: order._id },
-            $set: { cart: [] }
-        });
-
-        const orderDetails = { userName: user.name, orderId: order._id, address: selectedAddress, contact, time, orderItems: [{ product: memebershipDetails.title, price: memebershipDetails.finalPrice, days: memebershipDetails.days }], totalPrice: memebershipDetails.finalPrice };
+        const orderDetails = {
+            userName: user.name,
+            orderId: order._id,
+            address: membershipData.address,
+            contact: membershipData.contact,
+            time: membershipData.time,
+            orderItems: [{
+                product: mailData.title,
+                price: mailData.finalPrice,
+                days: membershipData.days
+            }],
+            totalPrice: mailData.finalPrice
+        };
         const mailRes = await resendMail({ email: user.email, subject: "Membership Confirmation", html: membershipEmailTemplate(orderDetails) });
 
-
-        return { success: true, mailRes, message: "Membership created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
+        return { success: true, message: "Membership created successfully", mailRes, orderId: JSON.parse(JSON.stringify(order._id)) };
     } catch (error) {
         console.error("Error creating order:", error);
         return { success: false, message: "Failed to create order" };
@@ -208,7 +215,8 @@ export async function getMembershipOrder(id: string, userId: string) {
         const details = await User.findById(userId).select("membershipDetails");
 
         if (details.membershipDetails.includes(id)) {
-            const data = await MembershipOrder.findById(id).populate({ path: 'category', model: MembershipProduct, populate: { path: "additionals", model: Additionals } });
+            const data = await MembershipOrder.findById(id)
+                .populate({ path: 'category', model: MembershipProduct });
             console.log(data)
             return JSON.parse(JSON.stringify(data));
         }
@@ -283,8 +291,13 @@ export const postponeMembershipByDate = async (mId: string, date: any) => {
         if (membership?.postponedDates?.some((date: any) => (date.toString() == postponeDate.toString()))) {
             return { success: false, message: "Already Added for postpone" }
         } else {
-            console.log("Herer to update psotoen dat", membership.postponedDates, postponeDate)
-            await MembershipOrder.findByIdAndUpdate(mId, { $push: { postponedDates: postponeDate } })
+            const { currentProduct, isItemPostponed } = getTodayItem(membership, false);
+
+            if (isItemPostponed)
+                await MembershipOrder.findByIdAndUpdate(mId, { $push: { postponedDates: postponeDate } })
+            else
+                await MembershipOrder.findByIdAndUpdate(mId, { $push: { postponedDates: postponeDate, postponedItems: currentProduct?._id } })
+
             return { success: true, message: `Order Postponed for Date ${postponeDate.getDate()}` }
         }
 
@@ -319,7 +332,8 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "assigned", assignedTo: assignReq ? assignUser : user._id },
                     { new: true }
-                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
+                )
+                    .populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "unassign") {
@@ -327,7 +341,9 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "pending", assignedTo: null },
                     { new: true }
-                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
+                )
+                    .populate({ path: 'orders.product', model: Product })
+                    .populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "delivered") {
@@ -335,7 +351,9 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "delivered" },
                     { new: true }
-                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
+                )
+                    .populate({ path: "assignedTo", model: User, select: "name" });
+
                 return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "cancelled") {
@@ -343,7 +361,8 @@ export async function updateOrderStatus(orderId: any, newStatus: any, assignReq?
                     orderId,
                     { status: "cancelled" },
                     { new: true }
-                ).populate({ path: 'orders.product', model: Product }).populate({ path: "assignedTo", model: User, select: "name" });
+                )
+                    .populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Marked as Cancelled", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
         } else {
@@ -367,7 +386,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any, assig
                     orderId,
                     { status: "assigned", assignedTo: assignReq ? assignUser : user._id },
                     { new: true }
-                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
+                ).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Assigned", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "unassign") {
@@ -375,31 +394,36 @@ export async function updateMembershipStatus(orderId: any, newStatus: any, assig
                     orderId,
                     { status: "pending", assignedTo: null },
                     { new: true }
-                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
+                ).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Updated", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
             else if (newStatus == "delivered") {
                 const utcDate = new Date();
                 utcDate.setUTCHours(0, 0, 0, 0);
-                const updatedOrder = await MembershipOrder.findByIdAndUpdate(
-                    orderId,
-                    { $push: { deliveryDates: utcDate } },
-                    { new: true }
-                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
+                const membershipDetails = await MembershipOrder.findByIdAndUpdate(orderId).populate({ path: "assignedTo", model: User, select: "name" });;
 
-                if (updatedOrder.deliveryDates.length === updatedOrder.category.days) {
-                    updatedOrder.status = "delivered";
-                    await updatedOrder.save();
+                let { isItemPostponed } = getTodayItem(membershipDetails, false);
+
+                if (isItemPostponed) {
+                    membershipDetails?.postponedItems?.splice(0, 1);
                 }
 
-                return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(updatedOrder)) }
+                if (membershipDetails.deliveryDates.length === membershipDetails.days - 1) {
+                    membershipDetails.status = "delivered";
+                }
+
+                membershipDetails.deliveryDates.push(utcDate)
+
+                await membershipDetails.save();
+
+                return { success: true, message: "Marked as Delivered", product: JSON.parse(JSON.stringify(membershipDetails)) }
             }
             else if (newStatus == "cancelled") {
                 const updatedOrder = await MembershipOrder.findByIdAndUpdate(
                     orderId,
                     { status: "cancelled" },
                     { new: true }
-                ).populate({ path: 'category', model: MembershipProduct }).populate({ path: "assignedTo", model: User, select: "name" });
+                ).populate({ path: "assignedTo", model: User, select: "name" });
                 return { success: true, message: "Marked as Cancelled", product: JSON.parse(JSON.stringify(updatedOrder)) }
             }
         } else {
@@ -548,36 +572,44 @@ export async function getFilteredOrders(timeRange: any, status: any, inverse: bo
     }
 }
 
-export async function getFilteredMemberships(timeRange: any, status: any, inverse: boolean, active: boolean, delivery: boolean) {
+export async function getFilteredMemberships(timeRange: any, status: any, isStatusInverse: boolean, isActive: boolean, isDelivery: boolean, forTomorrow?: boolean) {
     try {
         await connectToDatabase();
         let query: any = {};
 
         if (status !== null) {
+            //This is just for one status
             if (typeof (status) == 'string') {
-                query.status = inverse ?
+                query.status = isStatusInverse ?
                     { $ne: status }
                     : status
-            } else {
-                query.status = inverse ?
+            }
+            //this case agar multiple status
+            else {
+                query.status = isStatusInverse ?
                     { $nin: status }
                     : { $in: status }
             }
         }
 
-        const utcDate = new Date();
+
+        let utcDate = new Date();
+        if (forTomorrow) {
+            utcDate.setDate(utcDate.getDate() + 1);
+        }
         utcDate.setUTCHours(0, 0, 0, 0);
 
-        if (active) {
+
+        if (isActive) {
             query.startDate = { $lte: utcDate }
         }
 
-        if (delivery) {
+        if (isDelivery) {
             query.deliveryDates = { $nin: [utcDate] }
             query.postponedDates = { $nin: [utcDate] }
         }
 
-        // Add time filter
+        // time filter
         if (timeRange) {
             const currentTime = new Date();
             const startTime = new Date(currentTime);
