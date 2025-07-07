@@ -165,7 +165,7 @@ const Cart = () => {
 
   useEffect(() => {
     validatePincode();
-  }, [isOpen,selectedAddress])
+  }, [isOpen, selectedAddress])
 
   const validateCheckout = () => {
     if (!time) {
@@ -411,6 +411,7 @@ const Cart = () => {
                 </div>
 
                 {/* Address Selection */}
+                
 
                 <div className="flex justify-between items-center">
                   <p className="font-semibold">Delivery Address</p>
@@ -422,9 +423,7 @@ const Cart = () => {
                   </button>
                 </div>
 
-                {userAddresses.length > 0 ? (
-                  <div className="max-h-60 overflow-y-auto">
-                    <div className="mb-2">
+                <div className="mb-2">
 
                       {isAddingAddress && (
                         <form onSubmit={handleAddAddress} className="mt-2 space-y-2">
@@ -472,6 +471,8 @@ const Cart = () => {
                       )}
                     </div>
 
+                {userAddresses.length > 0 ? (
+                  <div className="max-h-60 overflow-y-auto">
                     {userAddresses.map((addr: any, idx: number) => (
                       <div
                         key={idx}
@@ -484,8 +485,10 @@ const Cart = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-2 p-3 bg-yellow-50 rounded-lg text-center">
-                    <p className="text-sm text-yellow-700">No addresses added yet</p>
+                  <div>
+                    <div className="mt-2 p-3 bg-yellow-50 rounded-lg text-center">
+                      <p className="text-sm text-yellow-700">No addresses added yet</p>
+                    </div>
                   </div>
                 )}
 
