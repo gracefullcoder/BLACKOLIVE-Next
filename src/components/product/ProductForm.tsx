@@ -278,7 +278,7 @@ const ProductForm = () => {
                         </div>
 
                         {
-                            isMembership == "membership" && <>
+                            isMembership == "membership" ? <>
 
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
@@ -413,7 +413,32 @@ const ProductForm = () => {
                                     )}
 
                                 </div>
-                            </>
+                            </> :
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Price
+                                        </label>
+                                        <input type='number'
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            onChange={handleInputChange}
+                                            value={formData.price}
+                                            name='price'
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Final Price
+                                        </label>
+                                        <input type='number'
+                                            value={formData.finalPrice}
+                                            onChange={handleInputChange}
+                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            name='finalPrice'
+                                        />
+                                    </div>
+                                </div>
                         }
 
                         <div className="flex items-center">
