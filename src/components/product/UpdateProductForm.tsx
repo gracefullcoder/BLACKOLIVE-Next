@@ -19,7 +19,8 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
         price: "",
         finalPrice: "",
         isAvailable: true,
-        responses: []
+        responses: [],
+        timings: ""
     } :
         {
             title: "",
@@ -252,159 +253,190 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Timings
-                            </label>
-                            <input
-                                type="text"
-                                name="timings"
-                                value={formData?.timings?.toString()}
-                                onChange={handleInputChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
+
                         {
-                            isMembership && <>
-
-                                <div className="grid grid-cols-3 gap-4">
+                            isMembership ?
+                                <>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">
-                                            Bonus
+                                            Timings
                                         </label>
                                         <input
-                                            type="number"
-                                            name="bonus"
-                                            value={formData.bonus}
+                                            type="text"
+                                            name="timings"
+                                            value={formData?.timings?.toString()}
                                             onChange={handleInputChange}
                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                            required
                                         />
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Bonus
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="bonus"
+                                                value={formData.bonus}
+                                                onChange={handleInputChange}
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Days
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="days"
+                                                value={formData.days}
+                                                onChange={handleInputChange}
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Discount
+                                            </label>
+                                            <input
+                                                type="number"
+                                                name="discountPercent"
+                                                value={formData.discountPercent}
+                                                onChange={handleInputChange}
+                                                className="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                required
+                                            />
+
+                                        </div>
+
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">
-                                            Days
+                                            Add Products
                                         </label>
-                                        <input
-                                            type="number"
-                                            name="days"
-                                            value={formData.days}
-                                            onChange={handleInputChange}
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                            required
-                                        />
+
+                                        <div className='flex justify-between gap-4'>
+                                            <select name="products"
+                                                className="mt-1 p-2 block w-1/2 border-gray-300 rounded-md shadow-sm"
+                                                onChange={(e) => setSelectedProduct(e.target.value)}
+                                            >
+                                                <option value="">Select</option>
+                                                {products.map((product: any) => (
+                                                    <option value={product._id} key={product._id}>
+                                                        {product.title}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            <div
+                                                className="mt-1 block w-1/2 border text-center cursor-pointer border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                onClick={handleAddProduct}
+                                            >
+                                                Add in Mebership
+                                            </div>
+                                        </div>
+
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">
-                                            Discount
-                                        </label>
-                                        <input
-                                            type="number"
-                                            name="discountPercent"
-                                            value={formData.discountPercent}
-                                            onChange={handleInputChange}
-                                            className="mt-1 w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                            required
-                                        />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Price
+                                            </label>
+                                            <div
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            >
+                                                {formData.price}
+                                            </div>
+                                        </div>
 
-                                    </div>
-
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Add Products
-                                    </label>
-
-                                    <div className='flex justify-between gap-4'>
-                                        <select name="products"
-                                            className="mt-1 p-2 block w-1/2 border-gray-300 rounded-md shadow-sm"
-                                            onChange={(e) => setSelectedProduct(e.target.value)}
-                                        >
-                                            <option value="">Select</option>
-                                            {products.map((product: any) => (
-                                                <option value={product._id} key={product._id}>
-                                                    {product.title}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <div
-                                            className="mt-1 block w-1/2 border text-center cursor-pointer border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                            onClick={handleAddProduct}
-                                        >
-                                            Add in Mebership
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700">
+                                                Final Price
+                                            </label>
+                                            <div
+                                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                            >
+                                                {formData.finalPrice}
+                                            </div>
                                         </div>
                                     </div>
 
-                                </div>
 
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Selected Products
+                                        </label>
+
+
+
+                                        {formData?.products?.length === 0 ? (
+                                            <p>No product added</p>
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {formData?.products?.map((product: any, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center gap-2 border border-gray-300 px-3 py-1 rounded-md bg-gray-100"
+                                                    >
+                                                        <span>
+                                                            {product?.title}
+                                                        </span>
+                                                        <span>
+                                                            {product?.price}
+                                                        </span>
+                                                        <span>
+                                                            {product?.finalPrice}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="text-red-500 hover:text-red-700"
+                                                            onClick={() => handleRemoveProduct(product)}
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                    </div>
+                                </> :
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">
                                             Price
                                         </label>
-                                        <div
+                                        <input
+                                            type="number"
+                                            name="price"
+                                            value={formData.price}
+                                            onChange={handleInputChange}
                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            {formData.price}
-                                        </div>
+                                            required
+                                        />
                                     </div>
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">
                                             Final Price
                                         </label>
-                                        <div
+                                        <input
+                                            type="number"
+                                            name="finalPrice"
+                                            value={formData.finalPrice}
+                                            onChange={handleInputChange}
                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                        >
-                                            {formData.finalPrice}
-                                        </div>
+                                            required
+                                        />
                                     </div>
                                 </div>
 
-
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">
-                                        Selected Products
-                                    </label>
-
-
-
-                                    {formData?.products?.length === 0 ? (
-                                        <p>No product added</p>
-                                    ) : (
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {formData?.products?.map((product: any, index: number) => (
-                                                <div
-                                                    key={index}
-                                                    className="flex items-center gap-2 border border-gray-300 px-3 py-1 rounded-md bg-gray-100"
-                                                >
-                                                    <span>
-                                                        {product?.title}
-                                                    </span>
-                                                    <span>
-                                                        {product?.price}
-                                                    </span>
-                                                    <span>
-                                                        {product?.finalPrice}
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        className="text-red-500 hover:text-red-700"
-                                                        onClick={() => handleRemoveProduct(product)}
-                                                    >
-                                                        ✕
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                </div>
-                            </>
                         }
 
                         <div className="flex items-center">

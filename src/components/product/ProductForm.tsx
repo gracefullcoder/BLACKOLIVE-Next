@@ -264,21 +264,21 @@ const ProductForm = () => {
 
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">
-                                Timings
-                            </label>
-                            <input
-                                type="text"
-                                name="timings"
-                                value={formData.timings}
-                                onChange={handleInputChange}
-                                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            />
-                        </div>
 
                         {
                             isMembership == "membership" ? <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Timings
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="timings"
+                                        value={formData.timings}
+                                        onChange={handleInputChange}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                </div>
 
                                 <div className="grid grid-cols-3 gap-4">
                                     <div>
