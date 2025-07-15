@@ -68,7 +68,7 @@ export async function displayRazorpay(
       orderDetails['paymentId'] = paymentData.razorpayPaymentId;
 
       const mailData = { title: additionalDetails?.productDetails?.title, finalPrice: totalAmount };
-      const result = await updateFnx(orderDetails, paymentData, mailData);
+      const result = await updateFnx(orderDetails, mailData, paymentData);
 
       handleToast(result);
       handleToast({ success: result?.mailRes, message: "Mail sent!" });

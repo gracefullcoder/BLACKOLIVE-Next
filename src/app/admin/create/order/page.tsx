@@ -114,7 +114,7 @@ export default function Page() {
                 orderDetails: orderData,
                 totalAmount,
                 additionalDetails,
-                updateFnx: async (orderDetailsWithPayment: any, paymentData: any) => {
+                updateFnx: async (orderDetailsWithPayment: any, mailData: any, paymentData: any) => {
                     // Call createOrder with paymentData
                     const response = await createOrder(orderDetailsWithPayment, paymentData);
                     if (response.success) {

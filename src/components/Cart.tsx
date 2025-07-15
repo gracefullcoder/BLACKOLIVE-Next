@@ -209,7 +209,7 @@ const Cart = () => {
     };
   }, [isOpen]);
 
-  const orderCreation = async (orderDetails: any, paymentData?: any) => {
+  const orderCreation = async (orderDetails: any,mailData?:any, paymentData?: any) => {
     try {
       let response;
       if (paymentData) {
