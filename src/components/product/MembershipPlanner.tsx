@@ -56,9 +56,9 @@ const MembershipPlanner = ({ isModalOpen, setIsModalOpen, membershipData, weekly
           />
 
           {/* Modal Content */}
-          <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 relative">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 relative flex-shrink-0">
               <button
                 onClick={closeModal}
                 className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
@@ -79,39 +79,15 @@ const MembershipPlanner = ({ isModalOpen, setIsModalOpen, membershipData, weekly
                     <span className="font-semibold">{membershipData.discountPercent}%</span> on product selling price.
                   </p>
                 </div>
-
-                {/* <div className="bg-white rounded-xl shadow p-4 text-sm text-gray-700 w-64 ml-auto">
-                  <h3 className="text-base font-semibold text-green-600 mb-3">Billing Summary</h3>
-
-                  <div className="flex justify-between py-1">
-                    <span>Total Price</span>
-                    <span className="font-medium text-gray-900">₹{priceDetails.price}.00</span>
-                  </div>
-
-                  <div className="flex justify-between py-1">
-                    <span>Discount ({membershipData.discountPercent}%)</span>
-                    <span className="font-medium text-red-600">
-                      – ₹{priceDetails.price - priceDetails.finalPrice}.00
-                    </span>
-                  </div>
-
-                  <div className="border-t border-gray-200 my-2"></div>
-
-                  <div className="flex justify-between py-1 text-base font-semibold text-green-700">
-                    <span>To Pay</span>
-                    <span>₹{priceDetails.finalPrice}.00</span>
-                  </div>
-                </div> */}
               </div>
-
             </div>
 
-
-            {/* Content */}
-            <div className="p-6 max-h-[calc(90vh-200px)] overflow-y-auto">
+            {/* Content Area with Natural Scrolling */}
+            <div className="flex-1 overflow-y-auto p-6">
               <div className="grid gap-4">
                 {daysOfWeek?.map((day: any, index: number) => (
                   <div key={day} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    {/* Day content remains the same */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
@@ -146,7 +122,7 @@ const MembershipPlanner = ({ isModalOpen, setIsModalOpen, membershipData, weekly
                       </div>
                     </div>
 
-                    {/* Dropdown for Product Selection */}
+                    {/* Product Selection Dropdown */}
                     <div className="relative">
                       <button
                         onClick={() => toggleDropdown(day)}
@@ -193,49 +169,45 @@ const MembershipPlanner = ({ isModalOpen, setIsModalOpen, membershipData, weekly
                   </div>
                 ))}
               </div>
-              <div className="self-start bg-white rounded-xl shadow mt-4 p-4 text-sm text-gray-700 w-full">
-                <h3 className="text-base font-semibold text-green-600 mb-3">Billing Summary</h3>
 
+              {/* Billing Summary (now part of content flow) */}
+              <div className="bg-white rounded-xl shadow p-4 text-sm text-gray-700 w-full mt-6">
+                <h3 className="text-base font-semibold text-green-600 mb-3">Billing Summary</h3>
                 <div className="flex justify-between py-1">
                   <span>Total Price</span>
                   <span className="font-medium text-gray-900">₹{priceDetails.price}.00</span>
                 </div>
-
                 <div className="flex justify-between py-1">
                   <span>Discount ({membershipData.discountPercent}%)</span>
                   <span className="font-medium text-red-600">
                     - ₹{priceDetails.price - priceDetails.finalPrice}.00
                   </span>
                 </div>
-
                 <div className="border-t border-gray-200 my-2"></div>
-
                 <div className="flex justify-between py-1 text-base font-semibold text-green-700">
                   <span>To Pay</span>
                   <span>₹{priceDetails.finalPrice}.00</span>
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons (now part of content flow) */}
               <div className="mt-6 flex gap-3 justify-end">
-                <div className='flex gap-4 felx-wrap'>
-                  <button
-                    onClick={closeModal}
-                    className="px-6 py-2 border h-fit border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      savePlan();
-                      console.log('Weekly plan saved:', modifiedPlan);
-                      closeModal();
-                    }}
-                    className="px-6 py-2 h-fit bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
-                  >
-                    Save Weekly Plan
-                  </button>
-                </div>
+                <button
+                  onClick={closeModal}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    savePlan();
+                    console.log('Weekly plan saved:', modifiedPlan);
+                    closeModal();
+                  }}
+                  className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
+                >
+                  Save Weekly Plan
+                </button>
               </div>
             </div>
           </div>
