@@ -266,7 +266,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
             <div ref={porductDetail} />
             <div className="relative py-16 px-6 md:px-12 lg:px-20">
                 <div className="flex flex-col lg:flex-row justify-center items-center gap-10 lg:gap-20">
-                    <img src={product.image} alt={product.title} className="h-[32rem] rounded-3xl" />
+                    <img src={product.image} alt={product.title} className="h-[32rem] rounded-3xl self-start mt-4" />
                     <div className="max-w-xl text-center lg:text-left">
                         <p className="text-sm md:text-base text-slate-400">{product.speciality}</p>
                         <h1 className="text-3xl md:text-5xl font-bold tracking-wide mt-4">{product.title}</h1>
@@ -278,7 +278,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
 
                         <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
                         <div className='flex gap-2 mt-2 text-lg'>
-                            <p className='text-slate-600 whitespace-nowrap text-xl'>Delivery Time:</p>
+                            <p className='text-slate-800 whitespace-nowrap'>Delivery Time:</p>
                             <ul className='flex gap-2 flex-wrap'>
                                 {timings.map((t: any, idx: any) => (
                                     <li key={t._id + idx} className='bg-gray-100 px-2 py-1 rounded text-sm'>
@@ -288,33 +288,43 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                             </ul>
                         </div>
 
-                        <div>
+                        <div className='mt-4 mb-4'>
                             {
                                 isMembership ?
-                                    <div className='flex items-center gap-8'>
+                                    <div className='flex items-center gap-4 flex-wrap justify-center max-[500px]:justify-center sm:justify-start'>
                                         <div>
-                                            <p className="text-black mt-6 mb-2">Select Start Date</p>
-                                            <input type="date" className='border p-2 rounded-3xl'
-                                                name='startDate' onChange={(e) => handleDetailsChange(e)}
+                                            <p className="text-black">Select Start Date</p>
+                                            <input
+                                                type="date"
+                                                className='border p-2 rounded-3xl'
+                                                name='startDate'
+                                                onChange={(e) => handleDetailsChange(e)}
                                                 min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
                                                 value={membershipDetails.startDate}
                                             />
                                         </div>
                                         <div>
-                                            <p className="text-black mt-6 mb-2">Timings</p>
-                                            <select className='border p-2 rounded-3xl'
-                                                name="time" onChange={(e) => handleDetailsChange(e)} >
-                                                {
-                                                    timings?.map((t: any, i: number) => <option key={i} value={t.deliveryTime}>{t.display}</option>)
-                                                }
+                                            <p className="text-black">Timings</p>
+                                            <select
+                                                className='border p-2 rounded-3xl'
+                                                name="time"
+                                                onChange={(e) => handleDetailsChange(e)}
+                                            >
+                                                {timings?.map((t: any, i: number) => (
+                                                    <option key={i} value={t.deliveryTime}>{t.display}</option>
+                                                ))}
                                             </select>
                                         </div>
 
-                                        <CustomizeButton product={product} weeklyPlan={weeklyPlan} setWeeklyPlan={setWeeklyPlan} daysOfWeek={daysOfWeek} />
-
+                                        <CustomizeButton
+                                            product={product}
+                                            weeklyPlan={weeklyPlan}
+                                            setWeeklyPlan={setWeeklyPlan}
+                                            daysOfWeek={daysOfWeek}
+                                        />
                                     </div> :
 
-                                    <div className="flex items-center gap-8 mt-6">
+                                    <div className="flex items-center gap-4 mt-6">
                                         <p className="text-slate-600 whitespace-nowrap text-xl">Quantity</p>
                                         <div className="flex items-center gap-4 px-4 py-2 border border-slate-200 rounded-full">
                                             <button
