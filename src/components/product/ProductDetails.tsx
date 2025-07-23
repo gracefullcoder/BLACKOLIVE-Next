@@ -59,8 +59,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
     useEffect(() => {
         const getPincodes = async () => {
             const feature = await featureDetails();
-            const formattedTimings = feature.deliveryTimings.map((t: any) => formatTime(t?.deliveryTime));
-            setTimings(formattedTimings);
+            setTimings(feature.deliveryTimings);
             setPincodes(feature.pincodes)
         }
 
@@ -166,13 +165,13 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
         return true;
     };
 
-    const membershipCreation = async (orderDetails: MembershipCreationType,mailData:any, paymentData?: any) => {
+    const membershipCreation = async (orderDetails: MembershipCreationType, mailData: any, paymentData?: any) => {
         let response;
 
         if (paymentData) {
-            response = await createMembership(orderDetails,mailData, paymentData);
+            response = await createMembership(orderDetails, mailData, paymentData);
         } else {
-            response = await createMembership(orderDetails,mailData);
+            response = await createMembership(orderDetails, mailData);
         }
 
         if (response.success) setMembershipDetails(initMemDetails)
@@ -223,9 +222,9 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                 displayRazorpay({ totalAmount, orderDetails, additionalDetails, updateFnx: membershipCreation });
             } else {
                 const mailData = { finalPrice: totalAmount, title: product?.title }
-                let res:any = await membershipCreation(orderDetails,mailData);
+                let res: any = await membershipCreation(orderDetails, mailData);
                 handleToast(res);
-                handleToast({success:res?.mailRes,message:"Membership Mail sent!"});
+                handleToast({ success: res?.mailRes, message: "Membership Mail sent!" });
             }
 
         } catch (error) {
@@ -278,16 +277,20 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                         </div>
 
                         <p className="mt-6 text-sm md:text-base text-slate-600">{product.details}</p>
-                        <p className="mt-8 text-sm md:text-base text-slate-600">
-                            Delivery Time: {isMembership ? product.timings.map((t: any) => {
-                                return `${formatTime(t)} `
-                            }) :
-                                timings.map((t) => `${t} `)}
-                        </p>
+                        <div className='flex gap-2 mt-2 text-lg'>
+                            <p className='text-slate-600 whitespace-nowrap text-xl'>Delivery Time:</p>
+                            <ul className='flex gap-2 flex-wrap'>
+                                {timings.map((t: any, idx: any) => (
+                                    <li key={t._id + idx} className='bg-gray-100 px-2 py-1 rounded text-sm'>
+                                        {t.display}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
 
                         <div>
                             {
-                                product.products ?
+                                isMembership ?
                                     <div className='flex items-center gap-8'>
                                         <div>
                                             <p className="text-black mt-6 mb-2">Select Start Date</p>
@@ -302,7 +305,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                                             <select className='border p-2 rounded-3xl'
                                                 name="time" onChange={(e) => handleDetailsChange(e)} >
                                                 {
-                                                    product?.timings?.map((t: any, i: number) => <option key={i} value={t}>{formatTime(t)}</option>)
+                                                    timings?.map((t: any, i: number) => <option key={i} value={t.deliveryTime}>{t.display}</option>)
                                                 }
                                             </select>
                                         </div>
@@ -311,19 +314,21 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
 
                                     </div> :
 
-                                    <div>
-                                        <p className="text-slate-500 mt-6">Quantity</p>
-
-                                        <div className="flex gap-8 px-4 py-2 border w-fit rounded-3xl mt-2 items-center text-3xl max-lg:mx-auto">
+                                    <div className="flex items-center gap-8 mt-6">
+                                        <p className="text-slate-600 whitespace-nowrap text-xl">Quantity</p>
+                                        <div className="flex items-center gap-4 px-4 py-2 border border-slate-200 rounded-full">
                                             <button
-                                                className={`cursor-pointer font-bold`}
+                                                className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-lg font-bold text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
                                                 onClick={handleDecrease}
+                                                disabled={quantity <= 1}
                                             >
-                                                -
+                                                −
                                             </button>
-                                            <div className="text-xl">{quantity}</div>
+                                            <div className="text-base font-medium w-6 text-center">
+                                                {quantity}
+                                            </div>
                                             <button
-                                                className={`cursor-pointer font-bold`}
+                                                className="w-6 h-6 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-lg font-bold text-slate-700"
                                                 onClick={handleIncrease}
                                             >
                                                 +

@@ -267,6 +267,7 @@ const UserProfile = ({ user }: any) => {
                                         value={newAddress.landmark}
                                         onChange={(e: any) => setNewAddress({ ...newAddress, landmark: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
                                     />
                                 </div>
                                 <button
@@ -331,6 +332,7 @@ const UserProfile = ({ user }: any) => {
                                         value={editingAddress.landmark}
                                         onChange={(e) => setEditingAddress({ ...editingAddress, landmark: e.target.value })}
                                         className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
                                     />
                                 </div>
                                 <div className="flex gap-2">
