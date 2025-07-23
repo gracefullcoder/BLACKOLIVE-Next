@@ -164,7 +164,7 @@ const Cart = () => {
   }
 
   useEffect(() => {
-    validatePincode();
+    if (items.length) validatePincode();
   }, [isOpen, selectedAddress])
 
   const validateCheckout = () => {
@@ -209,7 +209,7 @@ const Cart = () => {
     };
   }, [isOpen]);
 
-  const orderCreation = async (orderDetails: any,mailData?:any, paymentData?: any) => {
+  const orderCreation = async (orderDetails: any, mailData?: any, paymentData?: any) => {
     try {
       let response;
       if (paymentData) {
@@ -411,7 +411,7 @@ const Cart = () => {
                 </div>
 
                 {/* Address Selection */}
-                
+
 
                 <div className="flex justify-between items-center">
                   <p className="font-semibold">Delivery Address</p>
@@ -425,51 +425,51 @@ const Cart = () => {
 
                 <div className="mb-2">
 
-                      {isAddingAddress && (
-                        <form onSubmit={handleAddAddress} className="mt-2 space-y-2">
-                          <div className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={newAddress.number}
-                              onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
-                              placeholder="House/Flat No."
-                              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              required
-                            />
-                            <input
-                              type="text"
-                              value={newAddress.pincode}
-                              onChange={(e) => setNewAddress({ ...newAddress, pincode: parseInt(e.target.value) ? parseInt(e.target.value) : '' })}
-                              placeholder="Pincode"
-                              maxLength={6}
-                              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              required
-                            />
-                          </div>
-                          <textarea
-                            value={newAddress.address}
-                            onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
-                            placeholder="Full Address"
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            rows={2}
-                            required
-                          />
-                          <input
-                            type="text"
-                            value={newAddress.landmark}
-                            onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
-                            placeholder="Landmark (Optional)"
-                            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                          <button
-                            type="submit"
-                            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
-                          >
-                            <Save size={16} /> Add Address
-                          </button>
-                        </form>
-                      )}
-                    </div>
+                  {isAddingAddress && (
+                    <form onSubmit={handleAddAddress} className="mt-2 space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={newAddress.number}
+                          onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
+                          placeholder="House/Flat No."
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                        <input
+                          type="text"
+                          value={newAddress.pincode}
+                          onChange={(e) => setNewAddress({ ...newAddress, pincode: parseInt(e.target.value) ? parseInt(e.target.value) : '' })}
+                          placeholder="Pincode"
+                          maxLength={6}
+                          className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                      <textarea
+                        value={newAddress.address}
+                        onChange={(e) => setNewAddress({ ...newAddress, address: e.target.value })}
+                        placeholder="Full Address"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows={2}
+                        required
+                      />
+                      <input
+                        type="text"
+                        value={newAddress.landmark}
+                        onChange={(e) => setNewAddress({ ...newAddress, landmark: e.target.value })}
+                        placeholder="Landmark (Optional)"
+                        className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 flex items-center justify-center gap-2"
+                      >
+                        <Save size={16} /> Add Address
+                      </button>
+                    </form>
+                  )}
+                </div>
 
                 {userAddresses.length > 0 ? (
                   <div className="max-h-60 overflow-y-auto">

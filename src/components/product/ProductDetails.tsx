@@ -287,7 +287,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
 
                         <div>
                             {
-                                product.bonus ?
+                                product.products ?
                                     <div className='flex items-center gap-8'>
                                         <div>
                                             <p className="text-black mt-6 mb-2">Select Start Date</p>
