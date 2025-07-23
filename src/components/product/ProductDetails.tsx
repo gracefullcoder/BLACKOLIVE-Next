@@ -47,7 +47,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
         if (porductDetail.current) {
             porductDetail?.current?.scrollIntoView({ behavior: "smooth" });
         }
-    }, []);
+    }, [product]);
 
 
     useEffect(() => {
