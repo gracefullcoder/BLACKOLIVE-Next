@@ -157,6 +157,7 @@ const Cart = () => {
         return false;
       } else {
         setDeliveryCharge(result.deliveryCharge);
+        toast.success("Deliverable Here!");
         return true;
       }
     }

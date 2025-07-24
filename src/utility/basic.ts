@@ -34,7 +34,7 @@ export const handleApiError = (res: any, error: any, message: string) => {
     return res.json({ success: false, message: error?.message || message })
 }
 
-export const handleToast = (data: { success: boolean, message: string, [key: string]: any }, duration: number = 1000, info: boolean = false) => {
+export const handleToast = (data: { success: boolean, message: string, [key: string]: any }, duration: number = 2000, info: boolean = false) => {
     if (info) {
         toast.info(data.message, { autoClose: duration });
     }
