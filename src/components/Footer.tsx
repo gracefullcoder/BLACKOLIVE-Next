@@ -21,7 +21,7 @@ function Footer() {
           Follow Us On
         </p>
         <div className="flex gap-2 justify-center">
-          <a href="https://www.instagram.com/black.olive._?igsh=em9lYXMydW40bHR6" target='_blank'>
+          <a href="https://www.instagram.com/blackolive.in" target='_blank'>
             <Instagram className="h-8 w-8 text-slate-400 hover:text-white transition-colors duration-200 cursor-pointer" />
           </a>
           <a href="https://www.facebook.com/blackoIive0123" target='_blank'>
