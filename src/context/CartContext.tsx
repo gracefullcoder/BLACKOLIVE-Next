@@ -35,11 +35,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const getFeatures = async () => {
-            const features = await featureDetails();
+            const url = `/api/check`;
+            console.log(url);
+            let features: any = await fetch(url);
+            features = await features.json();
+            console.log("called",features);
             if (features.success) setFeatures(features?.data);
         }
 
-        if(!features) getFeatures();
+        if (!features) getFeatures();
     }, [])
 
     return (
