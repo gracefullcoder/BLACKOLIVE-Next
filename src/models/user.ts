@@ -46,7 +46,10 @@ const userSchema = new mongoose.Schema({
                 type: Schema.Types.ObjectId,
                 ref: "Product"
             },
-            quantity: Number,
+            quantity: {
+                type: Number,
+                min: 1
+            },
         }
     ],
     membershipDetails: [
