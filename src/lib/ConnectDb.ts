@@ -11,7 +11,7 @@ const connectToDatabase = async () => {
         console.log("Already Connected To Database");
         return;
     }
-    const MongoUri = process.env.MONGO_URI || "";
+    const MongoUri = process.env.MONGO_URI_PROD || "";
 
     if (!MongoUri) console.log("Please enter database url");
 

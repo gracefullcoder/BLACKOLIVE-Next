@@ -62,7 +62,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
         }
 
         getPincodes()
-    }, [])
+    }, [features])
 
     useEffect(() => {
         let { price, finalPrice } = calculatePrices(Object.values(weeklyPlan), product?.discountPercent, product?.days);
@@ -188,7 +188,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
 
         setIsLoading(true);
         try {
-            const productIds = daysOfWeek.map((day) => (weeklyPlan[day]?._id));
+            const productIds = daysOfWeek?.map((day) => (weeklyPlan[day]?._id));
             const membershipData = { productIds, membershipId: product?._id }
             const orderData: any = await getOrderCost({ productData: membershipData, isMembership: true });
 
@@ -234,7 +234,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
     };
 
     const isPincodeAvailable = () => {
-        const res = pincodes.some((pin: any) => pin?.pincode == pincode);
+        const res = pincodes?.some((pin: any) => pin?.pincode == pincode);
         setIsDeliverable(res)
     }
 
@@ -278,7 +278,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                         <div className='flex gap-2 mt-2 text-lg'>
                             <p className='text-slate-800 whitespace-nowrap'>Delivery Time:</p>
                             <ul className='flex gap-2 flex-wrap'>
-                                {timings.map((t: any, idx: any) => (
+                                {timings?.map((t: any, idx: any) => (
                                     <li key={t._id + idx} className='bg-gray-100 px-2 py-1 rounded text-sm'>
                                         {t.display}
                                     </li>
@@ -355,7 +355,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                                         <div className="mb-4">
                                             <p className="my-2">Select Delivery Address:</p>
                                             <div className="space-y-2 max-h-32 overflow-y-auto">
-                                                {userAddresses.map((addr: any, idx: number) => (
+                                                {userAddresses?.map((addr: any, idx: number) => (
                                                     <div
                                                         key={idx}
                                                         className={`p-2 border rounded-lg cursor-pointer ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}

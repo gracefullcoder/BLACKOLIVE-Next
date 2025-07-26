@@ -40,7 +40,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if(!features) getFeatures();
-    }, [isOpen])
+    }, [isOpen,session])
 
     return (
         <cartContext.Provider value={{ items, setItems, isOpen, setIsOpen, features }}>
