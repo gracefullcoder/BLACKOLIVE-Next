@@ -36,7 +36,25 @@
   min-height: 1rem !important;
   width: fit-content !important;
   padding: 0.5rem !important;
+  min-width: max(20vw, 18rem);
 }
+
+@media (max-width: 500px) {
+  .custom-toast.Toastify__toast {
+    position: absolute; 
+    left: 5%;
+    width: 90% !important;
+    margin-top: 1rem;
+    margin-bottom: 0rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .custom-toast{
+    font-size: 16px !important;
+  }
+}
+
 
 .custom-toast.Toastify__toast--success {
   background-color: #e6f3e6;

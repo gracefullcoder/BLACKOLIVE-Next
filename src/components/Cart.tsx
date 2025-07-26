@@ -1,5 +1,5 @@
 "use client"
-import { X, ShoppingCart, Minus, Plus, Trash2, Phone, MapPin, Save, Pencil } from 'lucide-react';
+import { X, ShoppingCart, Minus, Plus, Trash2, Phone, MapPin, Save, Pencil, Flag } from 'lucide-react';
 import { useCartContext } from '../context/CartContext';
 import { IncQty, DecQty, removeItem } from '../utility/CartFunction';
 import { createOrder } from '../actions/Order';
@@ -47,9 +47,21 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [deliveryCharge, setDeliveryCharge] = useState(0);
 
+  useEffect(() => {    
+    const configPincodes = async () => {
+      const features = await featureDetails();
+      const availablePins = features.pincodes;
+      setPincodes(availablePins);
+    }
+
+    configPincodes();
+  }, [isOpen])
+
   useEffect(() => {
+    if(!isOpen) return;
+    
     let contactDetails = session?.data?.user?.contact
-    let addressesDetails = session?.data?.user?.addresses;
+    let addressesDetails: any = session?.data?.user?.addresses;
 
     if (contactDetails) {
       setContactNumber(contactDetails)
@@ -60,22 +72,43 @@ const Cart = () => {
     }
 
     if (addressesDetails?.length) {
+      let idx = 0;
+      let flag = false;
+      if (isOpen) {
+        for (const address of addressesDetails) {
+          const pincode = address?.pincode;
+          const result = pincodes.find((pin: any) => pin?.pincode == pincode);
+          if (result) {
+            setDeliveryCharge(result.deliveryCharge);
+            setSelectedAddress(idx);
+            setIsAddingAddress(false);
+            address.isDeliverable = true;
+            flag = true;
+          } else {
+            address.isDeliverable = false;
+          }
+          idx++;
+        }
+      }
       setUserAddresses(addressesDetails);
-      setSelectedAddress(0);
-      setIsAddingAddress(false);
-    } else {
+
+      if (!flag) {
+        setIsAddingAddress(true);
+        if (addressesDetails.length > 1) toast.error("Not Deliverable at any address add new");
+        else toast.error("Not Deliverable at your address add new");
+      }
+    }
+    else {
       setIsAddingAddress(true);
     }
 
-  }, [session])
+  }, [session, pincodes])
 
   useEffect(() => {
     const handleTimings = async () => {
       const indianTime = new Date((new Date()).getTime() + 19800000);
       const features = await featureDetails();
       const deliveryTimings = features.deliveryTimings;
-      const availablePins = features.pincodes;
-      setPincodes(availablePins);
 
       let finalTimings = deliveryTimings.filter((time: any) => {
         const start_HH_MM = time.startTime.split(":");
@@ -102,7 +135,7 @@ const Cart = () => {
     };
 
     handleTimings();
-  }, [items.length]);
+  }, [items.length, isOpen]);
 
   // Update contact number
   const handleUpdateContact = async (e: any) => {
@@ -166,7 +199,7 @@ const Cart = () => {
 
   useEffect(() => {
     if (items.length) validatePincode();
-  }, [isOpen, selectedAddress])
+  }, [selectedAddress])
 
   const validateCheckout = () => {
     if (!time) {
@@ -474,16 +507,34 @@ const Cart = () => {
 
                 {userAddresses.length > 0 ? (
                   <div className="max-h-60 overflow-y-auto">
-                    {userAddresses.map((addr: any, idx: number) => (
-                      <div
-                        key={idx}
-                        className={`p-2 border rounded-lg cursor-pointer my-2 ${selectedAddress === idx ? 'border-green-500 bg-green-50' : ''}`}
-                        onClick={() => setSelectedAddress(idx)}
-                      >
-                        <p className="text-sm">{addr.address}</p>
-                        <p className="text-xs text-gray-500">{addr.landmark} - {addr.pincode}</p>
-                      </div>
-                    ))}
+                    {userAddresses.map((addr: any, idx: number) => {
+                      const isSelected = selectedAddress === idx;
+                      const isDeliverable = addr.isDeliverable;
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`p-2 border rounded-lg cursor-pointer my-2
+        ${isSelected ? 'border-green-500 bg-green-50' : ''}
+        ${!isDeliverable ? 'opacity-50 bg-gray-100 cursor-not-allowed' : ''}
+      `}
+                          onClick={() => {
+                            if (isDeliverable) setSelectedAddress(idx);
+                          }}
+                        >
+                          <p className="text-sm">{addr.address}</p>
+                          <div className='flex gap-1 justify-between'>
+                            <p className="text-xs text-gray-500">
+                              {addr.landmark} - {addr.pincode}
+                            </p>
+                            {!isDeliverable && (
+                              <p className="text-xs text-red-500 mt-1">Not Deliverable</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+
                   </div>
                 ) : (
                   <div>

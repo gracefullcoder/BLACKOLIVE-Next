@@ -3,6 +3,7 @@ import { contactInterface, handleContactRequest } from "@/src/actions/Additional
 import { handleToast } from "@/src/utility/basic";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 function ContactUs() {
 
@@ -13,7 +14,7 @@ function ContactUs() {
     contact: "",
     message: "",
   });
-  
+
   const [errors, setErrors] = useState({
     name: "",
     email: "",
@@ -22,15 +23,27 @@ function ContactUs() {
   });
 
   const session = useSession();
+  console.log(session);
 
   useEffect(() => {
-    let userId = session?.data?.user?._id;
-    if (userId) setContactDetails((prev: contactInterface) => { return { ...prev, user: userId } });
+    let user = session?.data?.user;
+    if (user) {
+      const userId = user?._id;
+      const email = user?.email;
+      const contact = user?.contact.toString();
+      const name = user.name;
+      setContactDetails((prev: contactInterface) => { return { ...prev, user: userId, email, contact, name } });
+    }
   }, [session])
 
   const validate = () => {
     const newErrors = { name: "", email: "", contact: "", message: "" };
     let isValid = true;
+
+    if (session.data == null) {
+      isValid = false;
+      toast.error("Please Login First To Raise Issue!");
+    }
 
     if (!contactDetails.name.trim()) {
       newErrors.name = "Name is required.";
@@ -68,7 +81,8 @@ function ContactUs() {
   };
 
   const handleDataChange = (e: any) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    if (name == 'contact') value = (parseInt(value) || "").toString().slice(0, 10);
     setContactDetails((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: "" }));
   };
@@ -105,6 +119,7 @@ function ContactUs() {
               name="name"
               value={contactDetails.name}
               onChange={handleDataChange}
+              readOnly={session.data != null}
               required
             />
             {errors.name && (
@@ -123,6 +138,7 @@ function ContactUs() {
               name="email"
               value={contactDetails.email}
               onChange={handleDataChange}
+              readOnly={session?.data != null}
               required
             />
             {errors.email && (

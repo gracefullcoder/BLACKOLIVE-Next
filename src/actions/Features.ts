@@ -20,8 +20,12 @@ export const updateFeature = async (heroImage: string, fileId: string) => {
 }
 
 export const featureDetails = async () => {
-    const feature = await Feature.findOne();
-    return JSON.parse(JSON.stringify(feature));
+    try {
+        const feature = await Feature.findOne();
+        return JSON.parse(JSON.stringify(feature));
+    } catch (error) {
+        return { success: false, message: "Unable to Fetch Pincodes" }
+    }
 }
 
 export async function addTimingServer(formData: FormData) {

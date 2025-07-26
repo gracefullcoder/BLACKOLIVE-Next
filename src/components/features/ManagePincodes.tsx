@@ -21,7 +21,7 @@ const ManagePincodes = () => {
     }, []);
 
     const addPincode = async () => {
-        if (!newPincode.pincode.trim()) return;
+        if (!newPincode.pincode.toString().trim()) return;
 
         const res = await fetch("/api/admin/features/pincode", {
             method: "POST",
@@ -37,7 +37,7 @@ const ManagePincodes = () => {
     };
 
     const updatePincode = async () => {
-        if (!updatedPincode?.pincode?.trim()) return;
+        if (!updatedPincode?.pincode?.toString().trim()) return;
 
         const res = await fetch("/api/admin/features/pincode", {
             method: "PUT",

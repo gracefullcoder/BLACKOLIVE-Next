@@ -5,11 +5,6 @@ import crypto from 'crypto';
 import Product from '../models/product';
 import MembershipProduct from '../models/membershipproducts';
 import { getPincodeDetails } from './Features';
-import { toast } from 'react-toastify';
-
-export const getEnv = async () => {
-    console.log("razorpay apple ", process.env.RAZORPAY_KEY_ID);
-}
 
 let instance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -70,8 +65,8 @@ export const getOrderCost = async ({ productData, isMembership, pincode }: any) 
 }
 
 export const createRazorpayOrder = async (totalAmount: any) => {
-
-    const options = {
+    try {
+        const options = {
         amount: totalAmount * 100,
         currency: "INR",
         receipt: `reciept_${Math.floor(Math.random() * 10000000)}`,
@@ -80,6 +75,9 @@ export const createRazorpayOrder = async (totalAmount: any) => {
     const order = await instance.orders.create(options);
 
     return order;
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 // router.post("/payment/success", wrapAsync(async (req, res) => {
