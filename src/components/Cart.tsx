@@ -102,7 +102,7 @@ const Cart = () => {
       setIsAddingAddress(true);
     }
 
-  }, [session, pincodes])
+  }, [session, pincodes,isOpen])
 
   useEffect(() => {
     const handleTimings = async () => {
