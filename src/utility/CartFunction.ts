@@ -26,7 +26,7 @@ export const DecQty = (productId: any, setItems: any) => {
     setItems((prev: any) => {
         return prev.map((item: any) => {
             if (item.product._id == productId) {
-                const newItem = { ...item, product: { ...item.product }, quantity: item.quantity - 1 }
+                const newItem = { ...item, product: { ...item.product }, quantity: Math.max(item.quantity - 1, 1) }
 
                 return newItem
             }
