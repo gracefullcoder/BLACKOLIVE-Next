@@ -47,19 +47,7 @@ const Cart = () => {
   const [paymentMethod, setPaymentMethod] = useState("UPI");
   const [deliveryCharge, setDeliveryCharge] = useState(0);
 
-  useEffect(() => {    
-    const configPincodes = async () => {
-      const features = await featureDetails();
-      const availablePins = features.pincodes;
-      setPincodes(availablePins);
-    }
-
-    configPincodes();
-  }, [isOpen])
-
   useEffect(() => {
-    if(!isOpen) return;
-    
     let contactDetails = session?.data?.user?.contact
     let addressesDetails: any = session?.data?.user?.addresses;
 
@@ -71,43 +59,18 @@ const Cart = () => {
       setIsEditingContact(true);
     }
 
-    if (addressesDetails?.length) {
-      let idx = 0;
-      let flag = false;
-      if (isOpen) {
-        for (const address of addressesDetails) {
-          const pincode = address?.pincode;
-          const result = pincodes.find((pin: any) => pin?.pincode == pincode);
-          if (result) {
-            setDeliveryCharge(result.deliveryCharge);
-            setSelectedAddress(idx);
-            setIsAddingAddress(false);
-            address.isDeliverable = true;
-            flag = true;
-          } else {
-            address.isDeliverable = false;
-          }
-          idx++;
-        }
-      }
-      setUserAddresses(addressesDetails);
-
-      if (!flag) {
-        setIsAddingAddress(true);
-        if (addressesDetails.length > 1) toast.error("Not Deliverable at any address add new");
-        else toast.error("Not Deliverable at your address add new");
-      }
+    if (addressesDetails) {
+      addressesDetails.forEach((add: any) => {
+        add.isDeliverable = true;
+      })
+      setUserAddresses(addressesDetails)
     }
-    else {
-      setIsAddingAddress(true);
-    }
-
-  }, [session, pincodes,isOpen])
+  }, [session])
 
   useEffect(() => {
-    const handleTimings = async () => {
+
+    const handleTimings = async (features: any) => {
       const indianTime = new Date((new Date()).getTime() + 19800000);
-      const features = await featureDetails();
       const deliveryTimings = features.deliveryTimings;
 
       let finalTimings = deliveryTimings.filter((time: any) => {
@@ -134,7 +97,49 @@ const Cart = () => {
       }
     };
 
-    handleTimings();
+    const handlePins = async (pincodes: any) => {
+      let addressesDetails: any = session?.data?.user?.addresses;
+      if (addressesDetails?.length) {
+        let idx = 0;
+        let flag = false;
+        if (isOpen) {
+          for (const address of addressesDetails) {
+            const pincode = address?.pincode;
+            const result = pincodes.find((pin: any) => pin?.pincode == pincode);
+            if (result) {
+              setDeliveryCharge(result.deliveryCharge);
+              setSelectedAddress(idx);
+              setIsAddingAddress(false);
+              address.isDeliverable = true;
+              flag = true;
+            } else {
+              address.isDeliverable = false;
+            }
+            idx++;
+          }
+        }
+        setUserAddresses(addressesDetails);
+
+        if (isOpen && !flag) {
+          setIsAddingAddress(true);
+          if (addressesDetails.length > 1) toast.error("Not Deliverable at any address add new");
+          else toast.error("Not Deliverable at your address add new");
+        }
+      }
+      else {
+        setIsAddingAddress(true);
+      }
+    }
+
+    const config = async () => {
+      const features = await featureDetails();
+      const availablePins = features.pincodes;
+      handlePins(availablePins);
+      handleTimings(features);
+      setPincodes(availablePins);
+    }
+
+    config();
   }, [items.length, isOpen]);
 
   // Update contact number
