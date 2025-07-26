@@ -1,11 +1,12 @@
+"use client"
 import React from 'react';
 import { Megaphone } from "lucide-react";
+import { useCartContext } from '../context/CartContext';
 
-interface MessageBarProps {
-  messages: string[];
-}
+const MessageBar = () => {
+  const { features } = useCartContext();
+  const messages: string[] = features?.topBarMessages || [];
 
-const MessageBar: React.FC<MessageBarProps> = ({ messages }) => {
   return (
     <div className="relative overflow-hidden bg-black text-white h-10 flex items-center">
       <style>
@@ -33,7 +34,7 @@ const MessageBar: React.FC<MessageBarProps> = ({ messages }) => {
           animation: `scroll ${messages.length == 1 ? 10 : messages.length * 4}s linear infinite`
         }}
       >
-        {messages.map((message, index) => (
+        {messages.map((message: any, index: any) => (
           <div key={index} className="text-xl font-semibold tracking-wide">
             {message}
           </div>

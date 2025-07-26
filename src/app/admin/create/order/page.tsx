@@ -32,7 +32,7 @@ export default function Page() {
     useEffect(() => {
         const fetchPincodes = async () => {
             const features = await featureDetails();
-            setPincodes(features.pincodes || []);
+            setPincodes(features?.data?.pincodes || []);
         };
         fetchPincodes();
     }, []);

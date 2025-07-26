@@ -1,11 +1,11 @@
 "use client"
 import { useSession } from 'next-auth/react'
 import HeroCard from './HeroCard'
+import { useCartContext } from '../context/CartContext';
 
-function HeroSection({ features }: { features: any }) {
+function HeroSection() {
   const session = useSession();
-
-  console.log(session);
+  const { features } = useCartContext();
 
   return (
     <div className="h-full w-full relative">

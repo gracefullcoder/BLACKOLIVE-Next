@@ -9,7 +9,6 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/Cart';
 import { Message } from '@/src/utility/SendMessage';
-import { featureDetails } from '../actions/Features';
 import axios from 'axios';
 import { getOrderCost } from '../actions/Payment';
 import { displayRazorpay } from '../lib/razorpay';
@@ -18,7 +17,7 @@ import { handleToast } from '../utility/basic';
 const Cart = () => {
   const router = useRouter();
   const session = useSession();
-  const { items, setItems, isOpen, setIsOpen } = useCartContext();
+  const { items, setItems, isOpen, setIsOpen, features } = useCartContext();
 
   const [time, setTime] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -71,9 +70,9 @@ const Cart = () => {
 
     const handleTimings = async (features: any) => {
       const indianTime = new Date((new Date()).getTime() + 19800000);
-      const deliveryTimings = features.deliveryTimings;
+      const deliveryTimings = features?.deliveryTimings;
 
-      let finalTimings = deliveryTimings.filter((time: any) => {
+      let finalTimings = deliveryTimings?.filter((time: any) => {
         const start_HH_MM = time.startTime.split(":");
         const end_HH_MM = time.endTime.split(":");
 
@@ -83,7 +82,7 @@ const Cart = () => {
         tempStartTime.setUTCHours(start_HH_MM[0], start_HH_MM[1], 0, 0);
         tempEndTime.setUTCHours(end_HH_MM[0], end_HH_MM[1], 0, 0);
 
-        return indianTime < tempStartTime || indianTime <= tempEndTime;
+        return indianTime < tempStartTime || indianTime <= tempEndTime || false;
       });
 
       if (finalTimings.length) {
@@ -132,15 +131,16 @@ const Cart = () => {
     }
 
     const config = async () => {
-      const features = await featureDetails();
-      const availablePins = features.pincodes;
-      handlePins(availablePins);
-      handleTimings(features);
-      setPincodes(availablePins);
+      if (features) {
+        const availablePins = features?.pincodes;
+        handlePins(availablePins);
+        handleTimings(features);
+        setPincodes(availablePins);
+      }
     }
 
     config();
-  }, [items.length, isOpen]);
+  }, [items.length, isOpen, features]);
 
   // Update contact number
   const handleUpdateContact = async (e: any) => {

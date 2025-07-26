@@ -22,7 +22,7 @@ export const updateFeature = async (heroImage: string, fileId: string) => {
 export const featureDetails = async () => {
     try {
         const feature = await Feature.findOne();
-        return JSON.parse(JSON.stringify(feature));
+        return { success: true, message: "Features fetched successfully", data: JSON.parse(JSON.stringify(feature)) };
     } catch (error) {
         return { success: false, message: "Unable to Fetch Pincodes" }
     }

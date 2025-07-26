@@ -7,7 +7,6 @@ import { addToCart, decreaseQuantity, increaseQuantity } from '@/src/actions/Car
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { createMembership } from '@/src/actions/Order';
-import { featureDetails } from '@/src/actions/Features';
 import ExcludedProduct from './ExcludedProduct';
 import CustomizeButton from './CustomizeButton';
 import { formatTime } from '@/src/utility/timeUtil';
@@ -18,7 +17,7 @@ import { MembershipCreationType } from '@/src/types/orderType';
 
 function ProductDetails({ product, isMembership }: { product: any, isMembership: boolean }) {
     const session = useSession();
-    const { items, setItems } = useCartContext();
+    const { items, setItems ,features} = useCartContext();
     const existingCartItem = items.find((item: any) => item?.product?._id === product._id);
     const [quantity, setQuantity] = useState(existingCartItem ? existingCartItem.quantity : 1);
     const [pincode, setPincode] = useState<any>(null);
@@ -58,9 +57,8 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
 
     useEffect(() => {
         const getPincodes = async () => {
-            const feature = await featureDetails();
-            setTimings(feature.deliveryTimings);
-            setPincodes(feature.pincodes)
+            setTimings(features?.deliveryTimings);
+            setPincodes(features?.pincodes)
         }
 
         getPincodes()
