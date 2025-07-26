@@ -329,37 +329,50 @@ const Cart = () => {
   const handleDecrease = async (item: any) => {
     if (item.quantity > 1) {
       try {
-        const res = await decreaseQuantity(session?.data?.user?._id, item?.product?._id);
-        if (res.success) {
+        const res = await axios.post("api/user/cart/decrease", {
+          userId: session?.data?.user?._id,
+          productId: item?.product?._id,
+        });
+
+        if (res.data.success) {
           DecQty(item?.product?._id, setItems);
         }
-      } catch (error) {
-        console.error("Error decreasing quantity:", error);
+      } catch (error: any) {
+        console.error("Error decreasing quantity:", error?.response?.data || error.message);
       }
     }
   };
 
   const handleIncrease = async (item: any) => {
     try {
-      const res = await increaseQuantity(session?.data?.user?._id, item?.product?._id);
-      if (res.success) {
+      const res = await axios.post("api/user/cart/increase", {
+        userId: session?.data?.user?._id,
+        productId: item?.product?._id,
+      });
+
+      if (res.data.success) {
         IncQty(item?.product?._id, setItems);
       }
-    } catch (error) {
-      console.error("Error increasing quantity:", error);
+    } catch (error: any) {
+      console.error("Error increasing quantity:", error?.response?.data || error.message);
     }
   };
 
   const handleRemoveFromCart = async (item: any) => {
     try {
-      const res = await removeFromCart(session?.data?.user?._id, item?.product?._id);
-      if (res.success) {
+      const res = await axios.post("api/user/cart/remove", {
+        userId: session?.data?.user?._id,
+        productId: item?.product?._id,
+      });
+
+      if (res.data.success) {
         removeItem(item?.product?._id, setItems);
       }
-    } catch (error) {
-      console.error("Error removing from cart:", error);
+    } catch (error: any) {
+      console.error("Error removing from cart:", error?.response?.data || error.message);
     }
   };
+
 
   return (
     <>
