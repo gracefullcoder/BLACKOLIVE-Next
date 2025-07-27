@@ -37,7 +37,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         const getFeatures = async () => {
             let features: any = await fetch("/api/features");
             features = await features.json();
-            console.log("called",features);
             if (features.success) setFeatures(features?.data);
         }
 

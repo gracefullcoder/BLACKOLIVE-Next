@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import { toast } from "react-toastify";
 import { handleToast } from "../utility/basic";
@@ -32,13 +32,18 @@ interface DisplayRazorpayProps {
 export async function displayRazorpay(
   { orderDetails, totalAmount, additionalDetails, updateFnx }: any
 ) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    alert("Window not opening")
+    return;
+  }
 
   const res = await loadScript("https://checkout.razorpay.com/v1/checkout.js");
   if (!res) {
     alert("Razorpay SDK failed to load.");
     return;
   }
+
+  console.log(res);
 
   const orderResponse = await createRazorpayOrder(totalAmount);
 

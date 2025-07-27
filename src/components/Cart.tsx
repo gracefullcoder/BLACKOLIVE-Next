@@ -7,7 +7,6 @@ import { useSession } from 'next-auth/react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
-import { decreaseQuantity, increaseQuantity, removeFromCart } from '../actions/Cart';
 import { Message } from '@/src/utility/SendMessage';
 import axios from 'axios';
 import { getOrderCost } from '../actions/Payment';
