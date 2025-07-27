@@ -217,7 +217,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
             if (paymentMethod == "UPI") {
                 const additionalDetails = { userDetails: session?.data?.user, productDetails: product };
                 orderDetails.isPaid = true;
-                displayRazorpay({ totalAmount, orderDetails, additionalDetails, updateFnx: membershipCreation });
+                await displayRazorpay({ totalAmount, orderDetails, additionalDetails, updateFnx: membershipCreation });
             } else {
                 const mailData = { finalPrice: totalAmount, title: product?.title }
                 let res: any = await membershipCreation(orderDetails, mailData);

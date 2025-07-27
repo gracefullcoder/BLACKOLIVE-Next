@@ -3,6 +3,7 @@ import { createContext, useEffect, useState, ReactNode, useContext } from "react
 import { useSession } from "next-auth/react";
 import { productType } from "../types/product";
 import { featureDetails } from "../actions/Features";
+import { loadScript } from "../lib/razorpay";
 
 export type CartItem = {
     product: productType,
@@ -41,7 +42,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         }
 
         if (!features) getFeatures();
-    }, [session,isOpen])
+    }, [session, isOpen])
+
+    useEffect(() => {
+        loadScript("https://checkout.razorpay.com/v1/checkout.js");
+    }, []);
+
 
     return (
         <cartContext.Provider value={{ items, setItems, isOpen, setIsOpen, features }}>

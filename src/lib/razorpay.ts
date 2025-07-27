@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-function loadScript(src: string): Promise<boolean> {
+export function loadScript(src: string): Promise<boolean> {
   return new Promise((resolve) => {
     const script = document.createElement("script");
     script.src = src;
