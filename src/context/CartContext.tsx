@@ -45,7 +45,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }, [session, isOpen])
 
     useEffect(() => {
-        loadScript("https://checkout.razorpay.com/v1/checkout.js");
+        const preLoadScript = async () => {
+            if (!window.Razorpay) {
+                await loadScript("https://checkout.razorpay.com/v1/checkout.js");
+            }
+        }
+
+        preLoadScript();
     }, []);
 
 

@@ -10,7 +10,7 @@ import { useRouter } from 'next/navigation';
 import { Message } from '@/src/utility/SendMessage';
 import axios from 'axios';
 import { getOrderCost } from '../actions/Payment';
-import { displayRazorpay } from '../lib/razorpay';
+import { displayRazorpay, loadScript } from '../lib/razorpay';
 import { handleToast } from '../utility/basic';
 
 const Cart = () => {

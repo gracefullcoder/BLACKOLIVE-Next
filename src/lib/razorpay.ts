@@ -10,13 +10,34 @@ declare global {
   }
 }
 
-export function loadScript(src: string): Promise<boolean> {
+// lib/razorpay.ts
+export async function loadScript(src: string, retries = 3, delay = 500): Promise<boolean> {
   return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = src;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
+    const attemptLoad = (remainingRetries: number) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+
+      script.onload = () => {
+        console.log('Razorpay script loaded successfully');
+        resolve(true);
+      };
+
+      script.onerror = () => {
+        document.body.removeChild(script);
+        if (remainingRetries > 0) {
+          console.log(`Retrying Razorpay load (${remainingRetries} attempts left)`);
+          setTimeout(() => attemptLoad(remainingRetries - 1), delay);
+        } else {
+          console.error('Failed to load Razorpay after multiple attempts');
+          resolve(false);
+        }
+      };
+
+      document.body.appendChild(script);
+    };
+
+    attemptLoad(retries);
   });
 }
 
