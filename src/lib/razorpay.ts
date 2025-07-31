@@ -75,10 +75,8 @@ export async function displayRazorpay(
   console.log(orderResponse);
 
   if (!orderResponse?.success || !orderResponse?.order?.id) {
-    alert("Server error while creating order.");
-    return;
-  } else {
     alert("Razorpay Payments is Facing error Go with COD Option, Delivery person would accept UPI!");
+    return;
   }
 
   const { amount, id: order_id, currency } = orderResponse?.order;

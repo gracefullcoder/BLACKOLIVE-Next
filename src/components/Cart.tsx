@@ -229,7 +229,7 @@ const Cart = () => {
     return true;
   };
 
-  const totalAmount = items.reduce((sum, item) => item.product.isAvailable ? sum + (item?.product?.finalPrice * item.quantity) : sum, 0) + deliveryCharge;
+  const totalAmount = items.reduce((sum, item) => item.product.isAvailable ? sum + (item?.product?.finalPrice * item.quantity) : sum, 0);
 
   const toggleCart = () => {
     setIsOpen(!isOpen);
@@ -290,7 +290,14 @@ const Cart = () => {
     setIsLoading(true);
     try {
       const pincode = userAddresses[selectedAddress].pincode;
-      const { totalAmount, productDetails } = await getOrderCost({ productData: items, isMembership: false, pincode });
+      const costData: any = (await axios.post("/api/user/payment/cost", { productData: items, isMembership: false, pincode })).data;
+
+      if (!costData?.success) {
+        alert("Proceed With COD, Delivery Person will take UPI");
+        return;
+      }
+
+      const { totalAmount, productDetails } = costData;
 
       const orderDetails = {
         userId: session?.data?.user?._id,
@@ -315,7 +322,7 @@ const Cart = () => {
 
       if (paymentMethod == "UPI") {
         orderDetails.isPaid = true;
-        await displayRazorpay({ orderDetails, totalAmount, additionalDetails, updateFnx: orderCreation,isApi:true })
+        await displayRazorpay({ orderDetails, totalAmount, additionalDetails, updateFnx: orderCreation, isApi: true })
       } else {
         orderCreation(orderDetails)
       }
@@ -387,7 +394,7 @@ const Cart = () => {
         <div className='flex h-[calc(100%-56px)] max-sm:block overflow-y-auto'>
           {/* Items Section */}
           <div className='flex-1 p-4 overflow-y-auto border-r max-sm:border-b'>
-            {items.length === 0 ? (
+            {(items.length === 0) ? (
               <div className="flex flex-col items-center justify-center h-full text-gray-500">
                 <ShoppingCart className="w-16 h-16 mb-4" />
                 <p>Your cart is empty</p>
@@ -617,59 +624,61 @@ const Cart = () => {
                   </div>
                 }
 
-                <div>
-                  <p className="mt-4">Add Message:</p>
-                  <input type="text" className="mt-2 border rounded-3xl w-full px-4 py-2" placeholder='Need Changes' onChange={(e) => setOrderMessage(e.target.value)} />
-                </div>
-
-                {/* Payment Method Selection */}
-                <div className="mb-4">
-                  <label className="block text-gray-600 mb-2 text-sm">Payment Method:</label>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("UPI")}
-                      className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "UPI" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
-                    >
-                      UPI / Prepaid
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("COD")}
-                      className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "COD" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
-                    >
-                      Cash on Delivery
-                    </button>
+                {totalAmount > 0 && <>
+                  <div>
+                    <p className="mt-4">Add Message:</p>
+                    <input type="text" className="mt-2 border rounded-3xl w-full px-4 py-2" placeholder='Need Changes' onChange={(e) => setOrderMessage(e.target.value)} />
                   </div>
-                </div>
-                {/* End Payment Method Selection */}
 
-                {/* Total and Checkout Button */}
-                <div className='mb-4'>
-                  <div className="space-y-2 mb-4">
-                    <div className="flex justify-between text-sm">
-                      <span>Subtotal:</span>
-                      <span>₹{(totalAmount - deliveryCharge).toFixed(2)}</span>
+                  {/* Payment Method Selection */}
+                  <div className="mb-4">
+                    <label className="block text-gray-600 mb-2 text-sm">Payment Method:</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("UPI")}
+                        className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "UPI" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
+                      >
+                        UPI / Prepaid
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod("COD")}
+                        className={`flex-1 border rounded-full px-2 py-1 text-xs sm:text-sm cursor-pointer transition-colors ${paymentMethod === "COD" ? "border-green-600 bg-green-50 font-semibold" : "border-gray-300 bg-white"}`}
+                      >
+                        Cash on Delivery
+                      </button>
                     </div>
-                    {deliveryCharge > 0 && (
+                  </div>
+                  {/* End Payment Method Selection */}
+
+                  {/* Total and Checkout Button */}
+                  <div className='mb-4'>
+                    <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
-                        <span>Delivery Charge:</span>
-                        <span>₹{deliveryCharge.toFixed(2)}</span>
+                        <span>Subtotal:</span>
+                        <span>₹{(totalAmount).toFixed(2)}</span>
                       </div>
-                    )}
-                    <div className="flex justify-between font-semibold text-base border-t pt-2">
-                      <span>Total:</span>
-                      <span>₹{totalAmount.toFixed(2)}</span>
+                      {deliveryCharge > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span>Delivery Charge:</span>
+                          <span>₹{deliveryCharge.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-semibold text-base border-t pt-2">
+                        <span>Total:</span>
+                        <span>₹{(totalAmount + deliveryCharge).toFixed(2)}</span>
+                      </div>
                     </div>
+                    <button
+                      disabled={isLoading || !isProfileComplete || totalAmount == 0}
+                      className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
+                      onClick={handleCheckout}
+                    >
+                      {isLoading ? 'Processing...' : !isProfileComplete ? 'Complete Profile to Checkout' : 'Checkout'}
+                    </button>
                   </div>
-                  <button
-                    disabled={isLoading || !isProfileComplete}
-                    className="w-full bg-green-600 text-white py-3 rounded-lg font-medium disabled:bg-gray-300 disabled:cursor-not-allowed hover:bg-green-700 transition-colors"
-                    onClick={handleCheckout}
-                  >
-                    {isLoading ? 'Processing...' : !isProfileComplete ? 'Complete Profile to Checkout' : 'Checkout'}
-                  </button>
-                </div>
+                </>}
               </div>
             </div>
           )}

@@ -51,13 +51,16 @@ export const getOrderCost = async ({ productData, isMembership, pincode }: any) 
             const product = productData.find((item: any) => item?.product?._id.toString() == prod._id.toString());
             return { product: prod._id, title: prod.title, priceCharged: prod.finalPrice, quantity: product.quantity }
         })
-        totalAmount += productDetails.reduce((sum, item) => (sum + (item?.priceCharged * item?.quantity)), 0);
-        const deliveryData = await getPincodeDetails(pincode);
 
-        if (deliveryData == null) {
-            return { success: false, message: "Not Deliverable in your Area" }
-        } else {
-            totalAmount += deliveryData.deliveryCharge;
+        if (productDetails.length) {
+            totalAmount += productDetails.reduce((sum, item) => (sum + (item?.priceCharged * item?.quantity)), 0);
+            const deliveryData = await getPincodeDetails(pincode);
+
+            if (deliveryData == null) {
+                return { success: false, message: "Not Deliverable in your Area" }
+            } else {
+                totalAmount += deliveryData.deliveryCharge;
+            }
         }
     }
 
