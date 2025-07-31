@@ -1,5 +1,6 @@
 import {
     addExtraCharge,
+    deliverPastMembership,
     postponeMembershipByDate,
     updateMembershipStatus,
     updatePaymentStatus
@@ -8,7 +9,7 @@ import { toast } from 'react-toastify';
 import { AssignedDetails, OrderButtons, ShowMessage, UserBasicDetails } from './OrderBasicDetails';
 import SelectDeliveryUser from './SelectDeliveryUser';
 
-function MembershipCard({ order, setOrders, setError, session, users,setMemberships }: any) {
+function MembershipCard({ order, setOrders, setError, session, users, setMemberships }: any) {
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
@@ -41,6 +42,24 @@ function MembershipCard({ order, setOrders, setError, session, users,setMembersh
 
         if (postponeDate) {
             const res = await postponeMembershipByDate(order._id, postponeDate);
+
+            if (res?.success) {
+                toast.success(res.message);
+            } else {
+                toast.error(res.message);
+            }
+        } else {
+            toast.error("Enter a valid Date!");
+        }
+    };
+
+    const handlePastDelivery = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        const membershipDate = formData.get("membershipDate");
+
+        if (membershipDate) {
+            const res = await deliverPastMembership(order._id, membershipDate);
 
             if (res?.success) {
                 toast.success(res.message);
@@ -149,6 +168,18 @@ function MembershipCard({ order, setOrders, setError, session, users,setMembersh
                         <button className='p-1 bg-red-300 rounded-md'>Postpone</button>
                     </form>
                 </div>
+                <div className='flex justify-between items-center mt-4 mb-2'>
+                    <h3 className="font-medium text-gray-800">Past Delivery</h3>
+                    <form onSubmit={handlePastDelivery} className='flex gap-1'>
+                        <input type="date"
+                            name='membershipDate'
+                            className='border rounded-md border-black p-1'
+                            max={new Date().toISOString().split('T')[0]}
+                        />
+                        <button className='p-1 bg-green-300 rounded-md'>Deliver</button>
+                    </form>
+                </div>
+
                 <div className='flex gap-4 flex-wrap'>
                     {order?.postponedDates?.map((date: any, idx: any) => {
                         return <div key={idx}>
@@ -167,7 +198,7 @@ function MembershipCard({ order, setOrders, setError, session, users,setMembersh
             {(order?.deliveryDates?.length != order?.days) &&
                 <>
                     <OrderButtons session={session} order={order} setOrders={setOrders} setMemberships={setMemberships} setError={setError} isMembership={true} />
-                    {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={true} setOrders={setOrders} setMembership={setMemberships} setError={setError} />}
+                    {session?.data.user?.isAdmin && <SelectDeliveryUser users={users} orderId={order._id} isMembership={true} setOrders={setOrders} setMemberships={setMemberships} setError={setError} />}
                 </>
             }
         </div >

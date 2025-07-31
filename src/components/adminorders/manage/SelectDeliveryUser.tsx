@@ -3,7 +3,7 @@ import { updateMembershipStatus, updateOrderStatus } from "@/src/actions/Order";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-function SelectDeliveryUser({ users, orderId, isMembership, setOrders,setMemberships, setError }: any) {
+function SelectDeliveryUser({ users, orderId, isMembership, setOrders, setMemberships, setError }: any) {
     const [search, setSearch] = useState("");
     const [filteredUsers, setFilteredUsers] = useState(users);
     const [selectedUser, setSelectedUser] = useState("");
@@ -18,21 +18,21 @@ function SelectDeliveryUser({ users, orderId, isMembership, setOrders,setMembers
 
     const handleAssign = async (newStatus: any) => {
         try {
-            if(selectedUser){
+            if (selectedUser) {
                 const updatedOrder = !isMembership ? await updateOrderStatus(orderId, newStatus, true, selectedUser) : await updateMembershipStatus(orderId, newStatus, true, selectedUser);
-            console.log("updatedorder status", updatedOrder)
-            if (updatedOrder?.success) {
-                setOrders((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? {...order,assignedTo:updatedOrder?.product?.assignedTo,status:updatedOrder?.product?.status} : order
-                )));
-                setMemberships((prev: any) => (prev.map((order: any) =>
-                    order._id === orderId ? {...order,assignedTo:updatedOrder?.product?.assignedTo,status:updatedOrder?.product?.status} : order
-                )));
-                toast.success(updatedOrder.message);
+                console.log("updatedorder status", updatedOrder)
+                if (updatedOrder?.success) {
+                    setOrders((prev: any) => (prev.map((order: any) =>
+                        order._id === orderId ? { ...order, assignedTo: updatedOrder?.product?.assignedTo, status: updatedOrder?.product?.status } : order
+                    )));
+                    setMemberships((prev: any) => (prev.map((order: any) =>
+                        order._id === orderId ? { ...order, assignedTo: updatedOrder?.product?.assignedTo, status: updatedOrder?.product?.status } : order
+                    )));
+                    toast.success(updatedOrder.message);
+                } else {
+                    toast(updatedOrder?.message)
+                }
             } else {
-                toast(updatedOrder?.message)
-            }
-            }else{
                 toast.error("Select Delivery User!")
             }
 

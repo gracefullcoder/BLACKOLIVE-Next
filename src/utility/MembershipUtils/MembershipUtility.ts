@@ -1,3 +1,4 @@
+
 export const getTodayItem = (membership: any, populated: boolean) => {
     const deliveredDays = membership?.deliveryDates?.length || 0;
     const postponedDays = membership?.postponedDates?.length || 0;
@@ -6,13 +7,18 @@ export const getTodayItem = (membership: any, populated: boolean) => {
     let currentProduct;
     let isItemPostponed = true;
 
+    const todayDay = new Date();
+    const offset = Math.max(todayDay.getUTCDay() - 1, 0); //sunday ka delivery on monday also used mod tho staurday ka on monday
+
     if (postponedProducts > 0 && (deliveredDays + postponedProducts) == totalDays) {
         const productId = membership.postponedItems[0];
         if (populated) currentProduct = membership?.products?.find((plan: any) => plan?.product?._id == productId).product;
         else currentProduct = membership?.products?.find((plan: any) => plan?.product == productId);
     } else {
         isItemPostponed = false;
-        currentProduct = membership?.products[(deliveredDays + postponedDays) % membership?.products?.length]?.product;
+
+        if (membership?.products?.length != 5) currentProduct = membership?.products[(deliveredDays + postponedDays) % membership?.products?.length]?.product;
+        else currentProduct = membership?.products[(offset) % membership?.products?.length]?.product;
     }
 
     return { currentProduct, isItemPostponed };

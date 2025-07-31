@@ -306,6 +306,27 @@ export const postponeMembershipByDate = async (mId: string, date: any) => {
     }
 }
 
+export const deliverPastMembership = async (mId: string, date: any) => {
+    const membership = await MembershipOrder.findById(mId);
+
+    if (!membership) return { success: false, message: "Membership doesn't exist" }
+
+
+    if (membership.status != "delivered") {
+        
+        const deliveryDate = new Date(date);
+
+        if (membership?.deliverydDates?.some((date: any) => (date.toString() == deliveryDate.toString()))) {
+            return { success: false, message: "Already Added for delivery" }
+        } else {
+            await MembershipOrder.findByIdAndUpdate(mId, { $push: { deliveryDates: deliveryDate } })
+            return { success: true, message: `Marked Order delivered for Date ${deliveryDate.getDate()}` }
+        }
+    } else {
+        return { success: false, message: "Membership Is Completed" }
+    }
+}
+
 // Get all orders
 export async function getAllOrders() {
     try {
@@ -400,7 +421,7 @@ export async function updateMembershipStatus(orderId: any, newStatus: any, assig
             else if (newStatus == "delivered") {
                 const utcDate = new Date();
                 utcDate.setUTCHours(0, 0, 0, 0);
-                const membershipDetails = await MembershipOrder.findByIdAndUpdate(orderId).populate({ path: "assignedTo", model: User, select: "name" });;
+                const membershipDetails = await MembershipOrder.findById(orderId).populate({ path: "assignedTo", model: User, select: "name" });
 
                 let { isItemPostponed } = getTodayItem(membershipDetails, false);
 
