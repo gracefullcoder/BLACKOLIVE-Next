@@ -3,6 +3,7 @@
 import { toast } from "react-toastify";
 import { handleToast } from "../utility/basic";
 import { createRazorpayOrder } from "../actions/Payment";
+import axios from "axios";
 
 declare global {
   interface Window {
@@ -51,7 +52,7 @@ interface DisplayRazorpayProps {
 }
 
 export async function displayRazorpay(
-  { orderDetails, totalAmount, additionalDetails, updateFnx }: any
+  { orderDetails, totalAmount, additionalDetails, updateFnx, isApi = false }: any
 ) {
   if (typeof window === "undefined") {
     alert("Window not opening")
@@ -64,17 +65,23 @@ export async function displayRazorpay(
     return;
   }
 
-  
-  const orderResponse = await createRazorpayOrder(totalAmount);
-  
+
+  let orderResponse: any;
+  if (isApi)
+    orderResponse = (await axios.post("/api/user/payment/order", {amount:totalAmount})).data;
+  else
+    orderResponse = await createRazorpayOrder(totalAmount);
+
   console.log(orderResponse);
 
-  if (!orderResponse || !orderResponse.id) {
+  if (!orderResponse?.success || !orderResponse?.order?.id) {
     alert("Server error while creating order.");
     return;
+  } else {
+    alert("Razorpay Payments is Facing error Go with COD Option, Delivery person would accept UPI!");
   }
 
-  const { amount, id: order_id, currency } = orderResponse;
+  const { amount, id: order_id, currency } = orderResponse?.order;
 
   const options = {
     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,

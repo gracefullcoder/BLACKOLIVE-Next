@@ -315,7 +315,7 @@ const Cart = () => {
 
       if (paymentMethod == "UPI") {
         orderDetails.isPaid = true;
-        await displayRazorpay({ orderDetails, totalAmount, additionalDetails, updateFnx: orderCreation })
+        await displayRazorpay({ orderDetails, totalAmount, additionalDetails, updateFnx: orderCreation,isApi:true })
       } else {
         orderCreation(orderDetails)
       }

@@ -67,16 +67,17 @@ export const getOrderCost = async ({ productData, isMembership, pincode }: any) 
 export const createRazorpayOrder = async (totalAmount: any) => {
     try {
         const options = {
-        amount: totalAmount * 100,
-        currency: "INR",
-        receipt: `reciept_${Math.floor(Math.random() * 10000000)}`,
-    };
+            amount: totalAmount * 100,
+            currency: "INR",
+            receipt: `reciept_${Math.floor(Math.random() * 10000000)}`,
+        };
 
-    const order = await instance.orders.create(options);
+        const order = await instance.orders.create(options);
 
-    return order;
+        return { success: true, order };
     } catch (error) {
         console.log(error);
+        return { success: false, message: "Proceed With Cash!" };
     }
 }
 
