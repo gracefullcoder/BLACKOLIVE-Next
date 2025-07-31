@@ -64,9 +64,10 @@ export async function displayRazorpay(
     return;
   }
 
-  console.log(res);
-
+  
   const orderResponse = await createRazorpayOrder(totalAmount);
+  
+  console.log(orderResponse);
 
   if (!orderResponse || !orderResponse.id) {
     alert("Server error while creating order.");

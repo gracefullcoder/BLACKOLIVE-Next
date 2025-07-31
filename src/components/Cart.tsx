@@ -249,15 +249,16 @@ const Cart = () => {
 
   const orderCreation = async (orderDetails: any, mailData?: any, paymentData?: any) => {
     try {
-      let response;
+      let response: any;
       if (paymentData) {
-        response = await createOrder(orderDetails, paymentData);
+        console.log("tillu badmosh")
+        response = await axios.post("/api/user/cart/checkout", { orderDetails, paymentData });
       } else {
         response = await createOrder(orderDetails);
         handleToast(response);
       }
 
-      if (response.success) {
+      if (response?.success) {
         const message = items.map((item, idx) => {
           return `PRODUCT ${idx + 1}: ${item.product.title}\n -Quantity: ${item.quantity}\n-Time : ${time}\n`;
         })
