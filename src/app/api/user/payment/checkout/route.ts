@@ -18,10 +18,11 @@ const validateSignature = async ({ razorpayPaymentId, orderCreationId, razorpayS
 }
 
 export async function POST(req: NextRequest) {
-  await connectToDatabase(); // if you're not auto-connecting elsewhere
 
   try {
+
     const body = await req.json();
+    console.log(body)
 
     const {
       userId,

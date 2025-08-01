@@ -251,8 +251,7 @@ const Cart = () => {
     try {
       let response: any;
       if (paymentData) {
-        console.log("tillu badmosh")
-        response = await axios.post("/api/user/cart/checkout", { orderDetails, paymentData });
+        response = await createOrder(orderDetails, paymentData);
       } else {
         response = await createOrder(orderDetails);
         handleToast(response);
@@ -271,6 +270,7 @@ const Cart = () => {
 
       return response;
     } catch (error) {
+      console.log(error)
       toast.error("Internal Server Error");
     }
   }
