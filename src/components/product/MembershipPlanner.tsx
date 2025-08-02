@@ -163,6 +163,32 @@ const MembershipPlanner = ({ isModalOpen, setIsModalOpen, membershipData, weekly
                               </div>
                             </button>
                           ))}
+                          {membershipData.additionalProducts.map((product: any) => (
+                            <button
+                              key={product._id}
+                              onClick={() => handleProductSelection(day, product)}
+                              className={`w-full p-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0 ${modifiedPlan[day]._id === product._id ? 'bg-green-50 border-l-4 border-l-green-500' : ''
+                                }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={product.image}
+                                  alt={product.title}
+                                  className="w-12 h-12 rounded-lg object-cover"
+                                  onError={(e: any) => {
+                                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA0OCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNiAxNkgzMlYzMkgxNlYxNloiIGZpbGw9IiNEMUQ1REIiLz4KPC9zdmc+';
+                                  }}
+                                />
+                                <div className="flex-1">
+                                  <h5 className="font-medium text-gray-900 text-sm">{product.title}</h5>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-sm font-semibold text-green-600">₹{product.finalPrice}</span>
+                                    <span className="text-xs text-gray-500 line-through">₹{product.price}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+                          ))}
                         </div>
                       )}
                     </div>

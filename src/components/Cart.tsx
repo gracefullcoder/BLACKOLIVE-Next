@@ -298,6 +298,7 @@ const Cart = () => {
       }
 
       const { totalAmount, productDetails } = costData;
+      const displayTime = timings.find((t:any) => t.deliveryTime == time)?.display;
 
       const orderDetails = {
         userId: session?.data?.user?._id,
@@ -308,7 +309,8 @@ const Cart = () => {
         message: orderMessage,
         isPaid: false,
         totalAmount,
-        deliveryCharge
+        deliveryCharge,
+        displayTime
       }
 
       const additionalDetails = {

@@ -11,7 +11,9 @@ export const getSpecificProduct = async (id: any) => {
         let isMembership = false;
 
         if (product == null) {
-            product = await MembershipProduct.findById(id).populate({ model: Product, path: "products" });
+            product = await MembershipProduct.findById(id)
+            .populate({ model: Product, path: "products" })
+            .populate({ model: Product, path: "additionalProducts" });
             isMembership = true
         }
 

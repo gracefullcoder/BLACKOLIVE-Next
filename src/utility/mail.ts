@@ -142,7 +142,7 @@ export const orderEmailTemplate = (orderDetails: any) => {
 
             <div class="footer">
                 <p>📞 Contact Support: <a href="mailto:blackolive0123@gmail.com">blackolive.in</a></p>
-                <p>© 2025 Your Company. All rights reserved.</p>
+                <p>© 2025 Black Olive. All rights reserved.</p>
             </div>
         </div>
     </body>
@@ -150,7 +150,7 @@ export const orderEmailTemplate = (orderDetails: any) => {
 };
 
 export const membershipEmailTemplate = (orderDetails: any) => {
-    const { userName, orderId, address, contact, time, orderItems, totalPrice } = orderDetails;
+    const { userName, orderId, address, contact, time,displayTime, orderItems, totalPrice } = orderDetails;
 
     const itemsHTML = orderItems
         .map(
@@ -218,7 +218,7 @@ export const membershipEmailTemplate = (orderDetails: any) => {
             <p><strong>Order ID:</strong> ${orderId}</p>
             <p><strong>Delivery Address:</strong> ${address.number + ', ' + address.address + ', ' + address.landmark + ', ' + address.pincode}</p>
             <p><strong>Contact:</strong> ${contact}</p>
-            <p><strong>Expected Delivery Time:</strong> ${time}</p>
+            <p><strong>Expected Delivery Time:</strong> ${displayTime || time}</p>
 
             <h3>📦 Ordered Items:</h3>
             <table class="order-table">
@@ -237,7 +237,7 @@ export const membershipEmailTemplate = (orderDetails: any) => {
 
             <div class="footer">
                 <p>📞 Contact Support: <a href="mailto:blackolive0123@gmail.com">blackolive.in</a></p>
-                <p>© 2025 Your Company. All rights reserved.</p>
+                <p>© 2025 Black Olive. All rights reserved.</p>
             </div>
         </div>
     </body>

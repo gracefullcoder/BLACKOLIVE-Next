@@ -32,6 +32,12 @@ const memProductSchema = new mongoose.Schema({
             ref: "Product"
         }
     ],
+    additionalProducts: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product"
+        }
+    ],
     discountPercent: {
         type: Number,
         default: 0

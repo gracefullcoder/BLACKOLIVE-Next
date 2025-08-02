@@ -12,7 +12,8 @@ export interface MembershipCreationType {
     message: string,
     extraCharge?: number,
     isPaid: boolean,
-    payementId?: string
+    payementId?: string,
+    displayTime?: string
 }
 
 export interface OrderCreationType {
@@ -26,5 +27,6 @@ export interface OrderCreationType {
     totalAmount: number,
     deliveryCharge: string,
     paymentId?: string,
-    adminOrder?: any
+    adminOrder?: any,
+    displayTime?:any
 }

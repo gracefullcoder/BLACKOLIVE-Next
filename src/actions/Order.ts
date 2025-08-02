@@ -28,7 +28,8 @@ export const createOrder = async (
         totalAmount,
         deliveryCharge,
         paymentId,
-        adminOrder
+        adminOrder,
+        displayTime
     }: OrderCreationType,
     paymentData?: any
 ) => {
@@ -91,7 +92,7 @@ export const createOrder = async (
             $set: { cart: [] }
         });
 
-        const orderDetails = { userName: user.name, orderId: order._id, address: selectedAddress, contact, time, orderItems, totalAmount };
+        const orderDetails = { userName: user.name, orderId: order._id, address: selectedAddress, contact, time: displayTime || time, orderItems, totalAmount };
         const mailRes = await resendMail({ email: user.email, subject: "Order Confirmation", html: orderEmailTemplate(orderDetails) });
 
         return { success: true, mailRes, message: "Order created successfully", orderId: JSON.parse(JSON.stringify(order._id)) };
@@ -164,6 +165,7 @@ export const createMembership = async (membershipData: MembershipCreationType, m
             address: membershipData.address,
             contact: membershipData.contact,
             time: membershipData.time,
+            displayTime: membershipData?.displayTime || "",
             orderItems: [{
                 product: mailData.title,
                 price: mailData.finalPrice,
@@ -313,7 +315,7 @@ export const deliverPastMembership = async (mId: string, date: any) => {
 
 
     if (membership.status != "delivered") {
-        
+
         const deliveryDate = new Date(date);
 
         if (membership?.deliverydDates?.some((date: any) => (date.toString() == deliveryDate.toString()))) {

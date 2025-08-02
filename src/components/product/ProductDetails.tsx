@@ -17,14 +17,18 @@ import { MembershipCreationType } from '@/src/types/orderType';
 
 function ProductDetails({ product, isMembership }: { product: any, isMembership: boolean }) {
     const session = useSession();
-    const { items, setItems ,features} = useCartContext();
+    const { items, setItems, features } = useCartContext();
     const existingCartItem = items.find((item: any) => item?.product?._id === product._id);
     const [quantity, setQuantity] = useState(existingCartItem ? existingCartItem.quantity : 1);
     const [pincode, setPincode] = useState<any>(null);
     const [pincodes, setPincodes] = useState([])
     const [isDeliverable, setIsDeliverable] = useState<any>(null)
     const porductDetail = useRef<any>(null);
-    const [timings, setTimings] = useState([]);
+    type Timing = {
+        deliveryTime: string;
+        display: string;
+    };
+    const [timings, setTimings] = useState<Timing[]>([]);
     const [paymentMethod, setPaymentMethod] = useState("UPI")
 
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -114,8 +118,8 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
             setIsLoading(false)
         }
     };
-    const initMemDetails = { time: product?.timings ? product?.timings[0] : "", startDate: "", message: "" };
-    const [membershipDetails, setMembershipDetails] = useState<{ time: string, startDate: any, message: string }>(initMemDetails);
+    const initMemDetails = { time: "", startDate: "", message: "", displayTime: "" };
+    const [membershipDetails, setMembershipDetails] = useState<{ time: string, startDate: any, message: string, displayTime: string }>(initMemDetails);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState<number>(-1);
 
@@ -205,6 +209,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                 address: userAddresses[selectedAddress],
                 contact: userContact,
                 time: membershipDetails.time,
+                displayTime: membershipDetails.displayTime,
                 startDate: membershipDetails.startDate,
                 message: membershipDetails.message,
                 days: product.days,
@@ -250,7 +255,16 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
         return null;
     }
 
-    const handleDetailsChange = (e: any) => { setMembershipDetails(prev => { return { ...prev, [e.target.name]: e.target.value } }) }
+    const handleDetailsChange = (e: any) => {
+        const { name, value } = e.target;
+
+
+        setMembershipDetails((prev: any) => {
+            const data: any = { ...prev, [name]: value }
+            if (name == "time") data.displayTime = (timings?.find((t: any) => t?.deliveryTime == value))?.display;
+            return data;
+        })
+    }
 
     const calculatePrices = (products: any, discountPercent: any, days: any) => {
         const weeks = days / products?.length;
@@ -308,6 +322,7 @@ function ProductDetails({ product, isMembership }: { product: any, isMembership:
                                                 name="time"
                                                 onChange={(e) => handleDetailsChange(e)}
                                             >
+                                                <option value={""}>Select</option>
                                                 {timings?.map((t: any, i: number) => (
                                                     <option key={i} value={t.deliveryTime}>{t.display}</option>
                                                 ))}

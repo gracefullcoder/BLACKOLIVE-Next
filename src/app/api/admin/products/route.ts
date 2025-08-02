@@ -32,6 +32,7 @@ export async function POST(req: Request) {
                 days: data.days,
                 timings: data.timings.split(','),
                 products: data.products,
+                additionalProducts:data.additionalProducts,
                 discountPercent: Number(data.discountPercent),
                 // customizations: [data.customizations],
                 // additionals: [data.additionals]  
