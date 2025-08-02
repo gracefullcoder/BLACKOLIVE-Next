@@ -32,7 +32,7 @@ export async function POST(req: Request) {
                 days: data.days,
                 timings: data.timings.split(','),
                 products: data.products,
-                additionalProducts:data.additionalProducts,
+                additionalProducts: data.additionalProducts,
                 discountPercent: Number(data.discountPercent),
                 // customizations: [data.customizations],
                 // additionals: [data.additionals]  
@@ -104,7 +104,8 @@ export async function PATCH(req: Request) {
                 days: data.days,
                 timings: data.timings,
                 products: data.products,
-                discountPercent:data.discountPercent
+                additionalProducts: data.additionalProducts,
+                discountPercent: data.discountPercent
             });
             revalidatePath("/membership");
         } else {

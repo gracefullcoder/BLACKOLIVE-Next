@@ -35,6 +35,7 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
             timings: [],
             bonus: 0,
             products: [],
+            additionalProducts: [],
             discountPercent: 0,
             responses: []
         }
@@ -152,10 +153,19 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
 
     console.log(products)
 
-    const handleAddProduct = () => {
+    const handleAddProduct = (isAdditional: boolean) => {
         if (!selectedProduct) return;
 
         const product: any = products.find((p: any) => p._id == selectedProduct);
+
+        if (isAdditional) {
+            setFormData((prev: any) => ({
+                ...prev,
+                additionalProducts: [...prev.additionalProducts, product]
+            }));
+            return;
+        }
+
         const { price, finalPrice } = calculatePrices([...formData.products, product], formData.discountPercent);
 
         setFormData((prev: any) => ({
@@ -166,15 +176,23 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
         }));
     };
 
-    const handleRemoveProduct = (pId: any) => {
-        const membershipProducts = formData?.products?.filter((p: any) => p !== pId);
-        console.log(membershipProducts);
-        const { price, finalPrice } = calculatePrices(membershipProducts, formData.discountPercent);
-        setFormData((prev: any) => ({
-            ...prev,
-            products: membershipProducts,
-            price, finalPrice
-        }));
+    const handleRemoveProduct = (pId: any, isAdditional: boolean) => {
+        if (isAdditional) {
+            const membershipProducts = formData?.additionalProducts?.filter((p: any) => p !== pId);
+            setFormData((prev: any) => ({
+                ...prev,
+                additionalProducts: membershipProducts
+            }));
+        } else {
+            const membershipProducts = formData?.products?.filter((p: any) => p !== pId);
+            console.log(membershipProducts);
+            const { price, finalPrice } = calculatePrices(membershipProducts, formData.discountPercent);
+            setFormData((prev: any) => ({
+                ...prev,
+                products: membershipProducts,
+                price, finalPrice
+            }));
+        }
     }
 
     return (
@@ -320,9 +338,9 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                                             Add Products
                                         </label>
 
-                                        <div className='flex justify-between gap-4'>
+                                        <div>
                                             <select name="products"
-                                                className="mt-1 p-2 block w-1/2 border-gray-300 rounded-md shadow-sm"
+                                                className="mt-1 w-full p-2 block w-1/2 border-gray-300 rounded-md shadow-sm"
                                                 onChange={(e) => setSelectedProduct(e.target.value)}
                                             >
                                                 <option value="">Select</option>
@@ -332,11 +350,22 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                                                     </option>
                                                 ))}
                                             </select>
-                                            <div
-                                                className="mt-1 block w-1/2 border text-center cursor-pointer border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                                onClick={handleAddProduct}
-                                            >
-                                                Add in Mebership
+
+                                            <div className='flex justify-between gap-4'>
+
+                                                <div
+                                                    className="mt-1 block w-1/2 border text-center cursor-pointer border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                    onClick={() => handleAddProduct(false)}
+                                                >
+                                                    Add in Mebership
+                                                </div>
+
+                                                <div
+                                                    className="mt-1 block w-1/2 border text-center cursor-pointer border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                                    onClick={() => handleAddProduct(true)}
+                                                >
+                                                    Add in Additional
+                                                </div>
                                             </div>
                                         </div>
 
@@ -396,7 +425,7 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                                                         <button
                                                             type="button"
                                                             className="text-red-500 hover:text-red-700"
-                                                            onClick={() => handleRemoveProduct(product)}
+                                                            onClick={() => handleRemoveProduct(product, false)}
                                                         >
                                                             ✕
                                                         </button>
@@ -406,6 +435,44 @@ const UpdateProductForm = ({ productId, isMembership }: { productId: any, isMemb
                                         )}
 
                                     </div>
+
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">
+                                            Additional Products
+                                        </label>
+
+                                        {formData.products.length === 0 ? (
+                                            <p>No product added</p>
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                {formData.additionalProducts.map((product: any, index: number) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center gap-2 border border-gray-300 px-3 py-1 rounded-md bg-gray-100"
+                                                    >
+                                                        <span>
+                                                            {product?.title}
+                                                        </span>
+                                                        <span>
+                                                            {product?.price}
+                                                        </span>
+                                                        <span>
+                                                            {product?.finalPrice}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            className="text-red-500 hover:text-red-700"
+                                                            onClick={() => handleRemoveProduct(product, true)}
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
                                 </> :
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
