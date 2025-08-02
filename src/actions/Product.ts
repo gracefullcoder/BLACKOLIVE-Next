@@ -34,7 +34,11 @@ export async function getProducts(type: string) {
         const products = await Product.find();
         let membership;
 
-        if (type == "all" || type == "membership") membership = await MembershipProduct.find().populate({ path: "products", model: Product });
+        if (type == "all" || type == "membership") 
+            membership = await MembershipProduct.find()
+            .populate({ path: "products", model: Product })
+            .populate({ path: "additionalProducts", model: Product });
+
 
         console.log(products, membership)
 
