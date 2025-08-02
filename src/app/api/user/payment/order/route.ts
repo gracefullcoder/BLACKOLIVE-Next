@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
     const options = {
       amount: amount * 100,
       currency: 'INR',
-      receipt: `receipt_order_${Math.floor(Math.random() * 10000000)}`
+      receipt: `receipt_order_${Math.floor(Math.random() * 10000000)}`,
+      offers:["R0PwIIu6LmqX4X"]
     };
 
     const order = await instance.orders.create(options);
