@@ -6,7 +6,6 @@ import { createOrder } from "@/src/actions/Order";
 import AdminOrder from "@/src/components/adminorders/create/AdminOrder";
 import ShowProducts from "@/src/components/adminorders/create/ShowProducts";
 import { Minus, Plus } from "lucide-react";
-import { featureDetails } from "@/src/actions/Features";
 import { displayRazorpay } from "@/src/lib/razorpay";
 
 export default function Page() {
@@ -31,7 +30,9 @@ export default function Page() {
 
     useEffect(() => {
         const fetchPincodes = async () => {
-            const features = await featureDetails();
+            let features: any = await fetch("/api/features");
+            features = await features.json();
+            console.log(features)
             setPincodes(features?.data?.pincodes || []);
         };
         fetchPincodes();
@@ -59,7 +60,6 @@ export default function Page() {
         }
     }, [orderDetails.address]);
 
-    console.log(orderDetails)
 
     const handleOrderSubmit = async () => {
 

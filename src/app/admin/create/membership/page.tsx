@@ -6,7 +6,6 @@ import AdminOrder from "@/src/components/adminorders/create/AdminOrder";
 import { toast } from "react-toastify";
 import { createMembership } from "@/src/actions/Order";
 import CustomizeButton from "@/src/components/product/CustomizeButton";
-import { featureDetails } from "@/src/actions/Features";
 import { displayRazorpay } from "@/src/lib/razorpay";
 import { MembershipCreationType } from "@/src/types/orderType";
 import { formatTime } from "@/src/utility/timeUtil";
@@ -42,11 +41,14 @@ export default function Page() {
 
     useEffect(() => {
         const fetchPincodes = async () => {
-            const features = await featureDetails();
+            let features: any = await fetch("/api/features");
+            features = await features.json();
+            console.log(features)
             setPincodes(features?.data?.pincodes || []);
         };
         fetchPincodes();
     }, []);
+
 
     const getPincode = () => {
         if (user && membershipDetails.address !== null && user.addresses && user.addresses.length > 0) {
