@@ -5,7 +5,7 @@ const AddressForm = ({ isAddingAddress, handleAddressSubmit, newAddress, setNewA
             <h3 className="font-semibold text-lg mb-4">Add New Address</h3>
             <div className="grid grid-cols-2 gap-4">
                 <input
-                    type="number"
+                    type="text"
                     value={newAddress.number}
                     onChange={(e) => setNewAddress({ ...newAddress, number: e.target.value })}
                     placeholder="House/Flat Number"

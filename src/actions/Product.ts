@@ -40,8 +40,6 @@ export async function getProducts(type: string) {
             .populate({ path: "additionalProducts", model: Product });
 
 
-        console.log(products, membership)
-
         if (type == "all") {
             return JSON.parse(JSON.stringify({ success: true, message: "All Products Fetched", products, membership }))
         }
