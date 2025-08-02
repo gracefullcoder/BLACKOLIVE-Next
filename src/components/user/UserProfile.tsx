@@ -189,6 +189,7 @@ const UserProfile = ({ user }: any) => {
                                         className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         maxLength={10}
                                         pattern="[0-9]{10}"
+                                        required
                                     />
                                 </div>
                                 <button

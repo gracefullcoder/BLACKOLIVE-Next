@@ -30,8 +30,8 @@ function ContactUs() {
     if (user) {
       const userId = user?._id;
       const email = user?.email;
-      const contact = user?.contact.toString();
-      const name = user.name;
+      const contact = user?.contact?.toString();
+      const name = user?.name;
       setContactDetails((prev: contactInterface) => { return { ...prev, user: userId, email, contact, name } });
     }
   }, [session])
